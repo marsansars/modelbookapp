@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { getAgencies, getJobs, getDisplayCurrency } from "@/lib/store";
-import { Agency, Job, CurrencyCode, CURRENCIES, calculateJobBreakdown, getDueDate } from "@/lib/types";
+import { Agency, Job, CurrencyCode, CURRENCIES, calculateJobBreakdown, getDueDate, parseLocalDate } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { ManageAgenciesDialog } from "@/components/ManageAgenciesDialog";
 import { CurrencySelector } from "@/components/CurrencySelector";
