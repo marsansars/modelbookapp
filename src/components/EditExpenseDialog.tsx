@@ -30,8 +30,10 @@ export function EditExpenseDialog({ expense, onUpdated }: Props) {
 
   useEffect(() => {
     if (open) {
-      setJobs(getJobs());
-      setCategories(getAllExpenseCategories());
+      Promise.all([getJobs(), getAllExpenseCategories()]).then(([j, c]) => {
+        setJobs(j);
+        setCategories(c);
+      });
       setForm({
         date: expense.date,
         category: expense.category,
@@ -44,9 +46,9 @@ export function EditExpenseDialog({ expense, onUpdated }: Props) {
     }
   }, [open, expense]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateExpense(expense.id, {
+    await updateExpense(expense.id, {
       date: form.date,
       category: form.category,
       description: form.description.trim(),

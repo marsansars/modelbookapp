@@ -15,18 +15,24 @@ import { motion } from "framer-motion";
 export default function Expenses() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [displayCur, setDisplayCur] = useState<CurrencyCode>(getDisplayCurrency());
+  const [displayCur, setDisplayCur] = useState<CurrencyCode>('USD');
   const [rates, setRates] = useState<Record<string, number>>({});
   const [cats, setCats] = useState<Record<string, ExpenseCategoryInfo>>({});
 
-  const reload = () => {
-    setExpenses(getExpenses());
-    setJobs(getJobs());
-    setCats(getAllExpenseCategories());
+  const reload = async () => {
+    const [e, j, c] = await Promise.all([getExpenses(), getJobs(), getAllExpenseCategories()]);
+    setExpenses(e); setJobs(j); setCats(c);
   };
+
   useEffect(() => {
-    reload();
-    fetchExchangeRates().then(r => setRates(r.rates));
+    const load = async () => {
+      const [e, j, cur, r, c] = await Promise.all([
+        getExpenses(), getJobs(), getDisplayCurrency(),
+        fetchExchangeRates(), getAllExpenseCategories(),
+      ]);
+      setExpenses(e); setJobs(j); setDisplayCur(cur); setRates(r.rates); setCats(c);
+    };
+    load();
   }, []);
 
   const conv = (amount: number, from: CurrencyCode) => convertAmount(amount, from, displayCur, rates);
@@ -37,9 +43,14 @@ export default function Expenses() {
     return j ? `${j.client} — ${j.description}` : undefined;
   };
 
-  const toggleReimbursed = (id: string, current: boolean) => {
-    updateExpense(id, { reimbursed: !current });
-    reload();
+  const toggleReimbursed = async (id: string, current: boolean) => {
+    await updateExpense(id, { reimbursed: !current });
+    await reload();
+  };
+
+  const handleDelete = async (id: string) => {
+    await deleteExpense(id);
+    await reload();
   };
 
   const byCategory = expenses.reduce((acc, e) => {
@@ -130,7 +141,7 @@ export default function Expenses() {
                     </button>
                   )}
                   <EditExpenseDialog expense={exp} onUpdated={reload} />
-                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => { deleteExpense(exp.id); reload(); }}>
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => handleDelete(exp.id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>

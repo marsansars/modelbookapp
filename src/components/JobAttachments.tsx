@@ -2,7 +2,7 @@ import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { updateJob } from "@/lib/store";
 import { Job, JobAttachment } from "@/lib/types";
-import { Paperclip, X, Image, FileText, Download } from "lucide-react";
+import { Paperclip, X, FileText, Download } from "lucide-react";
 import { toast } from "sonner";
 
 interface Props {
@@ -10,7 +10,7 @@ interface Props {
   onChanged: () => void;
 }
 
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB per file
+const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
 export function JobAttachments({ job, onChanged }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
@@ -37,7 +37,7 @@ export function JobAttachments({ job, onChanged }: Props) {
     }
 
     if (newAttachments.length > 0) {
-      updateJob(job.id, { attachments: [...attachments, ...newAttachments] });
+      await updateJob(job.id, { attachments: [...attachments, ...newAttachments] });
       onChanged();
       toast.success(`${newAttachments.length} file(s) attached`);
     }
@@ -45,8 +45,8 @@ export function JobAttachments({ job, onChanged }: Props) {
     if (fileRef.current) fileRef.current.value = '';
   };
 
-  const removeAttachment = (attachmentId: string) => {
-    updateJob(job.id, { attachments: attachments.filter(a => a.id !== attachmentId) });
+  const removeAttachment = async (attachmentId: string) => {
+    await updateJob(job.id, { attachments: attachments.filter(a => a.id !== attachmentId) });
     onChanged();
   };
 
@@ -55,23 +55,11 @@ export function JobAttachments({ job, onChanged }: Props) {
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-1.5 text-xs"
-          onClick={() => fileRef.current?.click()}
-        >
+        <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => fileRef.current?.click()}>
           <Paperclip className="h-3.5 w-3.5" />
           Attach File
         </Button>
-        <input
-          ref={fileRef}
-          type="file"
-          multiple
-          accept="image/*,.pdf,.doc,.docx"
-          className="hidden"
-          onChange={handleFiles}
-        />
+        <input ref={fileRef} type="file" multiple accept="image/*,.pdf,.doc,.docx" className="hidden" onChange={handleFiles} />
         {attachments.length > 0 && (
           <span className="text-xs text-muted-foreground">{attachments.length} file(s)</span>
         )}

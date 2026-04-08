@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus } from "lucide-react";
 import { addExpense, getJobs, getAllExpenseCategories } from "@/lib/store";
-import { Expense, ExpenseCategory, CurrencyCode, CURRENCIES, Job, ExpenseCategoryInfo } from "@/lib/types";
+import { ExpenseCategory, CurrencyCode, CURRENCIES, Job, ExpenseCategoryInfo } from "@/lib/types";
 
 interface Props {
   onAdded: () => void;
@@ -23,15 +23,18 @@ export function AddExpenseDialog({ onAdded, defaultJobId }: Props) {
     currency: 'USD' as CurrencyCode, jobId: defaultJobId || '', reimbursable: false,
   });
 
-  const handleOpen = (o: boolean) => {
+  const handleOpen = async (o: boolean) => {
     setOpen(o);
-    if (o) { setJobs(getJobs()); setCategories(getAllExpenseCategories()); }
+    if (o) {
+      const [j, c] = await Promise.all([getJobs(), getAllExpenseCategories()]);
+      setJobs(j);
+      setCategories(c);
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const expense: Expense = {
-      id: crypto.randomUUID(),
+    await addExpense({
       date: form.date,
       category: form.category,
       description: form.description.trim(),
@@ -40,8 +43,7 @@ export function AddExpenseDialog({ onAdded, defaultJobId }: Props) {
       jobId: form.jobId || undefined,
       reimbursable: form.reimbursable,
       reimbursed: false,
-    };
-    addExpense(expense);
+    });
     setForm({ date: '', category: 'meals', description: '', amount: '', currency: form.currency, jobId: defaultJobId || '', reimbursable: false });
     setOpen(false);
     onAdded();

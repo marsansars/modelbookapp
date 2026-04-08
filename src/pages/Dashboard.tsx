@@ -14,14 +14,19 @@ export default function Dashboard() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [agencies, setAgencies] = useState<Agency[]>([]);
-  const [displayCur, setDisplayCur] = useState<CurrencyCode>(getDisplayCurrency());
+  const [displayCur, setDisplayCur] = useState<CurrencyCode>('USD');
   const [rates, setRates] = useState<Record<string, number>>({});
 
   useEffect(() => {
-    setJobs(getJobs());
-    setExpenses(getExpenses());
-    setAgencies(getAgencies());
-    fetchExchangeRates().then(r => setRates(r.rates));
+    const load = async () => {
+      const [j, e, a, cur, r] = await Promise.all([
+        getJobs(), getExpenses(), getAgencies(), getDisplayCurrency(),
+        fetchExchangeRates(),
+      ]);
+      setJobs(j); setExpenses(e); setAgencies(a); setDisplayCur(cur);
+      setRates(r.rates);
+    };
+    load();
   }, []);
 
   const handleCurrencyChange = (c: CurrencyCode) => {

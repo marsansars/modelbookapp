@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getJobs, getExpenses, getDisplayCurrency, setDisplayCurrency, getAllExpenseCategories } from "@/lib/store";
-import { Job, Expense, CurrencyCode, calculateJobBreakdown } from "@/lib/types";
+import { Job, Expense, CurrencyCode, calculateJobBreakdown, ExpenseCategoryInfo } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { exportJobsCSV, exportExpensesCSV, exportSummaryCSV } from "@/lib/csv-export";
 import { StatCard } from "@/components/StatCard";
@@ -12,13 +12,19 @@ import { motion } from "framer-motion";
 export default function Bookkeeping() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [displayCur, setDisplayCur] = useState<CurrencyCode>(getDisplayCurrency());
+  const [displayCur, setDisplayCur] = useState<CurrencyCode>('USD');
   const [rates, setRates] = useState<Record<string, number>>({});
+  const [cats, setCats] = useState<Record<string, ExpenseCategoryInfo>>({});
 
   useEffect(() => {
-    setJobs(getJobs());
-    setExpenses(getExpenses());
-    fetchExchangeRates().then(r => setRates(r.rates));
+    const load = async () => {
+      const [j, e, cur, r, c] = await Promise.all([
+        getJobs(), getExpenses(), getDisplayCurrency(),
+        fetchExchangeRates(), getAllExpenseCategories(),
+      ]);
+      setJobs(j); setExpenses(e); setDisplayCur(cur); setRates(r.rates); setCats(c);
+    };
+    load();
   }, []);
 
   const conv = (amount: number, from: CurrencyCode) => convertAmount(amount, from, displayCur, rates);
@@ -121,7 +127,7 @@ export default function Bookkeeping() {
               <div className="space-y-2">
                 {Object.entries(expByCategory).sort((a, b) => b[1] - a[1]).map(([cat, amt]) => (
                   <div key={cat} className="flex justify-between items-center text-sm">
-                    <span>{getAllExpenseCategories()[cat]?.icon || '📋'} {getAllExpenseCategories()[cat]?.label || cat}</span>
+                    <span>{cats[cat]?.icon || '📋'} {cats[cat]?.label || cat}</span>
                     <span className="font-medium">{fmt(amt)}</span>
                   </div>
                 ))}

@@ -14,7 +14,187 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      agencies: {
+        Row: {
+          created_at: string
+          default_agent_percent: number
+          default_currency: string
+          default_net_days: number
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          default_agent_percent?: number
+          default_currency?: string
+          default_net_days?: number
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          default_agent_percent?: number
+          default_currency?: string
+          default_net_days?: number
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          currency: string
+          date: string
+          description: string
+          id: string
+          job_id: string | null
+          receipt: string | null
+          reimbursable: boolean | null
+          reimbursed: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          category?: string
+          created_at?: string
+          currency?: string
+          date: string
+          description?: string
+          id?: string
+          job_id?: string | null
+          receipt?: string | null
+          reimbursable?: boolean | null
+          reimbursed?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          currency?: string
+          date?: string
+          description?: string
+          id?: string
+          job_id?: string | null
+          receipt?: string | null
+          reimbursable?: boolean | null
+          reimbursed?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jobs: {
+        Row: {
+          agency_id: string | null
+          agent_percent: number
+          attachments: Json | null
+          client: string
+          created_at: string
+          currency: string
+          description: string
+          id: string
+          job_date: string
+          net_days: number
+          notes: string | null
+          rate: number
+          status: string
+          tax_percent: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          agency_id?: string | null
+          agent_percent?: number
+          attachments?: Json | null
+          client: string
+          created_at?: string
+          currency?: string
+          description?: string
+          id?: string
+          job_date: string
+          net_days?: number
+          notes?: string | null
+          rate?: number
+          status?: string
+          tax_percent?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          agency_id?: string | null
+          agent_percent?: number
+          attachments?: Json | null
+          client?: string
+          created_at?: string
+          currency?: string
+          description?: string
+          id?: string
+          job_date?: string
+          net_days?: number
+          notes?: string | null
+          rate?: number
+          status?: string
+          tax_percent?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jobs_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_settings: {
+        Row: {
+          created_at: string
+          custom_categories: Json | null
+          display_currency: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          custom_categories?: Json | null
+          display_currency?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          custom_categories?: Json | null
+          display_currency?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

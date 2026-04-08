@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Settings2, Plus, Trash2 } from "lucide-react";
 import { getAllExpenseCategories, addCustomCategory, deleteCustomCategory, getCustomCategories } from "@/lib/store";
-import { DEFAULT_EXPENSE_CATEGORIES, ExpenseCategoryInfo } from "@/lib/types";
+import { ExpenseCategoryInfo } from "@/lib/types";
 
 interface Props {
   onUpdated: () => void;
@@ -18,29 +18,30 @@ export function ManageCategoriesDialog({ onUpdated }: Props) {
   const [newLabel, setNewLabel] = useState("");
   const [newIcon, setNewIcon] = useState("📌");
 
-  const handleOpen = (o: boolean) => {
-    setOpen(o);
-    if (o) {
-      setCategories(getAllExpenseCategories());
-      setCustomKeys(new Set(Object.keys(getCustomCategories())));
-    }
+  const refreshData = async () => {
+    const [all, custom] = await Promise.all([getAllExpenseCategories(), getCustomCategories()]);
+    setCategories(all);
+    setCustomKeys(new Set(Object.keys(custom)));
   };
 
-  const handleAdd = () => {
+  const handleOpen = async (o: boolean) => {
+    setOpen(o);
+    if (o) await refreshData();
+  };
+
+  const handleAdd = async () => {
     if (!newLabel.trim()) return;
     const key = newLabel.trim().toLowerCase().replace(/\s+/g, '_');
-    addCustomCategory(key, { label: newLabel.trim(), icon: newIcon || '📌' });
+    await addCustomCategory(key, { label: newLabel.trim(), icon: newIcon || '📌' });
     setNewLabel("");
     setNewIcon("📌");
-    setCategories(getAllExpenseCategories());
-    setCustomKeys(new Set(Object.keys(getCustomCategories())));
+    await refreshData();
     onUpdated();
   };
 
-  const handleDelete = (key: string) => {
-    deleteCustomCategory(key);
-    setCategories(getAllExpenseCategories());
-    setCustomKeys(new Set(Object.keys(getCustomCategories())));
+  const handleDelete = async (key: string) => {
+    await deleteCustomCategory(key);
+    await refreshData();
     onUpdated();
   };
 

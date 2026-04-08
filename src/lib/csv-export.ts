@@ -1,6 +1,5 @@
 import { Job, Expense, Agency, CurrencyCode, calculateJobBreakdown, getDueDate, EXPENSE_CATEGORIES } from './types';
 import { convertAmount, formatCurrency } from './currency';
-import { getAgencies } from './store';
 
 function escapeCSV(value: string | number | undefined): string {
   if (value === undefined || value === null) return '';
@@ -22,9 +21,8 @@ function downloadCSV(rows: string[][], filename: string) {
   URL.revokeObjectURL(url);
 }
 
-export function exportJobsCSV(jobs: Job[], displayCur: CurrencyCode, rates: Record<string, number>) {
-  const agencies = getAgencies();
-  const agencyMap = Object.fromEntries(agencies.map(a => [a.id, a.name]));
+export function exportJobsCSV(jobs: Job[], displayCur: CurrencyCode, rates: Record<string, number>, agencies?: Agency[]) {
+  const agencyMap = agencies ? Object.fromEntries(agencies.map(a => [a.id, a.name])) : {};
 
   const headers = [
     'Date', 'Client', 'Description', 'Agency', 'Status',
