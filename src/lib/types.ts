@@ -6,6 +6,14 @@ export interface Agency {
   defaultNetDays: number;
 }
 
+export interface JobAttachment {
+  id: string;
+  name: string;
+  type: string;
+  dataUrl: string;
+  addedAt: string;
+}
+
 export interface Job {
   id: string;
   client: string;
@@ -19,6 +27,7 @@ export interface Job {
   agencyId?: string;
   status: 'pending' | 'invoiced' | 'paid' | 'overdue';
   notes?: string;
+  attachments?: JobAttachment[];
 }
 
 export interface Expense {
@@ -29,6 +38,9 @@ export interface Expense {
   amount: number;
   currency: CurrencyCode;
   receipt?: string;
+  jobId?: string;
+  reimbursable?: boolean;
+  reimbursed?: boolean;
 }
 
 export type ExpenseCategory = 

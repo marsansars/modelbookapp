@@ -4,19 +4,28 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Plus } from "lucide-react";
-import { addExpense } from "@/lib/store";
-import { Expense, ExpenseCategory, EXPENSE_CATEGORIES, CurrencyCode, CURRENCIES } from "@/lib/types";
+import { addExpense, getJobs } from "@/lib/store";
+import { Expense, ExpenseCategory, EXPENSE_CATEGORIES, CurrencyCode, CURRENCIES, Job } from "@/lib/types";
 
 interface Props {
   onAdded: () => void;
+  defaultJobId?: string;
 }
 
-export function AddExpenseDialog({ onAdded }: Props) {
+export function AddExpenseDialog({ onAdded, defaultJobId }: Props) {
   const [open, setOpen] = useState(false);
+  const [jobs, setJobs] = useState<Job[]>([]);
   const [form, setForm] = useState({
-    date: '', category: 'meals' as ExpenseCategory, description: '', amount: '', currency: 'USD' as CurrencyCode,
+    date: '', category: 'meals' as ExpenseCategory, description: '', amount: '',
+    currency: 'USD' as CurrencyCode, jobId: defaultJobId || '', reimbursable: false,
   });
+
+  const handleOpen = (o: boolean) => {
+    setOpen(o);
+    if (o) setJobs(getJobs());
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,19 +36,22 @@ export function AddExpenseDialog({ onAdded }: Props) {
       description: form.description.trim(),
       amount: parseFloat(form.amount) || 0,
       currency: form.currency,
+      jobId: form.jobId || undefined,
+      reimbursable: form.reimbursable,
+      reimbursed: false,
     };
     addExpense(expense);
-    setForm({ date: '', category: 'meals', description: '', amount: '', currency: form.currency });
+    setForm({ date: '', category: 'meals', description: '', amount: '', currency: form.currency, jobId: defaultJobId || '', reimbursable: false });
     setOpen(false);
     onAdded();
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpen}>
       <DialogTrigger asChild>
         <Button className="gap-2"><Plus className="h-4 w-4" /> Add Expense</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading">New Expense</DialogTitle>
         </DialogHeader>
@@ -80,6 +92,31 @@ export function AddExpenseDialog({ onAdded }: Props) {
               </Select>
             </div>
           </div>
+
+          {!defaultJobId && (
+            <div>
+              <Label>Link to Job (optional)</Label>
+              <Select value={form.jobId || '_none'} onValueChange={v => setForm(f => ({ ...f, jobId: v === '_none' ? '' : v }))}>
+                <SelectTrigger><SelectValue placeholder="No job linked" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none">No job linked</SelectItem>
+                  {jobs.map(j => (
+                    <SelectItem key={j.id} value={j.id}>{j.client} — {j.description}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="reimbursable"
+              checked={form.reimbursable}
+              onCheckedChange={v => setForm(f => ({ ...f, reimbursable: !!v }))}
+            />
+            <Label htmlFor="reimbursable" className="text-sm cursor-pointer">This expense is reimbursable</Label>
+          </div>
+
           <Button type="submit" className="w-full">Save Expense</Button>
         </form>
       </DialogContent>

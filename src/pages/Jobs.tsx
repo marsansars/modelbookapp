@@ -1,26 +1,33 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { getJobs, updateJob, deleteJob, getAgencies, getDisplayCurrency, setDisplayCurrency } from "@/lib/store";
-import { Job, Agency, CurrencyCode, CURRENCIES, calculateJobBreakdown, getDueDate } from "@/lib/types";
+import { getJobs, updateJob, deleteJob, getAgencies, getExpenses, updateExpense, getDisplayCurrency, setDisplayCurrency } from "@/lib/store";
+import { Job, Agency, Expense, CurrencyCode, CURRENCIES, EXPENSE_CATEGORIES, calculateJobBreakdown, getDueDate } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { AddJobDialog } from "@/components/AddJobDialog";
+import { AddExpenseDialog } from "@/components/AddExpenseDialog";
 import { ManageAgenciesDialog } from "@/components/ManageAgenciesDialog";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { DueDateBadge } from "@/components/DueDateBadge";
+import { JobAttachments } from "@/components/JobAttachments";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Trash2, ChevronDown, ChevronUp, Receipt, CheckCircle2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Jobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [agencies, setAgencies] = useState<Agency[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [displayCur, setDisplayCur] = useState<CurrencyCode>(getDisplayCurrency());
   const [rates, setRates] = useState<Record<string, number>>({});
+  const [expandedJob, setExpandedJob] = useState<string | null>(null);
 
   const reload = () => {
     setJobs(getJobs());
     setAgencies(getAgencies());
+    setExpenses(getExpenses());
   };
   useEffect(() => {
     reload();
@@ -31,6 +38,13 @@ export default function Jobs() {
   const fmt = (n: number) => formatCurrency(n, displayCur);
   const fmtOrig = (n: number, cur: CurrencyCode) => formatCurrency(n, cur);
   const getAgencyName = (id?: string) => agencies.find(a => a.id === id)?.name;
+
+  const getJobExpenses = (jobId: string) => expenses.filter(e => e.jobId === jobId);
+
+  const toggleReimbursed = (expenseId: string, current: boolean) => {
+    updateExpense(expenseId, { reimbursed: !current });
+    reload();
+  };
 
   return (
     <div className="space-y-6">
@@ -56,6 +70,11 @@ export default function Jobs() {
             const { agentFee, taxAmount, netPay } = calculateJobBreakdown(job.rate, job.agentPercent, job.taxPercent);
             const agencyName = getAgencyName(job.agencyId);
             const showConverted = job.currency !== displayCur;
+            const jobExpenses = getJobExpenses(job.id);
+            const reimbursableExpenses = jobExpenses.filter(e => e.reimbursable);
+            const reimbursedCount = reimbursableExpenses.filter(e => e.reimbursed).length;
+            const isExpanded = expandedJob === job.id;
+
             return (
               <motion.div
                 key={job.id}
@@ -70,6 +89,14 @@ export default function Jobs() {
                     <div className="flex items-center gap-3 mb-1">
                       <h3 className="font-heading font-semibold text-lg text-foreground truncate">{job.client}</h3>
                       <DueDateBadge jobDate={job.jobDate} status={job.status} netDays={job.netDays} />
+                      {reimbursableExpenses.length > 0 && (
+                        <Badge className={reimbursedCount === reimbursableExpenses.length
+                          ? "bg-success/20 text-success border-success/30"
+                          : "bg-warning/20 text-warning border-warning/30"
+                        }>
+                          {reimbursedCount}/{reimbursableExpenses.length} reimbursed
+                        </Badge>
+                      )}
                     </div>
                     <p className="text-sm text-muted-foreground">{job.description}</p>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -95,7 +122,7 @@ export default function Jobs() {
                   </div>
                 </div>
 
-                {/* Bottom row: financial breakdown */}
+                {/* Financial breakdown */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-3 border-t border-border/50">
                   <div>
                     <p className="text-muted-foreground text-xs mb-1">Rate ({CURRENCIES[job.currency].symbol})</p>
@@ -116,6 +143,80 @@ export default function Jobs() {
                     {showConverted && <p className="text-xs text-muted-foreground">≈ {fmt(conv(netPay, job.currency))}</p>}
                   </div>
                 </div>
+
+                {/* Expand toggle */}
+                <button
+                  onClick={() => setExpandedJob(isExpanded ? null : job.id)}
+                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors w-full pt-1"
+                >
+                  {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                  <span>
+                    Expenses ({jobExpenses.length}) & Attachments ({(job.attachments || []).length})
+                  </span>
+                </button>
+
+                {/* Expanded section */}
+                <AnimatePresence>
+                  {isExpanded && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      className="overflow-hidden space-y-4 pt-2 border-t border-border/50"
+                    >
+                      {/* Job Expenses */}
+                      <div>
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                            <Receipt className="h-4 w-4 text-muted-foreground" />
+                            Linked Expenses
+                          </h4>
+                          <AddExpenseDialog onAdded={reload} defaultJobId={job.id} />
+                        </div>
+                        {jobExpenses.length === 0 ? (
+                          <p className="text-xs text-muted-foreground">No expenses linked to this job yet.</p>
+                        ) : (
+                          <div className="space-y-1.5">
+                            {jobExpenses.map(exp => (
+                              <div key={exp.id} className="flex items-center justify-between p-2.5 rounded-md bg-secondary/30 text-sm">
+                                <div className="flex items-center gap-2.5">
+                                  <span>{EXPENSE_CATEGORIES[exp.category]?.icon}</span>
+                                  <div>
+                                    <p className="text-foreground">{exp.description || EXPENSE_CATEGORIES[exp.category]?.label}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {format(new Date(exp.date), 'MMM d, yyyy')}
+                                      {exp.reimbursable && (
+                                        <span className={exp.reimbursed ? ' text-success' : ' text-warning'}> · {exp.reimbursed ? 'Reimbursed ✓' : 'Awaiting reimbursement'}</span>
+                                      )}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium">{formatCurrency(exp.amount, exp.currency)}</span>
+                                  {exp.reimbursable && (
+                                    <button
+                                      onClick={() => toggleReimbursed(exp.id, !!exp.reimbursed)}
+                                      className={`p-1 rounded transition-colors ${exp.reimbursed ? 'text-success hover:text-success/70' : 'text-muted-foreground hover:text-warning'}`}
+                                      title={exp.reimbursed ? 'Mark as not reimbursed' : 'Mark as reimbursed'}
+                                    >
+                                      <CheckCircle2 className="h-4 w-4" />
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Attachments */}
+                      <div>
+                        <h4 className="text-sm font-medium text-foreground mb-2">Call Sheets & Statements</h4>
+                        <JobAttachments job={job} onChanged={reload} />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.div>
             );
           })}
