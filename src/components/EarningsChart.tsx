@@ -75,8 +75,8 @@ export function EarningsChart({ jobs, displayCur, rates }: Props) {
           </SelectContent>
         </Select>
       </div>
-      <ResponsiveContainer width="100%" height={220}>
-        <BarChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+      <ResponsiveContainer width="100%" height={260}>
+        <BarChart data={data} margin={{ top: 20, right: 5, left: 5, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
           <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
           <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={50}
@@ -90,7 +90,16 @@ export function EarningsChart({ jobs, displayCur, rates }: Props) {
             formatter={(value: number, name: string) => [fmt(value), name === 'gross' ? 'Gross' : 'Net']}
           />
           <Bar dataKey="gross" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} opacity={0.3} />
-          <Bar dataKey="net" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+          <Bar dataKey="net" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}>
+            <LabelList dataKey="net" position="top" fontSize={10} fill="hsl(var(--muted-foreground))"
+              formatter={(v: number) => {
+                if (!v) return '';
+                const sym = CURRENCIES[displayCur]?.symbol || '';
+                if (v >= 1000) return `${sym}${(v / 1000).toFixed(1)}k`;
+                return `${sym}${v.toFixed(0)}`;
+              }}
+            />
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
       <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground justify-center">
