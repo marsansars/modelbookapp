@@ -62,9 +62,10 @@ export default function Jobs() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="glass-card p-5"
+                className="glass-card p-5 space-y-4"
               >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                {/* Top row: client info + status/delete */}
+                <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-1">
                       <h3 className="font-heading font-semibold text-lg text-foreground truncate">{job.client}</h3>
@@ -76,27 +77,7 @@ export default function Jobs() {
                       Job: {format(new Date(job.jobDate), 'MMM d, yyyy')} · Due: {format(getDueDate(job.jobDate, job.netDays), 'MMM d, yyyy')} (Net {job.netDays})
                     </p>
                   </div>
-
-                  <div className="flex flex-wrap items-center gap-4 text-sm">
-                    <div className="text-center">
-                      <p className="text-muted-foreground text-xs">Rate ({CURRENCIES[job.currency].symbol})</p>
-                      <p className="font-medium text-foreground">{fmtOrig(job.rate, job.currency)}</p>
-                      {showConverted && <p className="text-xs text-muted-foreground">≈ {fmt(conv(job.rate, job.currency))}</p>}
-                    </div>
-                    <div className="text-center">
-                      <p className="text-muted-foreground text-xs">Agent ({job.agentPercent}%)</p>
-                      <p className="font-medium text-foreground">-{fmtOrig(agentFee, job.currency)}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-muted-foreground text-xs">Tax ({job.taxPercent}%)</p>
-                      <p className="font-medium text-foreground">-{fmtOrig(taxAmount, job.currency)}</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-muted-foreground text-xs">Your Net</p>
-                      <p className="font-heading font-semibold text-primary">{fmtOrig(netPay, job.currency)}</p>
-                      {showConverted && <p className="text-xs text-muted-foreground">≈ {fmt(conv(netPay, job.currency))}</p>}
-                    </div>
-
+                  <div className="flex items-center gap-2 shrink-0">
                     <Select value={job.status} onValueChange={v => { updateJob(job.id, { status: v as Job['status'] }); reload(); }}>
                       <SelectTrigger className="w-28 h-8 text-xs">
                         <SelectValue />
@@ -108,10 +89,31 @@ export default function Jobs() {
                         <SelectItem value="overdue">Overdue</SelectItem>
                       </SelectContent>
                     </Select>
-
                     <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => { deleteJob(job.id); reload(); }}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
+                  </div>
+                </div>
+
+                {/* Bottom row: financial breakdown */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-3 border-t border-border/50">
+                  <div>
+                    <p className="text-muted-foreground text-xs mb-1">Rate ({CURRENCIES[job.currency].symbol})</p>
+                    <p className="font-medium text-foreground">{fmtOrig(job.rate, job.currency)}</p>
+                    {showConverted && <p className="text-xs text-muted-foreground">≈ {fmt(conv(job.rate, job.currency))}</p>}
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs mb-1">Agent ({job.agentPercent}%)</p>
+                    <p className="font-medium text-foreground">-{fmtOrig(agentFee, job.currency)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs mb-1">Tax ({job.taxPercent}%)</p>
+                    <p className="font-medium text-foreground">-{fmtOrig(taxAmount, job.currency)}</p>
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-xs mb-1">Your Net</p>
+                    <p className="font-heading font-semibold text-primary">{fmtOrig(netPay, job.currency)}</p>
+                    {showConverted && <p className="text-xs text-muted-foreground">≈ {fmt(conv(netPay, job.currency))}</p>}
                   </div>
                 </div>
               </motion.div>
