@@ -52,8 +52,15 @@ export default function Jobs() {
   const getAgencyName = (id?: string) => agencies.find(a => a.id === id)?.name;
   const getJobExpenses = (jobId: string) => expenses.filter(e => e.jobId === jobId);
 
-  const handleStatusChange = async (jobId: string, status: Job['status']) => {
-    await updateJob(jobId, { status });
+  const handleRecordPayment = async () => {
+    if (!paymentDialog) return;
+    await updateJob(paymentDialog.jobId, { status: 'paid', paidDate: paymentDialog.date });
+    setPaymentDialog(null);
+    await reload();
+  };
+
+  const handleUnmarkPaid = async (jobId: string) => {
+    await updateJob(jobId, { status: 'pending', paidDate: '' });
     await reload();
   };
 
