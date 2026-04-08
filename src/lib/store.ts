@@ -28,15 +28,15 @@ const customCategoriesSchema = z.record(
 ).refine(obj => Object.keys(obj).length <= 50, { message: 'Too many categories' });
 
 function validateAttachments(data: unknown): JobAttachment[] {
-  return attachmentSchema.parse(data);
+  return attachmentSchema.parse(data) as JobAttachment[];
 }
 
 function validateLineItems(data: unknown): LineItem[] {
-  return lineItemSchema.parse(data);
+  return lineItemSchema.parse(data) as LineItem[];
 }
 
 function validateCustomCategories(data: unknown): Record<string, ExpenseCategoryInfo> {
-  return customCategoriesSchema.parse(data);
+  return customCategoriesSchema.parse(data) as Record<string, ExpenseCategoryInfo>;
 }
 
 // Helper to get current user id
