@@ -41,6 +41,7 @@ export default function Dashboard() {
   const getAgencyName = (id?: string) => agencies.find(a => a.id === id)?.name;
 
   const totalEarnings = jobs.reduce((s, j) => s + conv(j.rate, j.currency), 0);
+  const totalAgentFees = jobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).agentFee, j.currency), 0);
   const totalTax = jobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).taxAmount, j.currency), 0);
   const totalNet = jobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0);
   const totalExpenses = expenses.reduce((s, e) => s + conv(e.amount, e.currency), 0);
