@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Job, CurrencyCode, calculateJobBreakdown } from "@/lib/types";
 import { convertAmount, formatCurrency } from "@/lib/currency";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Period = "this_year" | "last_year" | "this_month";
@@ -13,6 +14,7 @@ interface Props {
 
 export function EarningsChart({ jobs, displayCur, rates }: Props) {
   const [period, setPeriod] = useState<Period>("this_year");
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const conv = (n: number, from: CurrencyCode) => convertAmount(n, from, displayCur, rates);
   const fmt = (n: number) => formatCurrency(n, displayCur);
@@ -32,7 +34,6 @@ export function EarningsChart({ jobs, displayCur, rates }: Props) {
     const totalGross = filtered.reduce((s, j) => s + conv(j.rate, j.currency), 0);
     const totalNet = filtered.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0);
 
-    // Build monthly or weekly rows
     let rows: { label: string; gross: number; net: number }[];
     if (period === "this_month") {
       const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -44,29 +45,46 @@ export function EarningsChart({ jobs, displayCur, rates }: Props) {
           const day = new Date(j.jobDate).getDate();
           return day >= start && day <= end;
         });
-        const g = weekJobs.reduce((s, j) => s + conv(j.rate, j.currency), 0);
-        const n = weekJobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0);
-        if (g > 0) rows.push({ label: `${start}–${end}`, gross: g, net: n });
+        rows.push({
+          label: `${start}–${end}`,
+          gross: weekJobs.reduce((s, j) => s + conv(j.rate, j.currency), 0),
+          net: weekJobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0),
+        });
       }
     } else {
-      rows = [];
       const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      for (let i = 0; i < 12; i++) {
+      rows = labels.map((label, i) => {
         const monthJobs = filtered.filter(j => new Date(j.jobDate).getMonth() === i);
-        const g = monthJobs.reduce((s, j) => s + conv(j.rate, j.currency), 0);
-        const n = monthJobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0);
-        if (g > 0) rows.push({ label: labels[i], gross: g, net: n });
-      }
+        return {
+          label,
+          gross: monthJobs.reduce((s, j) => s + conv(j.rate, j.currency), 0),
+          net: monthJobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0),
+        };
+      });
     }
 
     return { totalGross, totalNet, jobCount: filtered.length, rows };
   }, [jobs, period, displayCur, rates]);
 
+  // Reset selection when period changes
+  const handlePeriodChange = (v: string) => {
+    setPeriod(v as Period);
+    setSelectedIndex(null);
+  };
+
+  const handleBarClick = (_: unknown, index: number) => {
+    setSelectedIndex(prev => prev === index ? null : index);
+  };
+
+  const displayGross = selectedIndex !== null ? rows[selectedIndex]?.gross ?? totalGross : totalGross;
+  const displayNet = selectedIndex !== null ? rows[selectedIndex]?.net ?? totalNet : totalNet;
+  const displayLabel = selectedIndex !== null ? rows[selectedIndex]?.label : (period === "this_year" ? "Full Year" : period === "last_year" ? "Full Year" : "Full Month");
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-4">
         <h2 className="font-heading text-lg font-semibold">Earnings</h2>
-        <Select value={period} onValueChange={v => setPeriod(v as Period)}>
+        <Select value={period} onValueChange={handlePeriodChange}>
           <SelectTrigger className="w-[140px] h-8 text-xs">
             <SelectValue />
           </SelectTrigger>
@@ -78,41 +96,54 @@ export function EarningsChart({ jobs, displayCur, rates }: Props) {
         </Select>
       </div>
 
-      {/* Totals */}
-      <div className="grid grid-cols-2 gap-3 mb-5">
+      {/* Interactive chart */}
+      <ResponsiveContainer width="100%" height={140}>
+        <BarChart data={rows} margin={{ top: 5, right: 0, left: 0, bottom: 0 }} onClick={(e) => {
+          if (e && e.activeTooltipIndex !== undefined) {
+            handleBarClick(null, e.activeTooltipIndex);
+          }
+        }}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+          <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+          <YAxis hide />
+          <Bar dataKey="net" radius={[3, 3, 0, 0]} cursor="pointer">
+            {rows.map((_, i) => (
+              <Cell
+                key={i}
+                fill={selectedIndex === i ? 'hsl(var(--primary))' : 'hsl(var(--primary))'}
+                opacity={selectedIndex === null ? 0.7 : selectedIndex === i ? 1 : 0.25}
+              />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+
+      {/* Summary boxes */}
+      <div className="grid grid-cols-2 gap-3 mt-4">
         <div className="rounded-lg bg-secondary/50 p-4 text-center">
           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Gross</p>
-          <p className="text-xl font-heading font-semibold text-foreground">{fmt(totalGross)}</p>
+          <p className="text-xl font-heading font-semibold text-foreground">{fmt(displayGross)}</p>
         </div>
         <div className="rounded-lg bg-primary/10 p-4 text-center">
           <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Net</p>
-          <p className="text-xl font-heading font-semibold text-primary">{fmt(totalNet)}</p>
+          <p className="text-xl font-heading font-semibold text-primary">{fmt(displayNet)}</p>
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground mb-2">{jobCount} job{jobCount !== 1 ? 's' : ''} in period</p>
-
-      {/* Breakdown rows */}
-      {rows.length > 0 && (
-        <div className="space-y-1.5 max-h-[180px] overflow-y-auto">
-          {rows.map(r => (
-            <div key={r.label} className="flex items-center justify-between text-sm py-1.5 px-2 rounded-md bg-secondary/30">
-              <span className="text-muted-foreground font-medium">{r.label}</span>
-              <div className="flex gap-6">
-                <span className="text-foreground/70 w-24 text-right">{fmt(r.gross)}</span>
-                <span className="font-medium text-primary w-24 text-right">{fmt(r.net)}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {rows.length > 0 && (
-        <div className="flex justify-end gap-6 mt-1.5 text-[10px] text-muted-foreground/60 pr-2">
-          <span className="w-24 text-right">Gross</span>
-          <span className="w-24 text-right">Net</span>
-        </div>
-      )}
+      <div className="flex items-center justify-between mt-2 px-1">
+        <p className="text-xs text-muted-foreground">
+          {selectedIndex !== null ? (
+            <button onClick={() => setSelectedIndex(null)} className="text-primary hover:underline">
+              ← Show {period === "this_month" ? "full month" : "full year"}
+            </button>
+          ) : (
+            `${jobCount} job${jobCount !== 1 ? 's' : ''} in period`
+          )}
+        </p>
+        {selectedIndex !== null && (
+          <p className="text-xs font-medium text-muted-foreground">{displayLabel}</p>
+        )}
+      </div>
     </div>
   );
 }
