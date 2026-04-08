@@ -1,22 +1,45 @@
-import { useEffect, useState } from "react";
-import { format } from "date-fns";
+import { useEffect, useState, useMemo } from "react";
+import { format, startOfMonth, startOfYear, endOfYear, subYears } from "date-fns";
 import { StatCard } from "@/components/StatCard";
 import { DueDateBadge } from "@/components/DueDateBadge";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { EarningsChart } from "@/components/EarningsChart";
 
 import { getJobs, getExpenses, getDisplayCurrency, setDisplayCurrency, getAgencies } from "@/lib/store";
-import { Job, Expense, Agency, CurrencyCode, calculateJobBreakdown, getDueDate, getDaysUntilDue } from "@/lib/types";
+import { Job, Expense, Agency, CurrencyCode, calculateJobBreakdown, getDueDate, getDaysUntilDue, parseLocalDate } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { motion } from "framer-motion";
 import { Receipt, FileText, Building2 } from "lucide-react";
 
+type TimePeriod = 'month' | 'year' | 'last-year';
+
+function getPeriodRange(period: TimePeriod): { start: Date; end: Date } {
+  const now = new Date();
+  switch (period) {
+    case 'month':
+      return { start: startOfMonth(now), end: now };
+    case 'year':
+      return { start: startOfYear(now), end: now };
+    case 'last-year': {
+      const lastYear = subYears(now, 1);
+      return { start: startOfYear(lastYear), end: endOfYear(lastYear) };
+    }
+  }
+}
+
+const PERIOD_LABELS: Record<TimePeriod, string> = {
+  month: 'This Month',
+  year: 'This Year',
+  'last-year': 'Last Year',
+};
+
 export default function Dashboard() {
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [allJobs, setAllJobs] = useState<Job[]>([]);
+  const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [displayCur, setDisplayCur] = useState<CurrencyCode>('USD');
   const [rates, setRates] = useState<Record<string, number>>({});
+  const [period, setPeriod] = useState<TimePeriod>('year');
 
   useEffect(() => {
     const load = async () => {
@@ -24,7 +47,7 @@ export default function Dashboard() {
         getJobs(), getExpenses(), getAgencies(), getDisplayCurrency(),
         fetchExchangeRates(),
       ]);
-      setJobs(j); setExpenses(e); setAgencies(a); setDisplayCur(cur);
+      setAllJobs(j); setAllExpenses(e); setAgencies(a); setDisplayCur(cur);
       setRates(r.rates);
     };
     load();
@@ -35,12 +58,23 @@ export default function Dashboard() {
     setDisplayCurrency(c);
   };
 
+  const { start, end } = useMemo(() => getPeriodRange(period), [period]);
+
+  const jobs = useMemo(() => allJobs.filter(j => {
+    const d = parseLocalDate(j.jobDate);
+    return d >= start && d <= end;
+  }), [allJobs, start, end]);
+
+  const expenses = useMemo(() => allExpenses.filter(e => {
+    const d = parseLocalDate(e.date);
+    return d >= start && d <= end;
+  }), [allExpenses, start, end]);
+
   const conv = (amount: number, from: CurrencyCode) => convertAmount(amount, from, displayCur, rates);
   const fmt = (n: number) => formatCurrency(n, displayCur);
 
   const getAgencyName = (id?: string) => agencies.find(a => a.id === id)?.name;
 
-  const totalEarnings = jobs.reduce((s, j) => s + conv(j.rate, j.currency), 0);
   const totalAgentFees = jobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent).agentFee, j.currency), 0);
   const totalNet = jobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent).netPay, j.currency), 0);
   const totalRecommendedTax = jobs.reduce((s, j) => {
@@ -105,9 +139,26 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-3xl font-heading font-semibold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground mt-1 font-body">Your financial overview at a glance.</p>
+        <div className="flex items-center gap-4 flex-wrap">
+          <div>
+            <h1 className="text-3xl font-heading font-semibold text-foreground">Dashboard</h1>
+            <p className="text-muted-foreground mt-1 font-body">Your financial overview at a glance.</p>
+          </div>
+          <div className="flex items-center gap-1 bg-secondary/50 rounded-lg p-1">
+            {(Object.keys(PERIOD_LABELS) as TimePeriod[]).map((key) => (
+              <button
+                key={key}
+                onClick={() => setPeriod(key)}
+                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                  period === key
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {PERIOD_LABELS[key]}
+              </button>
+            ))}
+          </div>
         </div>
         <CurrencySelector value={displayCur} onChange={handleCurrencyChange} />
       </div>
