@@ -35,6 +35,7 @@ export interface Job {
   paidDate?: string;
   notes?: string;
   attachments?: JobAttachment[];
+  lineItems?: LineItem[];
 }
 
 export interface Expense {
