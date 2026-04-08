@@ -77,7 +77,7 @@ export default function Bookkeeping() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Gross Earnings" value={fmt(totalGross)} />
         <StatCard label="Agent Commissions" value={fmt(totalAgent)} />
-        <StatCard label="Recommended Tax Savings" value={fmt(totalRecommendedTax)} />
+        <StatCard label="Estimated Tax Planning" value={fmt(totalRecommendedTax)} />
         <StatCard label="Net Expenses" value={fmt(netExpenses)} sublabel={reimbursedTotal > 0 ? `${fmt(reimbursedTotal)} reimbursed` : undefined} />
       </div>
 
@@ -94,7 +94,7 @@ export default function Bookkeeping() {
               <span className="font-medium">-{fmt(totalAgent)}</span>
             </div>
             <div className="flex justify-between py-2 border-b border-border">
-              <span className="text-muted-foreground">− Recommended Tax Savings</span>
+              <span className="text-muted-foreground">− Estimated Tax Planning</span>
               <span className="font-medium">-{fmt(totalRecommendedTax)}</span>
             </div>
             <div className="flex justify-between py-2 border-b border-border">
