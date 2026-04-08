@@ -60,6 +60,31 @@ export async function setDisplayCurrency(currency: CurrencyCode): Promise<void> 
   }
 }
 
+export async function getHasSeenTutorial(): Promise<boolean> {
+  const userId = await getUserId();
+  const { data } = await supabase
+    .from('user_settings')
+    .select('has_seen_tutorial')
+    .eq('user_id', userId)
+    .maybeSingle();
+  return (data as any)?.has_seen_tutorial || false;
+}
+
+export async function setHasSeenTutorial(seen: boolean): Promise<void> {
+  const userId = await getUserId();
+  const { data: existing } = await supabase
+    .from('user_settings')
+    .select('id')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (existing) {
+    await supabase.from('user_settings').update({ has_seen_tutorial: seen } as any).eq('user_id', userId);
+  } else {
+    await supabase.from('user_settings').insert({ user_id: userId, has_seen_tutorial: seen } as any);
+  }
+}
+
 export async function getCustomCategories(): Promise<Record<string, ExpenseCategoryInfo>> {
   const userId = await getUserId();
   const { data } = await supabase

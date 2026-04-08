@@ -1,4 +1,4 @@
-import { LayoutDashboard, Briefcase, Receipt, BookOpen, Building2 } from "lucide-react";
+import { LayoutDashboard, Briefcase, Receipt, BookOpen, Building2, HelpCircle } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -18,6 +18,7 @@ const items = [
   { title: "Agencies", url: "/agencies", icon: Building2 },
   { title: "Expenses", url: "/expenses", icon: Receipt },
   { title: "Bookkeeping", url: "/bookkeeping", icon: BookOpen },
+  { title: "Guide", url: "/guide", icon: HelpCircle },
 ];
 
 interface AppSidebarProps {

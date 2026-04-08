@@ -8,8 +8,9 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { WelcomeDialog } from "@/components/WelcomeDialog";
+import { OnboardingTutorial } from "@/components/OnboardingTutorial";
 import { DisclaimerDialog } from "@/components/DisclaimerDialog";
-import { getDisplayName, setDisplayName } from "@/lib/store";
+import { getDisplayName, setDisplayName, getHasSeenTutorial, setHasSeenTutorial } from "@/lib/store";
 import Index from "./pages/Index";
 import Jobs from "./pages/Jobs";
 import Expenses from "./pages/Expenses";
@@ -19,6 +20,7 @@ import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import Install from "./pages/Install";
+import Guide from "./pages/Guide";
 import { LogOut, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +38,7 @@ function ProtectedLayout() {
   const [displayName, setDisplayNameState] = useState<string | null>(null);
   const [nameLoaded, setNameLoaded] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editValue, setEditValue] = useState("");
   const [showDisclaimer, setShowDisclaimer] = useState(true);
@@ -43,10 +46,14 @@ function ProtectedLayout() {
 
   useEffect(() => {
     if (user) {
-      getDisplayName().then((name) => {
+      Promise.all([getDisplayName(), getHasSeenTutorial()]).then(([name, seenTutorial]) => {
         setDisplayNameState(name);
         setNameLoaded(true);
-        if (!name) setShowWelcome(true);
+        if (!name) {
+          setShowWelcome(true);
+        } else if (!seenTutorial) {
+          setShowTutorial(true);
+        }
       });
     }
   }, [user]);
@@ -55,6 +62,12 @@ function ProtectedLayout() {
     await setDisplayName(name);
     setDisplayNameState(name);
     setShowWelcome(false);
+    setShowTutorial(true);
+  }, []);
+
+  const handleTutorialComplete = useCallback(async () => {
+    await setHasSeenTutorial(true);
+    setShowTutorial(false);
   }, []);
 
   const handleEditSubmit = useCallback(async () => {
@@ -89,6 +102,7 @@ function ProtectedLayout() {
         onDisagree={() => signOut()}
       />
       <WelcomeDialog open={!showDisclaimer && disclaimerAgreed && showWelcome} onSave={handleSaveName} />
+      <OnboardingTutorial open={!showDisclaimer && disclaimerAgreed && !showWelcome && showTutorial} onComplete={handleTutorialComplete} />
       <div className="min-h-screen flex w-full">
         <AppSidebar displayName={displayName} />
         <div className="flex-1 flex flex-col min-w-0">
@@ -130,6 +144,7 @@ function ProtectedLayout() {
               <Route path="/expenses" element={<Expenses />} />
               <Route path="/bookkeeping" element={<Bookkeeping />} />
               <Route path="/install" element={<Install />} />
+              <Route path="/guide" element={<Guide />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
