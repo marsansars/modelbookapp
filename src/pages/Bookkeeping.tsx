@@ -37,7 +37,10 @@ export default function Bookkeeping() {
     const netAfterAgent = calculateJobBreakdown(j.rate, j.agentPercent).netPay;
     return s + conv(netAfterAgent * (j.taxPercent / 100), j.currency);
   }, 0);
-  const totalExpenses = expenses.reduce((s, e) => s + conv(e.amount, e.currency), 0);
+  const reimbursedTotal = expenses.filter(e => e.reimbursable && e.reimbursed).reduce((s, e) => s + conv(e.amount, e.currency), 0);
+  const pendingReimbursement = expenses.filter(e => e.reimbursable && !e.reimbursed).reduce((s, e) => s + conv(e.amount, e.currency), 0);
+  const outOfPocketExpenses = expenses.filter(e => !e.reimbursable).reduce((s, e) => s + conv(e.amount, e.currency), 0);
+  const netExpenses = outOfPocketExpenses + pendingReimbursement;
   const paidJobs = jobs.filter(j => j.status === 'paid');
   const unpaidJobs = jobs.filter(j => j.status !== 'paid');
   const paidTotal = paidJobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0);
