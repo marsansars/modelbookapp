@@ -6,12 +6,17 @@ export interface Agency {
   defaultNetDays: number;
 }
 
+export type AttachmentLabel = 'Call Sheet' | 'Receipt' | 'Statement';
+
+export const ATTACHMENT_LABELS: AttachmentLabel[] = ['Call Sheet', 'Receipt', 'Statement'];
+
 export interface JobAttachment {
   id: string;
   name: string;
   type: string;
   dataUrl: string;
   addedAt: string;
+  label?: AttachmentLabel;
 }
 
 export interface LineItem {
