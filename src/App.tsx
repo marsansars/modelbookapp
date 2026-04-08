@@ -10,6 +10,7 @@ import Index from "./pages/Index";
 import Jobs from "./pages/Jobs";
 import Expenses from "./pages/Expenses";
 import Bookkeeping from "./pages/Bookkeeping";
+import Agencies from "./pages/Agencies";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import { LogOut } from "lucide-react";
@@ -50,6 +51,7 @@ function ProtectedLayout() {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/jobs" element={<Jobs />} />
+              <Route path="/agencies" element={<Agencies />} />
               <Route path="/expenses" element={<Expenses />} />
               <Route path="/bookkeeping" element={<Bookkeeping />} />
               <Route path="*" element={<NotFound />} />
