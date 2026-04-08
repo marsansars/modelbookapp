@@ -79,7 +79,7 @@ export function ManageAgenciesDialog({ onChanged }: Props) {
   return (
     <Dialog open={open} onOpenChange={handleOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2"><Building2 className="h-4 w-4" /> Agencies</Button>
+        <Button variant="outline" className="gap-2"><Building2 className="h-4 w-4" /> Add Agencies</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
