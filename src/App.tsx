@@ -8,6 +8,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { WelcomeDialog } from "@/components/WelcomeDialog";
+import { DisclaimerDialog } from "@/components/DisclaimerDialog";
 import { getDisplayName, setDisplayName } from "@/lib/store";
 import Index from "./pages/Index";
 import Jobs from "./pages/Jobs";
@@ -36,6 +37,8 @@ function ProtectedLayout() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editValue, setEditValue] = useState("");
+  const [showDisclaimer, setShowDisclaimer] = useState(true);
+  const [disclaimerAgreed, setDisclaimerAgreed] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -79,7 +82,12 @@ function ProtectedLayout() {
 
   return (
     <SidebarProvider>
-      <WelcomeDialog open={showWelcome} onSave={handleSaveName} />
+      <DisclaimerDialog
+        open={showDisclaimer && !disclaimerAgreed}
+        onAgree={() => { setShowDisclaimer(false); setDisclaimerAgreed(true); }}
+        onDisagree={() => signOut()}
+      />
+      <WelcomeDialog open={!showDisclaimer && disclaimerAgreed && showWelcome} onSave={handleSaveName} />
       <div className="min-h-screen flex w-full">
         <AppSidebar displayName={displayName} />
         <div className="flex-1 flex flex-col min-w-0">
