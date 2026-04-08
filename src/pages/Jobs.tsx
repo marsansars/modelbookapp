@@ -178,12 +178,15 @@ export default function Jobs() {
                   </div>
                 </div>
 
-                {/* Notes */}
+                {/* Notes - collapsible */}
                 {job.notes && (
-                  <div className="pt-3 border-t border-border/50">
-                    <p className="text-muted-foreground text-xs mb-1">Notes</p>
-                    <p className="text-sm text-foreground whitespace-pre-wrap">{job.notes}</p>
-                  </div>
+                  <details className="pt-3 border-t border-border/50 group">
+                    <summary className="text-muted-foreground text-xs cursor-pointer hover:text-foreground transition-colors list-none flex items-center gap-1">
+                      <ChevronDown className="h-3 w-3 transition-transform group-open:rotate-180" />
+                      Notes
+                    </summary>
+                    <p className="text-sm text-foreground whitespace-pre-wrap mt-1.5">{job.notes}</p>
+                  </details>
                 )}
 
                 <button
