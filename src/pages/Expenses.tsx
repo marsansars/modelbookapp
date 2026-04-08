@@ -87,6 +87,16 @@ export default function Expenses() {
     return acc;
   }, {} as Record<string, { total: number; count: number }>);
 
+  // Group write-offs by category (include agent fees)
+  const writeOffsByCategory = writeOffExpenses.reduce((acc, e) => {
+    const key = e.category;
+    acc[key] = (acc[key] || 0) + conv(e.amount, e.currency);
+    return acc;
+  }, {} as Record<string, number>);
+  if (totalAgentFees > 0) {
+    writeOffsByCategory['Agency Commissions'] = (writeOffsByCategory['Agency Commissions'] || 0) + totalAgentFees;
+  }
+
   // Filter expenses
   const filteredExpenses = expenses.filter(e => {
     if (filter === 'reimbursable') return e.reimbursable;
