@@ -27,6 +27,7 @@ export default function Jobs() {
   const [rates, setRates] = useState<Record<string, number>>({});
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
   const [cats, setCats] = useState<Record<string, ExpenseCategoryInfo>>({});
+  const [paymentDialog, setPaymentDialog] = useState<{ jobId: string; date: string } | null>(null);
 
   const reload = async () => {
     const [j, a, e, c] = await Promise.all([getJobs(), getAgencies(), getExpenses(), getAllExpenseCategories()]);
