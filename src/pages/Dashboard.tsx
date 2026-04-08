@@ -109,7 +109,6 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Total Earnings" value={fmt(totalEarnings)} sublabel={`${jobs.length} jobs`} accent />
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -129,8 +128,9 @@ export default function Dashboard() {
             {showOverdue ? `${overdueCount} overdue job${overdueCount !== 1 ? 's' : ''}` : `${currentCount} pending job${currentCount !== 1 ? 's' : ''}`}
           </p>
         </motion.div>
+        <StatCard label="Total Earnings" value={fmt(totalEarnings)} sublabel={`${jobs.length} jobs`} accent />
         <StatCard label="Recommended Tax Savings" value={fmt(totalRecommendedTax)} sublabel="Set aside from net earnings" />
-        <StatCard label="Your Net" value={fmt(totalNet)} sublabel={`After ${fmt(totalExpenses)} expenses`} accent />
+        <StatCard label="Your Net" value={fmt(totalNet - totalRecommendedTax)} sublabel={`After ${fmt(totalExpenses)} expenses`} accent />
       </div>
 
       {/* Upcoming Payments */}
