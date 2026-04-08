@@ -233,8 +233,8 @@ export async function updateJob(id: string, updates: Partial<Job>): Promise<void
   if (updates.status !== undefined) dbUpdates.status = updates.status;
   if (updates.paidDate !== undefined) dbUpdates.paid_date = updates.paidDate || null;
   if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
-  if (updates.attachments !== undefined) dbUpdates.attachments = updates.attachments;
-  if (updates.lineItems !== undefined) dbUpdates.line_items = updates.lineItems;
+  if (updates.attachments !== undefined) dbUpdates.attachments = validateAttachments(updates.attachments);
+  if (updates.lineItems !== undefined) dbUpdates.line_items = validateLineItems(updates.lineItems);
 
   await supabase.from('jobs').update(dbUpdates as any).eq('id', id);
 }
