@@ -129,6 +129,7 @@ function ProtectedLayout() {
               <Route path="/agencies" element={<Agencies />} />
               <Route path="/expenses" element={<Expenses />} />
               <Route path="/bookkeeping" element={<Bookkeeping />} />
+              <Route path="/install" element={<Install />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
