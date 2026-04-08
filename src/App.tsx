@@ -37,6 +37,8 @@ function ProtectedLayout() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editValue, setEditValue] = useState("");
+  const [showDisclaimer, setShowDisclaimer] = useState(true);
+  const [disclaimerAgreed, setDisclaimerAgreed] = useState(false);
 
   useEffect(() => {
     if (user) {
