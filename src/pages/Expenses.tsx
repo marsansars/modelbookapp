@@ -5,6 +5,7 @@ import { Expense, Job, EXPENSE_CATEGORIES, CurrencyCode } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { AddExpenseDialog } from "@/components/AddExpenseDialog";
 import { CurrencySelector } from "@/components/CurrencySelector";
+import { EditExpenseDialog } from "@/components/EditExpenseDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trash2, CheckCircle2 } from "lucide-react";
@@ -124,6 +125,7 @@ export default function Expenses() {
                       <CheckCircle2 className="h-4 w-4" />
                     </button>
                   )}
+                  <EditExpenseDialog expense={exp} onUpdated={reload} />
                   <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => { deleteExpense(exp.id); reload(); }}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
