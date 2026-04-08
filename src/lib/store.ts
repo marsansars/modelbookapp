@@ -39,6 +39,10 @@ export function addExpense(expense: Expense) {
   expenses.push(expense);
   saveExpenses(expenses);
 }
+export function updateExpense(id: string, updates: Partial<Expense>) {
+  const expenses = getExpenses().map(e => e.id === id ? { ...e, ...updates } : e);
+  saveExpenses(expenses);
+}
 export function deleteExpense(id: string) {
   saveExpenses(getExpenses().filter(e => e.id !== id));
 }
