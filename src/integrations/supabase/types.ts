@@ -114,6 +114,7 @@ export type Database = {
           description: string
           id: string
           job_date: string
+          line_items: Json | null
           net_days: number
           notes: string | null
           paid_date: string | null
@@ -133,6 +134,7 @@ export type Database = {
           description?: string
           id?: string
           job_date: string
+          line_items?: Json | null
           net_days?: number
           notes?: string | null
           paid_date?: string | null
@@ -152,6 +154,7 @@ export type Database = {
           description?: string
           id?: string
           job_date?: string
+          line_items?: Json | null
           net_days?: number
           notes?: string | null
           paid_date?: string | null

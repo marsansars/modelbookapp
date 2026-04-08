@@ -14,6 +14,12 @@ export interface JobAttachment {
   addedAt: string;
 }
 
+export interface LineItem {
+  id: string;
+  description: string;
+  amount: number;
+}
+
 export interface Job {
   id: string;
   client: string;
@@ -29,6 +35,7 @@ export interface Job {
   paidDate?: string;
   notes?: string;
   attachments?: JobAttachment[];
+  lineItems?: LineItem[];
 }
 
 export interface Expense {

@@ -148,9 +148,22 @@ export default function Jobs() {
                   </div>
                 </div>
 
+                {/* Line items breakdown */}
+                {job.lineItems && job.lineItems.length > 1 && (
+                  <div className="pt-3 border-t border-border/50 space-y-1">
+                    <p className="text-muted-foreground text-xs mb-1.5">Rate Breakdown</p>
+                    {job.lineItems.map((li, idx) => (
+                      <div key={li.id || idx} className="flex items-center justify-between text-sm px-2 py-1 rounded bg-secondary/20">
+                        <span className="text-muted-foreground">{li.description || `Line ${idx + 1}`}</span>
+                        <span className="font-medium text-foreground">{fmtOrig(li.amount, job.currency)}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-3 border-t border-border/50">
                   <div>
-                    <p className="text-muted-foreground text-xs mb-1">Rate ({CURRENCIES[job.currency].symbol})</p>
+                    <p className="text-muted-foreground text-xs mb-1">Total Rate ({CURRENCIES[job.currency].symbol})</p>
                     <p className="font-medium text-foreground">{fmtOrig(job.rate, job.currency)}</p>
                     {showConverted && <p className="text-xs text-muted-foreground">≈ {fmt(conv(job.rate, job.currency))}</p>}
                   </div>
@@ -164,6 +177,14 @@ export default function Jobs() {
                     {showConverted && <p className="text-xs text-muted-foreground">≈ {fmt(conv(netPay, job.currency))}</p>}
                   </div>
                 </div>
+
+                {/* Notes */}
+                {job.notes && (
+                  <div className="pt-3 border-t border-border/50">
+                    <p className="text-muted-foreground text-xs mb-1">Notes</p>
+                    <p className="text-sm text-foreground whitespace-pre-wrap">{job.notes}</p>
+                  </div>
+                )}
 
                 <button
                   onClick={() => setExpandedJob(isExpanded ? null : job.id)}

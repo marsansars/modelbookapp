@@ -1,13 +1,26 @@
 
+## Add Multi-Line Rate Items & Notes to Jobs
 
-## Dashboard Stat Cards Reorder
+### 1. Database Migration
+- Add `line_items` JSONB column to jobs table (array of `{description, amount}` objects)
+- The existing `rate` column will store the computed total of all line items
 
-Reorder the four stat cards in `src/pages/Dashboard.tsx` to match the requested order:
+### 2. Update Types
+- Add `LineItem` interface: `{ id: string, description: string, amount: number }`
+- Add `lineItems` to the `Job` type
 
-1. Current Owed / Overdue (the clickable toggle card)
-2. Payments Received
-3. Estimated Tax Planning
-4. Total Earnings
+### 3. Update Add Job Dialog
+- Replace single rate input with a dynamic list of line items
+- Each line has a description (e.g. "Shoot day", "Fitting") and amount
+- "Add Line" button to add more rows
+- Auto-calculate total rate from all lines
+- Add a Notes textarea field
 
-**Change**: In the `grid` section (~lines 139-152), rearrange the four card elements to this new order. No logic changes needed — just moving JSX elements.
+### 4. Update Edit Job Dialog
+- Same line items UI as Add dialog
+- Load existing line items when editing
+- Add Notes textarea
 
+### 5. Display on Jobs Page
+- Show line item breakdown in job cards/details
+- Show notes under each job
