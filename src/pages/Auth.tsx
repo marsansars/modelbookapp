@@ -69,7 +69,11 @@ export default function Auth() {
         <div className="text-center">
           <h1 className="font-heading text-3xl font-semibold text-gradient-gold">ModelBook</h1>
           <p className="text-muted-foreground mt-2 font-body">
-            {isLogin ? "Sign in to your account" : "Create your account"}
+            {forgotPassword
+              ? "Enter your email to reset your password"
+              : isLogin
+                ? "Sign in to your account"
+                : "Create your account"}
           </p>
         </div>
 
@@ -86,21 +90,38 @@ export default function Auth() {
                 placeholder="you@example.com"
               />
             </div>
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                required
-                minLength={6}
-                placeholder="••••••••"
-              />
-            </div>
+            {!forgotPassword && (
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  placeholder="••••••••"
+                />
+              </div>
+            )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Please wait..." : isLogin ? "Sign In" : "Sign Up"}
+              {loading
+                ? "Please wait..."
+                : forgotPassword
+                  ? "Send Reset Link"
+                  : isLogin
+                    ? "Sign In"
+                    : "Sign Up"}
             </Button>
+            {isLogin && !forgotPassword && (
+              <button
+                type="button"
+                onClick={() => setForgotPassword(true)}
+                className="w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Forgot your password?
+              </button>
+            )}
           </form>
         </div>
 
