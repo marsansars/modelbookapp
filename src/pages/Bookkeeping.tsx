@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 import { getJobs, getExpenses, getDisplayCurrency, setDisplayCurrency } from "@/lib/store";
 import { Job, Expense, CurrencyCode, calculateJobBreakdown, EXPENSE_CATEGORIES } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
+import { exportJobsCSV, exportExpensesCSV, exportSummaryCSV } from "@/lib/csv-export";
 import { StatCard } from "@/components/StatCard";
 import { CurrencySelector } from "@/components/CurrencySelector";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Bookkeeping() {
@@ -43,7 +46,20 @@ export default function Bookkeeping() {
           <h1 className="text-3xl font-heading font-semibold">Bookkeeping</h1>
           <p className="text-muted-foreground mt-1">Your complete financial picture.</p>
         </div>
-        <CurrencySelector value={displayCur} onChange={c => { setDisplayCur(c); setDisplayCurrency(c); }} />
+        <div className="flex items-center gap-2 flex-wrap">
+          <CurrencySelector value={displayCur} onChange={c => { setDisplayCur(c); setDisplayCurrency(c); }} />
+          <div className="flex gap-1.5">
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => exportSummaryCSV(jobs, expenses, displayCur, rates)}>
+              <Download className="h-3.5 w-3.5" /> Summary
+            </Button>
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => exportJobsCSV(jobs, displayCur, rates)}>
+              <Download className="h-3.5 w-3.5" /> Jobs
+            </Button>
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => exportExpensesCSV(expenses, jobs, displayCur, rates)}>
+              <Download className="h-3.5 w-3.5" /> Expenses
+            </Button>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
