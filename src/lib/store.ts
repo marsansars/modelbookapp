@@ -1,5 +1,43 @@
-import { Job, Expense, Agency, CurrencyCode, ExpenseCategoryInfo, DEFAULT_EXPENSE_CATEGORIES, JobAttachment, LineItem } from './types';
+import { Job, Expense, Agency, CurrencyCode, ExpenseCategoryInfo, DEFAULT_EXPENSE_CATEGORIES, JobAttachment, LineItem, ATTACHMENT_LABELS } from './types';
 import { supabase } from '@/integrations/supabase/client';
+import { z } from 'zod';
+
+// ---- JSONB Validation Schemas ----
+
+const attachmentSchema = z.array(z.object({
+  id: z.string(),
+  name: z.string().max(500),
+  type: z.string().max(100),
+  dataUrl: z.string(),
+  addedAt: z.string(),
+  label: z.enum(['Call Sheet', 'Receipt', 'Statement']).optional(),
+})).max(50);
+
+const lineItemSchema = z.array(z.object({
+  id: z.string(),
+  description: z.string().max(500),
+  amount: z.number().finite(),
+})).max(100);
+
+const customCategoriesSchema = z.record(
+  z.string().max(50),
+  z.object({
+    label: z.string().max(100),
+    icon: z.string().max(10),
+  })
+).refine(obj => Object.keys(obj).length <= 50, { message: 'Too many categories' });
+
+function validateAttachments(data: unknown): JobAttachment[] {
+  return attachmentSchema.parse(data);
+}
+
+function validateLineItems(data: unknown): LineItem[] {
+  return lineItemSchema.parse(data);
+}
+
+function validateCustomCategories(data: unknown): Record<string, ExpenseCategoryInfo> {
+  return customCategoriesSchema.parse(data);
+}
 
 // Helper to get current user id
 async function getUserId(): Promise<string> {
