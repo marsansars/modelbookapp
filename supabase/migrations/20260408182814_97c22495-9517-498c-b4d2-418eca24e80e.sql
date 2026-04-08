@@ -1,0 +1,1 @@
+ALTER TABLE public.jobs ADD COLUMN line_items jsonb DEFAULT '[]'::jsonb;
