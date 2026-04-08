@@ -64,6 +64,15 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-6">
+          <EarningsChart jobs={jobs} displayCur={displayCur} rates={rates} />
+        </motion.div>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.05 }} className="glass-card p-6">
+          <PaymentStatusChart jobs={jobs} displayCur={displayCur} rates={rates} />
+        </motion.div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-6">
           <h2 className="font-heading text-lg font-semibold mb-4">Upcoming Payments</h2>
           {pendingJobs.length === 0 ? (
             <p className="text-muted-foreground text-sm">No pending payments. Add a job to get started.</p>
