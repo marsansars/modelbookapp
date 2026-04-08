@@ -252,7 +252,7 @@ export default function Jobs() {
                       </div>
 
                       <div>
-                        <h4 className="text-sm font-medium text-foreground mb-2">Call Sheets & Statements</h4>
+                        <h4 className="text-sm font-medium text-foreground mb-2">Attachments</h4>
                         <JobAttachments job={job} onChanged={reload} />
                       </div>
                     </motion.div>

@@ -1,9 +1,13 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { updateJob } from "@/lib/store";
-import { Job, JobAttachment } from "@/lib/types";
+import { Job, JobAttachment, AttachmentLabel, ATTACHMENT_LABELS } from "@/lib/types";
 import { Paperclip, X, FileText, Download } from "lucide-react";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 interface Props {
   job: Job;
@@ -12,37 +16,59 @@ interface Props {
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024;
 
+interface PendingFile {
+  file: File;
+  dataUrl: string;
+  label: AttachmentLabel;
+}
+
 export function JobAttachments({ job, onChanged }: Props) {
   const fileRef = useRef<HTMLInputElement>(null);
   const attachments = job.attachments || [];
+  const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
+  const [showLabelDialog, setShowLabelDialog] = useState(false);
 
   const handleFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
-    const newAttachments: JobAttachment[] = [];
+    const pending: PendingFile[] = [];
     for (const file of Array.from(files)) {
       if (file.size > MAX_FILE_SIZE) {
         toast.error(`${file.name} is too large (max 2MB)`);
         continue;
       }
       const dataUrl = await readFileAsDataUrl(file);
-      newAttachments.push({
-        id: crypto.randomUUID(),
-        name: file.name,
-        type: file.type,
-        dataUrl,
-        addedAt: new Date().toISOString(),
-      });
+      pending.push({ file, dataUrl, label: 'Call Sheet' });
     }
 
-    if (newAttachments.length > 0) {
-      await updateJob(job.id, { attachments: [...attachments, ...newAttachments] });
-      onChanged();
-      toast.success(`${newAttachments.length} file(s) attached`);
+    if (pending.length > 0) {
+      setPendingFiles(pending);
+      setShowLabelDialog(true);
     }
 
     if (fileRef.current) fileRef.current.value = '';
+  };
+
+  const confirmAttachments = async () => {
+    const newAttachments: JobAttachment[] = pendingFiles.map(pf => ({
+      id: crypto.randomUUID(),
+      name: pf.file.name,
+      type: pf.file.type,
+      dataUrl: pf.dataUrl,
+      addedAt: new Date().toISOString(),
+      label: pf.label,
+    }));
+
+    await updateJob(job.id, { attachments: [...attachments, ...newAttachments] });
+    onChanged();
+    toast.success(`${newAttachments.length} file(s) attached`);
+    setPendingFiles([]);
+    setShowLabelDialog(false);
+  };
+
+  const updatePendingLabel = (idx: number, label: AttachmentLabel) => {
+    setPendingFiles(files => files.map((f, i) => i === idx ? { ...f, label } : f));
   };
 
   const removeAttachment = async (attachmentId: string) => {
@@ -51,6 +77,15 @@ export function JobAttachments({ job, onChanged }: Props) {
   };
 
   const isImage = (type: string) => type.startsWith('image/');
+
+  const labelColor = (label?: string) => {
+    switch (label) {
+      case 'Call Sheet': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+      case 'Receipt': return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
+      case 'Statement': return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30';
+      default: return 'bg-muted text-muted-foreground';
+    }
+  };
 
   return (
     <div className="space-y-2">
@@ -79,7 +114,12 @@ export function JobAttachments({ job, onChanged }: Props) {
                   <Download className="h-3 w-3 text-muted-foreground" />
                 </a>
               )}
-              <div className="px-1.5 py-1 bg-card/90">
+              <div className="px-1.5 py-1 bg-card/90 space-y-0.5">
+                {att.label && (
+                  <Badge variant="outline" className={`text-[9px] px-1 py-0 ${labelColor(att.label)}`}>
+                    {att.label}
+                  </Badge>
+                )}
                 <p className="text-[10px] text-muted-foreground truncate">{att.name}</p>
               </div>
               <button
@@ -92,6 +132,33 @@ export function JobAttachments({ job, onChanged }: Props) {
           ))}
         </div>
       )}
+
+      {/* Label selection dialog */}
+      <Dialog open={showLabelDialog} onOpenChange={open => { if (!open) { setPendingFiles([]); setShowLabelDialog(false); } }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-heading">Label Attachment{pendingFiles.length > 1 ? 's' : ''}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {pendingFiles.map((pf, idx) => (
+              <div key={idx} className="flex items-center gap-3">
+                <p className="text-sm text-foreground truncate flex-1">{pf.file.name}</p>
+                <Select value={pf.label} onValueChange={v => updatePendingLabel(idx, v as AttachmentLabel)}>
+                  <SelectTrigger className="w-36">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ATTACHMENT_LABELS.map(label => (
+                      <SelectItem key={label} value={label}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
+            <Button className="w-full" onClick={confirmAttachments}>Attach</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
