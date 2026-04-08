@@ -9,6 +9,7 @@ import { ManageAgenciesDialog } from "@/components/ManageAgenciesDialog";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { DueDateBadge } from "@/components/DueDateBadge";
 import { JobAttachments } from "@/components/JobAttachments";
+import { EditJobDialog } from "@/components/EditJobDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -104,7 +105,7 @@ export default function Jobs() {
                       Job: {format(new Date(job.jobDate), 'MMM d, yyyy')} · Due: {format(getDueDate(job.jobDate, job.netDays), 'MMM d, yyyy')} (Net {job.netDays})
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1 shrink-0">
                     <Select value={job.status} onValueChange={v => { updateJob(job.id, { status: v as Job['status'] }); reload(); }}>
                       <SelectTrigger className="w-28 h-8 text-xs">
                         <SelectValue />
@@ -116,6 +117,7 @@ export default function Jobs() {
                         <SelectItem value="overdue">Overdue</SelectItem>
                       </SelectContent>
                     </Select>
+                    <EditJobDialog job={job} onUpdated={reload} />
                     <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => { deleteJob(job.id); reload(); }}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
