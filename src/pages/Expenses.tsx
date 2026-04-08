@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { getExpenses, getJobs, deleteExpense, updateExpense, getDisplayCurrency, setDisplayCurrency } from "@/lib/store";
-import { Expense, Job, EXPENSE_CATEGORIES, CurrencyCode } from "@/lib/types";
+import { getExpenses, getJobs, deleteExpense, updateExpense, getDisplayCurrency, setDisplayCurrency, getAllExpenseCategories } from "@/lib/store";
+import { Expense, Job, CurrencyCode, ExpenseCategoryInfo } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { AddExpenseDialog } from "@/components/AddExpenseDialog";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { EditExpenseDialog } from "@/components/EditExpenseDialog";
+import { ManageCategoriesDialog } from "@/components/ManageCategoriesDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trash2, CheckCircle2 } from "lucide-react";
@@ -16,10 +17,12 @@ export default function Expenses() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [displayCur, setDisplayCur] = useState<CurrencyCode>(getDisplayCurrency());
   const [rates, setRates] = useState<Record<string, number>>({});
+  const [cats, setCats] = useState<Record<string, ExpenseCategoryInfo>>({});
 
   const reload = () => {
     setExpenses(getExpenses());
     setJobs(getJobs());
+    setCats(getAllExpenseCategories());
   };
   useEffect(() => {
     reload();
@@ -52,6 +55,7 @@ export default function Expenses() {
           <p className="text-muted-foreground mt-1">Track every dollar you spend on the job.</p>
         </div>
         <div className="flex items-center gap-2">
+          <ManageCategoriesDialog onUpdated={reload} />
           <CurrencySelector value={displayCur} onChange={c => { setDisplayCur(c); setDisplayCurrency(c); }} />
           <AddExpenseDialog onAdded={reload} />
         </div>
