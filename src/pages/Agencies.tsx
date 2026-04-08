@@ -1,14 +1,18 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { getAgencies, getJobs, getDisplayCurrency } from "@/lib/store";
-import { Agency, Job, CurrencyCode, CURRENCIES, calculateJobBreakdown, getDueDate, parseLocalDate } from "@/lib/types";
+import { getAgencies, getJobs, getDisplayCurrency, updateAgency } from "@/lib/store";
+import { Agency, Job, CurrencyCode, CURRENCIES, calculateJobBreakdown, getDueDate, parseLocalDate, DEFAULT_NET_DAYS } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { ManageAgenciesDialog } from "@/components/ManageAgenciesDialog";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { setDisplayCurrency } from "@/lib/store";
 import { DueDateBadge } from "@/components/DueDateBadge";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronUp, Building2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ChevronDown, ChevronUp, Building2, Pencil, Check, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Agencies() {
@@ -17,6 +21,8 @@ export default function Agencies() {
   const [displayCur, setDisplayCur] = useState<CurrencyCode>("USD");
   const [rates, setRates] = useState<Record<string, number>>({});
   const [expandedAgency, setExpandedAgency] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', defaultAgentPercent: '', defaultCurrency: 'USD' as CurrencyCode, defaultNetDays: '' });
 
   const reload = async () => {
     const [a, j] = await Promise.all([getAgencies(), getJobs()]);
@@ -74,6 +80,28 @@ export default function Agencies() {
   // Jobs not linked to any agency
   const unlinkedJobs = jobs.filter((j) => !j.agencyId);
 
+  const startEdit = (a: Agency) => {
+    setEditingId(a.id);
+    setEditForm({
+      name: a.name,
+      defaultAgentPercent: String(a.defaultAgentPercent),
+      defaultCurrency: a.defaultCurrency,
+      defaultNetDays: String(a.defaultNetDays),
+    });
+  };
+
+  const saveEdit = async () => {
+    if (!editingId || !editForm.name.trim()) return;
+    await updateAgency(editingId, {
+      name: editForm.name.trim(),
+      defaultAgentPercent: parseFloat(editForm.defaultAgentPercent) || 0,
+      defaultCurrency: editForm.defaultCurrency,
+      defaultNetDays: parseInt(editForm.defaultNetDays) || DEFAULT_NET_DAYS,
+    });
+    setEditingId(null);
+    await reload();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -117,24 +145,61 @@ export default function Agencies() {
                 className="glass-card p-5 space-y-4"
               >
                 {/* Agency Header */}
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-1">
-                      <Building2 className="h-5 w-5 text-primary shrink-0" />
-                      <h3 className="font-heading font-semibold text-lg text-foreground truncate">
-                        {agency.name}
-                      </h3>
-                      <Badge variant="outline" className="text-xs">
-                        {breakdown.allJobs.length} job{breakdown.allJobs.length !== 1 ? "s" : ""}
-                      </Badge>
+                {editingId === agency.id ? (
+                  <div className="space-y-3">
+                    <div>
+                      <Label>Agency Name</Label>
+                      <Input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} />
                     </div>
-                    <p className="text-xs text-muted-foreground ml-8">
-                      Default: {agency.defaultAgentPercent}% commission ·{" "}
-                      {CURRENCIES[agency.defaultCurrency].symbol}{" "}
-                      {agency.defaultCurrency} · Net {agency.defaultNetDays}
-                    </p>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <Label>Agent %</Label>
+                        <Input type="number" min="0" max="100" value={editForm.defaultAgentPercent} onChange={e => setEditForm(f => ({ ...f, defaultAgentPercent: e.target.value }))} />
+                      </div>
+                      <div>
+                        <Label>Currency</Label>
+                        <Select value={editForm.defaultCurrency} onValueChange={v => setEditForm(f => ({ ...f, defaultCurrency: v as CurrencyCode }))}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            {Object.entries(CURRENCIES).map(([code, { symbol }]) => (
+                              <SelectItem key={code} value={code}>{symbol} {code}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>Net Days</Label>
+                        <Input type="number" min="1" value={editForm.defaultNetDays} onChange={e => setEditForm(f => ({ ...f, defaultNetDays: e.target.value }))} />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" className="gap-1" onClick={saveEdit}><Check className="h-3.5 w-3.5" /> Save</Button>
+                      <Button size="sm" variant="ghost" className="gap-1" onClick={() => setEditingId(null)}><X className="h-3.5 w-3.5" /> Cancel</Button>
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-1">
+                        <Building2 className="h-5 w-5 text-primary shrink-0" />
+                        <h3 className="font-heading font-semibold text-lg text-foreground truncate">
+                          {agency.name}
+                        </h3>
+                        <Badge variant="outline" className="text-xs">
+                          {breakdown.allJobs.length} job{breakdown.allJobs.length !== 1 ? "s" : ""}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground ml-8">
+                        Default: {agency.defaultAgentPercent}% commission ·{" "}
+                        {CURRENCIES[agency.defaultCurrency].symbol}{" "}
+                        {agency.defaultCurrency} · Net {agency.defaultNetDays}
+                      </p>
+                    </div>
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground shrink-0" onClick={() => startEdit(agency)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
 
                 {/* Summary Stats */}
                 <div className="grid grid-cols-3 gap-4 pt-3 border-t border-border/50">
