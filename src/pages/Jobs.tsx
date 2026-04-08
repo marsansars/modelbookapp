@@ -135,7 +135,6 @@ export default function Jobs() {
               if (statusFilter === 'paid') return job.status === 'paid';
               if (statusFilter === 'pending') return job.status !== 'paid';
               if (statusFilter === 'overdue') {
-                const { getDaysUntilDue } = require('@/lib/types');
                 return job.status !== 'paid' && getDaysUntilDue(job.jobDate, job.netDays) < 0;
               }
               return true;
