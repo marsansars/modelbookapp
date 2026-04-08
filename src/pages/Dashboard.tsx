@@ -49,6 +49,10 @@ export default function Dashboard() {
   }, 0);
   const totalExpenses = expenses.reduce((s, e) => s + conv(e.amount, e.currency), 0);
 
+  const paidJobs = jobs.filter(j => j.status === 'paid');
+  const paidJobsCount = paidJobs.length;
+  const paymentsReceived = paidJobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent).netPay, j.currency), 0);
+
   // Current (not yet due) vs Overdue earnings
   const currentEarnings = jobs
     .filter(j => j.status !== 'paid' && getDaysUntilDue(j.jobDate, j.netDays) >= 0)
