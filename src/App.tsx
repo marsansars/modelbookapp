@@ -82,7 +82,12 @@ function ProtectedLayout() {
 
   return (
     <SidebarProvider>
-      <WelcomeDialog open={showWelcome} onSave={handleSaveName} />
+      <DisclaimerDialog
+        open={showDisclaimer && !disclaimerAgreed}
+        onAgree={() => { setShowDisclaimer(false); setDisclaimerAgreed(true); }}
+        onDisagree={() => signOut()}
+      />
+      <WelcomeDialog open={!showDisclaimer && disclaimerAgreed && showWelcome} onSave={handleSaveName} />
       <div className="min-h-screen flex w-full">
         <AppSidebar displayName={displayName} />
         <div className="flex-1 flex flex-col min-w-0">
