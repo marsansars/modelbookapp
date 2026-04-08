@@ -129,7 +129,7 @@ export default function Dashboard() {
           </p>
         </motion.div>
         <StatCard label="Total Earnings" value={fmt(totalNet)} sublabel={`${jobs.length} jobs`} accent />
-        <StatCard label="Recommended Tax Savings" value={fmt(totalRecommendedTax)} sublabel="Set aside from net earnings" />
+        <StatCard label="Estimated Tax Planning" value={fmt(totalRecommendedTax)} sublabel="Set aside from net earnings" />
         <StatCard label="Your Net" value={fmt(totalNet - totalRecommendedTax)} sublabel={`After ${fmt(totalExpenses)} expenses`} accent />
       </div>
 
