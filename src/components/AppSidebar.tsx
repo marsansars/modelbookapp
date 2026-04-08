@@ -20,12 +20,6 @@ const items = [
   { title: "Bookkeeping", url: "/bookkeeping", icon: BookOpen },
 ];
 
-function possessiveName(name: string): string {
-  return name.endsWith("s") || name.endsWith("S")
-    ? `${name}'`
-    : `${name}'s`;
-}
-
 interface AppSidebarProps {
   displayName?: string | null;
 }
@@ -34,10 +28,6 @@ export function AppSidebar({ displayName }: AppSidebarProps) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-
-  const title = displayName
-    ? `${possessiveName(displayName)} ModelBook`
-    : "ModelBook";
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
