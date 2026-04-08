@@ -8,6 +8,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { WelcomeDialog } from "@/components/WelcomeDialog";
+import { DisclaimerDialog } from "@/components/DisclaimerDialog";
 import { getDisplayName, setDisplayName } from "@/lib/store";
 import Index from "./pages/Index";
 import Jobs from "./pages/Jobs";
