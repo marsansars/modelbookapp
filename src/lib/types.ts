@@ -43,24 +43,26 @@ export interface Expense {
   reimbursed?: boolean;
 }
 
-export type ExpenseCategory = 
-  | 'meals'
-  | 'transport'
-  | 'hotel'
-  | 'wardrobe'
-  | 'beauty'
-  | 'portfolio'
-  | 'other';
+export type ExpenseCategory = string;
 
-export const EXPENSE_CATEGORIES: Record<ExpenseCategory, { label: string; icon: string }> = {
+export interface ExpenseCategoryInfo {
+  label: string;
+  icon: string;
+}
+
+export const DEFAULT_EXPENSE_CATEGORIES: Record<string, ExpenseCategoryInfo> = {
   meals: { label: 'Meals & Dining', icon: '🍽️' },
   transport: { label: 'Transport & Taxis', icon: '🚕' },
+  flights: { label: 'Flights', icon: '✈️' },
   hotel: { label: 'Hotels & Lodging', icon: '🏨' },
   wardrobe: { label: 'Wardrobe & Styling', icon: '👗' },
   beauty: { label: 'Beauty & Grooming', icon: '💄' },
   portfolio: { label: 'Portfolio & Comp Cards', icon: '📸' },
   other: { label: 'Other', icon: '📋' },
 };
+
+// Back-compat alias
+export const EXPENSE_CATEGORIES = DEFAULT_EXPENSE_CATEGORIES;
 
 export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'JPY' | 'CHF' | 'AUD' | 'CAD' | 'SEK' | 'DKK' | 'NOK' | 'CNY' | 'KRW' | 'BRL' | 'ZAR' | 'HKD' | 'SGD' | 'AED' | 'INR' | 'MXN' | 'THB';
 

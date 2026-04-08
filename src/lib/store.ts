@@ -1,9 +1,32 @@
-import { Job, Expense, Agency, CurrencyCode } from './types';
+import { Job, Expense, Agency, CurrencyCode, ExpenseCategoryInfo, DEFAULT_EXPENSE_CATEGORIES } from './types';
 
 const JOBS_KEY = 'modelbook_jobs';
 const EXPENSES_KEY = 'modelbook_expenses';
 const AGENCIES_KEY = 'modelbook_agencies';
 const DISPLAY_CURRENCY_KEY = 'modelbook_display_currency';
+const CUSTOM_CATEGORIES_KEY = 'modelbook_custom_categories';
+
+// Custom expense categories
+export function getCustomCategories(): Record<string, ExpenseCategoryInfo> {
+  const data = localStorage.getItem(CUSTOM_CATEGORIES_KEY);
+  return data ? JSON.parse(data) : {};
+}
+export function saveCustomCategories(cats: Record<string, ExpenseCategoryInfo>) {
+  localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(cats));
+}
+export function getAllExpenseCategories(): Record<string, ExpenseCategoryInfo> {
+  return { ...DEFAULT_EXPENSE_CATEGORIES, ...getCustomCategories() };
+}
+export function addCustomCategory(key: string, info: ExpenseCategoryInfo) {
+  const cats = getCustomCategories();
+  cats[key] = info;
+  saveCustomCategories(cats);
+}
+export function deleteCustomCategory(key: string) {
+  const cats = getCustomCategories();
+  delete cats[key];
+  saveCustomCategories(cats);
+}
 
 // Jobs
 export function getJobs(): Job[] {
