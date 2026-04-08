@@ -5,7 +5,7 @@ import { Job, Agency, Expense, CurrencyCode, CURRENCIES, calculateJobBreakdown, 
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { AddJobDialog } from "@/components/AddJobDialog";
 import { AddExpenseDialog } from "@/components/AddExpenseDialog";
-import { ManageAgenciesDialog } from "@/components/ManageAgenciesDialog";
+
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { DueDateBadge } from "@/components/DueDateBadge";
 import { JobAttachments } from "@/components/JobAttachments";
@@ -72,7 +72,6 @@ export default function Jobs() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <CurrencySelector value={displayCur} onChange={c => { setDisplayCur(c); setDisplayCurrency(c); }} />
-          <ManageAgenciesDialog onChanged={reload} />
           <AddJobDialog onAdded={reload} />
         </div>
       </div>
