@@ -25,7 +25,7 @@ export function EarningsChart({ jobs, displayCur, rates }: Props) {
     const month = now.getMonth();
 
     const filtered = jobs.filter(j => {
-      const d = new Date(j.jobDate);
+      const d = parseLocalDate(j.jobDate);
       if (period === "this_year") return d.getFullYear() === year;
       if (period === "last_year") return d.getFullYear() === year - 1;
       return d.getFullYear() === year && d.getMonth() === month;
@@ -42,7 +42,7 @@ export function EarningsChart({ jobs, displayCur, rates }: Props) {
         const start = w * 7 + 1;
         const end = Math.min(start + 6, daysInMonth);
         const weekJobs = filtered.filter(j => {
-          const day = new Date(j.jobDate).getDate();
+          const day = parseLocalDate(j.jobDate).getDate();
           return day >= start && day <= end;
         });
         rows.push({
@@ -54,7 +54,7 @@ export function EarningsChart({ jobs, displayCur, rates }: Props) {
     } else {
       const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
       rows = labels.map((label, i) => {
-        const monthJobs = filtered.filter(j => new Date(j.jobDate).getMonth() === i);
+        const monthJobs = filtered.filter(j => parseLocalDate(j.jobDate).getMonth() === i);
         return {
           label,
           gross: monthJobs.reduce((s, j) => s + conv(j.rate, j.currency), 0),
