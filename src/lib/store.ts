@@ -129,7 +129,7 @@ export async function addJob(job: Omit<Job, 'id'>): Promise<void> {
 }
 
 export async function updateJob(id: string, updates: Partial<Job>): Promise<void> {
-  const dbUpdates: Record<string, any> = {};
+  const dbUpdates: any = {};
   if (updates.client !== undefined) dbUpdates.client = updates.client;
   if (updates.description !== undefined) dbUpdates.description = updates.description;
   if (updates.jobDate !== undefined) dbUpdates.job_date = updates.jobDate;
@@ -141,9 +141,9 @@ export async function updateJob(id: string, updates: Partial<Job>): Promise<void
   if (updates.agencyId !== undefined) dbUpdates.agency_id = updates.agencyId || null;
   if (updates.status !== undefined) dbUpdates.status = updates.status;
   if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
-  if (updates.attachments !== undefined) dbUpdates.attachments = updates.attachments as any;
+  if (updates.attachments !== undefined) dbUpdates.attachments = updates.attachments;
 
-  await supabase.from('jobs').update(dbUpdates).eq('id', id);
+  await supabase.from('jobs').update(dbUpdates as any).eq('id', id);
 }
 
 export async function deleteJob(id: string): Promise<void> {
@@ -206,7 +206,7 @@ export async function updateExpense(id: string, updates: Partial<Expense>): Prom
   if (updates.reimbursable !== undefined) dbUpdates.reimbursable = updates.reimbursable;
   if (updates.reimbursed !== undefined) dbUpdates.reimbursed = updates.reimbursed;
 
-  await supabase.from('expenses').update(dbUpdates).eq('id', id);
+  await supabase.from('expenses').update(dbUpdates as any).eq('id', id);
 }
 
 export async function deleteExpense(id: string): Promise<void> {
@@ -254,7 +254,7 @@ export async function updateAgency(id: string, updates: Partial<Agency>): Promis
   if (updates.defaultCurrency !== undefined) dbUpdates.default_currency = updates.defaultCurrency;
   if (updates.defaultNetDays !== undefined) dbUpdates.default_net_days = updates.defaultNetDays;
 
-  await supabase.from('agencies').update(dbUpdates).eq('id', id);
+  await supabase.from('agencies').update(dbUpdates as any).eq('id', id);
 }
 
 export async function deleteAgency(id: string): Promise<void> {
