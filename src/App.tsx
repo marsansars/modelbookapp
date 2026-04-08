@@ -102,6 +102,7 @@ function ProtectedLayout() {
         onDisagree={() => signOut()}
       />
       <WelcomeDialog open={!showDisclaimer && disclaimerAgreed && showWelcome} onSave={handleSaveName} />
+      <OnboardingTutorial open={!showDisclaimer && disclaimerAgreed && !showWelcome && showTutorial} onComplete={handleTutorialComplete} />
       <div className="min-h-screen flex w-full">
         <AppSidebar displayName={displayName} />
         <div className="flex-1 flex flex-col min-w-0">
@@ -143,6 +144,7 @@ function ProtectedLayout() {
               <Route path="/expenses" element={<Expenses />} />
               <Route path="/bookkeeping" element={<Bookkeeping />} />
               <Route path="/install" element={<Install />} />
+              <Route path="/guide" element={<Guide />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
