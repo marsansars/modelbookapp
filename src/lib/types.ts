@@ -91,8 +91,15 @@ export const CURRENCIES: Record<CurrencyCode, { label: string; symbol: string }>
 
 export const DEFAULT_NET_DAYS = 60;
 
+/** Parse a date string (YYYY-MM-DD) as a local date, avoiding timezone shifts. */
+export function parseLocalDate(dateStr: string): Date {
+  const iso = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) return new Date(+iso[1], +iso[2] - 1, +iso[3]);
+  return new Date(dateStr);
+}
+
 export function getDueDate(jobDate: string, netDays: number = DEFAULT_NET_DAYS): Date {
-  const d = new Date(jobDate);
+  const d = parseLocalDate(jobDate);
   d.setDate(d.getDate() + netDays);
   return d;
 }

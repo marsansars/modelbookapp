@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Job, CurrencyCode, calculateJobBreakdown } from "@/lib/types";
+import { Job, CurrencyCode, calculateJobBreakdown, parseLocalDate } from "@/lib/types";
 import { convertAmount, formatCurrency } from "@/lib/currency";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
