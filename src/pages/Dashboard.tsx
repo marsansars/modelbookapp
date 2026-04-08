@@ -9,7 +9,7 @@ import { getJobs, getExpenses, getDisplayCurrency, setDisplayCurrency, getAgenci
 import { Job, Expense, Agency, CurrencyCode, calculateJobBreakdown, getDueDate, getDaysUntilDue } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { motion } from "framer-motion";
-import { Receipt, FileText, CheckCircle2, Building2 } from "lucide-react";
+import { Receipt, FileText, Building2 } from "lucide-react";
 
 export default function Dashboard() {
   const [jobs, setJobs] = useState<Job[]>([]);
