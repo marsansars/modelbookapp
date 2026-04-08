@@ -37,7 +37,10 @@ export default function Bookkeeping() {
     const netAfterAgent = calculateJobBreakdown(j.rate, j.agentPercent).netPay;
     return s + conv(netAfterAgent * (j.taxPercent / 100), j.currency);
   }, 0);
-  const totalExpenses = expenses.reduce((s, e) => s + conv(e.amount, e.currency), 0);
+  const reimbursedTotal = expenses.filter(e => e.reimbursable && e.reimbursed).reduce((s, e) => s + conv(e.amount, e.currency), 0);
+  const pendingReimbursement = expenses.filter(e => e.reimbursable && !e.reimbursed).reduce((s, e) => s + conv(e.amount, e.currency), 0);
+  const outOfPocketExpenses = expenses.filter(e => !e.reimbursable).reduce((s, e) => s + conv(e.amount, e.currency), 0);
+  const netExpenses = outOfPocketExpenses + pendingReimbursement;
   const paidJobs = jobs.filter(j => j.status === 'paid');
   const unpaidJobs = jobs.filter(j => j.status !== 'paid');
   const paidTotal = paidJobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0);
@@ -75,7 +78,7 @@ export default function Bookkeeping() {
         <StatCard label="Gross Earnings" value={fmt(totalGross)} />
         <StatCard label="Agent Commissions" value={fmt(totalAgent)} />
         <StatCard label="Recommended Tax Savings" value={fmt(totalRecommendedTax)} />
-        <StatCard label="Total Expenses" value={fmt(totalExpenses)} />
+        <StatCard label="Net Expenses" value={fmt(netExpenses)} sublabel={reimbursedTotal > 0 ? `${fmt(reimbursedTotal)} reimbursed` : undefined} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -95,12 +98,24 @@ export default function Bookkeeping() {
               <span className="font-medium">-{fmt(totalRecommendedTax)}</span>
             </div>
             <div className="flex justify-between py-2 border-b border-border">
-              <span className="text-muted-foreground">− Expenses</span>
-              <span className="font-medium">-{fmt(totalExpenses)}</span>
+              <span className="text-muted-foreground">− Out-of-Pocket Expenses</span>
+              <span className="font-medium">-{fmt(outOfPocketExpenses)}</span>
             </div>
+            {pendingReimbursement > 0 && (
+              <div className="flex justify-between py-2 border-b border-border">
+                <span className="text-muted-foreground">− Pending Reimbursement</span>
+                <span className="font-medium text-warning">-{fmt(pendingReimbursement)}</span>
+              </div>
+            )}
+            {reimbursedTotal > 0 && (
+              <div className="flex justify-between py-2 border-b border-border">
+                <span className="text-muted-foreground">Reimbursed (wash)</span>
+                <span className="font-medium text-success">{fmt(reimbursedTotal)}</span>
+              </div>
+            )}
             <div className="flex justify-between py-2">
               <span className="font-heading font-semibold text-foreground">Net After Everything</span>
-              <span className="font-heading font-semibold text-primary">{fmt(totalNet - totalRecommendedTax - totalExpenses)}</span>
+              <span className="font-heading font-semibold text-primary">{fmt(totalNet - totalRecommendedTax - netExpenses)}</span>
             </div>
           </div>
         </motion.div>
