@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Trash2, ChevronDown, ChevronUp, Receipt, CheckCircle2, CalendarCheck } from "lucide-react";
+import { Trash2, ChevronDown, ChevronUp, Receipt, CheckCircle2, CalendarCheck, ArrowUpDown, Filter } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Jobs() {
@@ -28,6 +28,8 @@ export default function Jobs() {
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
   const [cats, setCats] = useState<Record<string, ExpenseCategoryInfo>>({});
   const [paymentDialog, setPaymentDialog] = useState<{ jobId: string; date: string } | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'overdue'>('all');
+  const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'>('date-desc');
 
   const reload = async () => {
     const [j, a, e, c] = await Promise.all([getJobs(), getAgencies(), getExpenses(), getAllExpenseCategories()]);
@@ -87,13 +89,66 @@ export default function Jobs() {
         </div>
       </div>
 
+      {/* Filters & Sort */}
+      {jobs.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select value={statusFilter} onValueChange={(v: any) => setStatusFilter(v)}>
+              <SelectTrigger className="h-8 w-[130px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Jobs</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+                <SelectItem value="pending">Unpaid</SelectItem>
+                <SelectItem value="overdue">Overdue</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+            <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+              <SelectTrigger className="h-8 w-[150px] text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="date-desc">Newest First</SelectItem>
+                <SelectItem value="date-asc">Oldest First</SelectItem>
+                <SelectItem value="amount-desc">Highest Rate</SelectItem>
+                <SelectItem value="amount-asc">Lowest Rate</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+
       {jobs.length === 0 ? (
         <div className="glass-card p-12 text-center">
           <p className="text-muted-foreground">No jobs yet. Add your first booking to start tracking.</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {jobs.sort((a, b) => parseLocalDate(b.jobDate).getTime() - parseLocalDate(a.jobDate).getTime()).map((job, i) => {
+          {jobs
+            .filter(job => {
+              if (statusFilter === 'all') return true;
+              if (statusFilter === 'paid') return job.status === 'paid';
+              if (statusFilter === 'pending') return job.status !== 'paid';
+              if (statusFilter === 'overdue') {
+                const { getDaysUntilDue } = require('@/lib/types');
+                return job.status !== 'paid' && getDaysUntilDue(job.jobDate, job.netDays) < 0;
+              }
+              return true;
+            })
+            .sort((a, b) => {
+              switch (sortBy) {
+                case 'date-asc': return parseLocalDate(a.jobDate).getTime() - parseLocalDate(b.jobDate).getTime();
+                case 'amount-desc': return b.rate - a.rate;
+                case 'amount-asc': return a.rate - b.rate;
+                default: return parseLocalDate(b.jobDate).getTime() - parseLocalDate(a.jobDate).getTime();
+              }
+            })
+            .map((job, i) => {
             const { agentFee, netPay } = calculateJobBreakdown(job.rate, job.agentPercent);
             const agencyName = getAgencyName(job.agencyId);
             const showConverted = job.currency !== displayCur;
