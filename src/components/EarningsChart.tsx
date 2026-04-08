@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Job, CurrencyCode, calculateJobBreakdown, parseLocalDate } from "@/lib/types";
+import { Job, CurrencyCode, parseLocalDate } from "@/lib/types";
 import { convertAmount, formatCurrency } from "@/lib/currency";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -19,7 +19,7 @@ export function EarningsChart({ jobs, displayCur, rates }: Props) {
   const conv = (n: number, from: CurrencyCode) => convertAmount(n, from, displayCur, rates);
   const fmt = (n: number) => formatCurrency(n, displayCur);
 
-  const { totalGross, totalNet, jobCount, rows } = useMemo(() => {
+  const { totalIncome, jobCount, rows } = useMemo(() => {
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth();
@@ -31,10 +31,9 @@ export function EarningsChart({ jobs, displayCur, rates }: Props) {
       return d.getFullYear() === year && d.getMonth() === month;
     });
 
-    const totalGross = filtered.reduce((s, j) => s + conv(j.rate, j.currency), 0);
-    const totalNet = filtered.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0);
+    const totalIncome = filtered.reduce((s, j) => s + conv(j.rate, j.currency), 0);
 
-    let rows: { label: string; gross: number; net: number }[];
+    let rows: { label: string; income: number }[];
     if (period === "this_month") {
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       rows = [];
@@ -47,8 +46,7 @@ export function EarningsChart({ jobs, displayCur, rates }: Props) {
         });
         rows.push({
           label: `${start}–${end}`,
-          gross: weekJobs.reduce((s, j) => s + conv(j.rate, j.currency), 0),
-          net: weekJobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0),
+          income: weekJobs.reduce((s, j) => s + conv(j.rate, j.currency), 0),
         });
       }
     } else {
@@ -57,13 +55,12 @@ export function EarningsChart({ jobs, displayCur, rates }: Props) {
         const monthJobs = filtered.filter(j => parseLocalDate(j.jobDate).getMonth() === i);
         return {
           label,
-          gross: monthJobs.reduce((s, j) => s + conv(j.rate, j.currency), 0),
-          net: monthJobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0),
+          income: monthJobs.reduce((s, j) => s + conv(j.rate, j.currency), 0),
         };
       });
     }
 
-    return { totalGross, totalNet, jobCount: filtered.length, rows };
+    return { totalIncome, jobCount: filtered.length, rows };
   }, [jobs, period, displayCur, rates]);
 
   // Reset selection when period changes
@@ -76,8 +73,7 @@ export function EarningsChart({ jobs, displayCur, rates }: Props) {
     setSelectedIndex(prev => prev === index ? null : index);
   };
 
-  const displayGross = selectedIndex !== null ? rows[selectedIndex]?.gross ?? totalGross : totalGross;
-  const displayNet = selectedIndex !== null ? rows[selectedIndex]?.net ?? totalNet : totalNet;
+  const displayIncome = selectedIndex !== null ? rows[selectedIndex]?.income ?? totalIncome : totalIncome;
   const displayLabel = selectedIndex !== null ? rows[selectedIndex]?.label : (period === "this_year" ? "Full Year" : period === "last_year" ? "Full Year" : "Full Month");
 
   return (
@@ -106,11 +102,11 @@ export function EarningsChart({ jobs, displayCur, rates }: Props) {
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
           <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
           <YAxis hide />
-          <Bar dataKey="net" radius={[3, 3, 0, 0]} cursor="pointer">
+          <Bar dataKey="income" radius={[3, 3, 0, 0]} cursor="pointer">
             {rows.map((_, i) => (
               <Cell
                 key={i}
-                fill={selectedIndex === i ? 'hsl(var(--primary))' : 'hsl(var(--primary))'}
+                fill='hsl(var(--primary))'
                 opacity={selectedIndex === null ? 0.7 : selectedIndex === i ? 1 : 0.25}
               />
             ))}
@@ -118,15 +114,11 @@ export function EarningsChart({ jobs, displayCur, rates }: Props) {
         </BarChart>
       </ResponsiveContainer>
 
-      {/* Summary boxes */}
-      <div className="grid grid-cols-2 gap-3 mt-4">
-        <div className="rounded-lg bg-secondary/50 p-4 text-center">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Gross</p>
-          <p className="text-xl font-heading font-semibold text-foreground">{fmt(displayGross)}</p>
-        </div>
+      {/* Summary box */}
+      <div className="mt-4">
         <div className="rounded-lg bg-primary/10 p-4 text-center">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Net</p>
-          <p className="text-xl font-heading font-semibold text-primary">{fmt(displayNet)}</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total Income</p>
+          <p className="text-xl font-heading font-semibold text-primary">{fmt(displayIncome)}</p>
         </div>
       </div>
 
