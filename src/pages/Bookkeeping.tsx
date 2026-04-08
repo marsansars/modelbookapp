@@ -1,40 +1,49 @@
 import { useEffect, useState } from "react";
-import { getJobs, getExpenses } from "@/lib/store";
-import { Job, Expense, calculateJobBreakdown, EXPENSE_CATEGORIES } from "@/lib/types";
+import { getJobs, getExpenses, getDisplayCurrency, setDisplayCurrency } from "@/lib/store";
+import { Job, Expense, CurrencyCode, calculateJobBreakdown, EXPENSE_CATEGORIES } from "@/lib/types";
+import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { StatCard } from "@/components/StatCard";
+import { CurrencySelector } from "@/components/CurrencySelector";
 import { motion } from "framer-motion";
 
 export default function Bookkeeping() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [displayCur, setDisplayCur] = useState<CurrencyCode>(getDisplayCurrency());
+  const [rates, setRates] = useState<Record<string, number>>({});
 
   useEffect(() => {
     setJobs(getJobs());
     setExpenses(getExpenses());
+    fetchExchangeRates().then(r => setRates(r.rates));
   }, []);
 
-  const totalGross = jobs.reduce((s, j) => s + j.rate, 0);
-  const totalAgent = jobs.reduce((s, j) => s + calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).agentFee, 0);
-  const totalTax = jobs.reduce((s, j) => s + calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).taxAmount, 0);
-  const totalNet = jobs.reduce((s, j) => s + calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, 0);
-  const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
+  const conv = (amount: number, from: CurrencyCode) => convertAmount(amount, from, displayCur, rates);
+  const fmt = (n: number) => formatCurrency(n, displayCur);
+
+  const totalGross = jobs.reduce((s, j) => s + conv(j.rate, j.currency), 0);
+  const totalAgent = jobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).agentFee, j.currency), 0);
+  const totalTax = jobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).taxAmount, j.currency), 0);
+  const totalNet = jobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0);
+  const totalExpenses = expenses.reduce((s, e) => s + conv(e.amount, e.currency), 0);
   const paidJobs = jobs.filter(j => j.status === 'paid');
   const unpaidJobs = jobs.filter(j => j.status !== 'paid');
-  const paidTotal = paidJobs.reduce((s, j) => s + calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, 0);
-  const unpaidTotal = unpaidJobs.reduce((s, j) => s + calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, 0);
-
-  const fmt = (n: number) => `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const paidTotal = paidJobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0);
+  const unpaidTotal = unpaidJobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0);
 
   const expByCategory = expenses.reduce((acc, e) => {
-    acc[e.category] = (acc[e.category] || 0) + e.amount;
+    acc[e.category] = (acc[e.category] || 0) + conv(e.amount, e.currency);
     return acc;
   }, {} as Record<string, number>);
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-heading font-semibold">Bookkeeping</h1>
-        <p className="text-muted-foreground mt-1">Your complete financial picture.</p>
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div>
+          <h1 className="text-3xl font-heading font-semibold">Bookkeeping</h1>
+          <p className="text-muted-foreground mt-1">Your complete financial picture.</p>
+        </div>
+        <CurrencySelector value={displayCur} onChange={c => { setDisplayCur(c); setDisplayCurrency(c); }} />
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
