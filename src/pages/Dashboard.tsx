@@ -133,6 +133,10 @@ export default function Dashboard() {
         <StatCard label="Your Net" value={fmt(totalNet - totalRecommendedTax)} sublabel={`After ${fmt(totalExpenses)} expenses`} accent />
       </div>
 
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-6">
+        <EarningsChart jobs={jobs} displayCur={displayCur} rates={rates} />
+      </motion.div>
+
       {/* Upcoming Payments */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-6">
         <h2 className="font-heading text-lg font-semibold mb-4">Upcoming Payments</h2>
@@ -163,10 +167,6 @@ export default function Dashboard() {
             })}
           </div>
         )}
-      </motion.div>
-
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-6">
-        <EarningsChart jobs={jobs} displayCur={displayCur} rates={rates} />
       </motion.div>
 
       {/* Expense Breakdown Section */}
