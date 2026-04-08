@@ -22,6 +22,7 @@ export function EditJobDialog({ job, onUpdated }: Props) {
     jobDate: job.jobDate,
     rate: String(job.rate),
     agentPercent: String(job.agentPercent),
+    taxPercent: String(job.taxPercent),
     currency: job.currency,
     netDays: String(job.netDays),
     agencyId: job.agencyId || '',
@@ -36,6 +37,7 @@ export function EditJobDialog({ job, onUpdated }: Props) {
         jobDate: job.jobDate,
         rate: String(job.rate),
         agentPercent: String(job.agentPercent),
+        taxPercent: String(job.taxPercent),
         currency: job.currency,
         netDays: String(job.netDays),
         agencyId: job.agencyId || '',
@@ -69,7 +71,7 @@ export function EditJobDialog({ job, onUpdated }: Props) {
       rate: parseFloat(form.rate) || 0,
       currency: form.currency,
       agentPercent: parseFloat(form.agentPercent) || 0,
-      taxPercent: 0,
+      taxPercent: parseFloat(form.taxPercent) || 0,
       netDays: parseInt(form.netDays) || DEFAULT_NET_DAYS,
       agencyId: form.agencyId || undefined,
     });
@@ -135,10 +137,14 @@ export function EditJobDialog({ job, onUpdated }: Props) {
               </Select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
               <Label htmlFor="edit-agent">Agent %</Label>
               <Input id="edit-agent" type="number" min="0" max="100" value={form.agentPercent} onChange={set('agentPercent')} />
+            </div>
+            <div>
+              <Label htmlFor="edit-tax">Tax %</Label>
+              <Input id="edit-tax" type="number" min="0" max="100" value={form.taxPercent} onChange={set('taxPercent')} />
             </div>
             <div>
               <Label htmlFor="edit-net">Net Days</Label>
