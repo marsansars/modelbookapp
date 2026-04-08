@@ -41,10 +41,22 @@ export default function Dashboard() {
   const getAgencyName = (id?: string) => agencies.find(a => a.id === id)?.name;
 
   const totalEarnings = jobs.reduce((s, j) => s + conv(j.rate, j.currency), 0);
-  const totalAgent = jobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).agentFee, j.currency), 0);
   const totalTax = jobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).taxAmount, j.currency), 0);
   const totalNet = jobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0);
   const totalExpenses = expenses.reduce((s, e) => s + conv(e.amount, e.currency), 0);
+
+  // Current (not yet due) vs Overdue earnings
+  const currentEarnings = jobs
+    .filter(j => j.status !== 'paid' && getDaysUntilDue(j.jobDate, j.netDays) >= 0)
+    .reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0);
+  const currentCount = jobs.filter(j => j.status !== 'paid' && getDaysUntilDue(j.jobDate, j.netDays) >= 0).length;
+
+  const overdueEarnings = jobs
+    .filter(j => j.status !== 'paid' && getDaysUntilDue(j.jobDate, j.netDays) < 0)
+    .reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0);
+  const overdueCount = jobs.filter(j => j.status !== 'paid' && getDaysUntilDue(j.jobDate, j.netDays) < 0).length;
+
+  const [showOverdue, setShowOverdue] = useState(false);
 
   const pendingJobs = jobs
     .filter(j => j.status !== 'paid')
@@ -91,7 +103,25 @@ export default function Dashboard() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Total Earnings" value={fmt(totalEarnings)} sublabel={`${jobs.length} jobs`} accent />
-        <StatCard label="Agent Fees" value={fmt(totalAgent)} sublabel="Total commissions" />
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-card p-5 cursor-pointer select-none"
+          onClick={() => setShowOverdue(!showOverdue)}
+        >
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground font-body">{showOverdue ? 'Overdue' : 'Current Owed'}</p>
+            <button className="text-[10px] text-muted-foreground/60 hover:text-muted-foreground transition-colors">
+              {showOverdue ? 'Show Current →' : 'Show Overdue →'}
+            </button>
+          </div>
+          <p className={`text-2xl font-heading font-semibold mt-1 ${showOverdue ? 'text-destructive' : 'text-foreground'}`}>
+            {fmt(showOverdue ? overdueEarnings : currentEarnings)}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {showOverdue ? `${overdueCount} overdue job${overdueCount !== 1 ? 's' : ''}` : `${currentCount} pending job${currentCount !== 1 ? 's' : ''}`}
+          </p>
+        </motion.div>
         <StatCard label="Tax Reserve" value={fmt(totalTax)} sublabel="Set aside for taxes" />
         <StatCard label="Your Net" value={fmt(totalNet)} sublabel={`After ${fmt(totalExpenses)} expenses`} accent />
       </div>
