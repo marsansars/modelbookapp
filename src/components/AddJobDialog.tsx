@@ -76,20 +76,21 @@ export function AddJobDialog({ onAdded }: Props) {
           <DialogTitle className="font-heading">New Job</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {agencies.length > 0 && (
-            <div>
-              <Label>Agency</Label>
-              <Select value={form.agencyId || '_none'} onValueChange={handleAgencyChange}>
-                <SelectTrigger><SelectValue placeholder="Select agency" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="_none">No agency</SelectItem>
-                  {agencies.map(a => (
-                    <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          <div>
+            <Label>Agency</Label>
+            <Select value={form.agencyId || '_none'} onValueChange={handleAgencyChange}>
+              <SelectTrigger><SelectValue placeholder="Select agency" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="_none">No agency (direct booking)</SelectItem>
+                {agencies.map(a => (
+                  <SelectItem key={a.id} value={a.id}>{a.name} ({a.defaultAgentPercent}%)</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {agencies.length === 0 && (
+              <p className="text-xs text-muted-foreground mt-1">No agencies yet — add one from the Agencies page.</p>
+            )}
+          </div>
           <div>
             <Label htmlFor="client">Client / Brand</Label>
             <Input id="client" value={form.client} onChange={set('client')} required placeholder="e.g. Vogue, Gucci" />
