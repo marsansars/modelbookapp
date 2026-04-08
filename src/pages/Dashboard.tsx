@@ -185,9 +185,9 @@ export default function Dashboard() {
             {showOverdue ? `${overdueCount} overdue job${overdueCount !== 1 ? 's' : ''}` : `${currentCount} pending job${currentCount !== 1 ? 's' : ''}`}
           </p>
         </motion.div>
-        <StatCard label="Total Earnings" value={fmt(totalNet)} sublabel={`${jobs.length} jobs`} accent />
-        <StatCard label="Estimated Tax Planning" value={fmt(totalRecommendedTax)} sublabel="Set aside from net earnings" />
         <StatCard label="Payments Received" value={fmt(paymentsReceived)} sublabel={`${paidJobsCount} paid job${paidJobsCount !== 1 ? 's' : ''}`} accent />
+        <StatCard label="Estimated Tax Planning" value={fmt(totalRecommendedTax)} sublabel="Set aside from net earnings" />
+        <StatCard label="Total Earnings" value={fmt(totalNet)} sublabel={`${jobs.length} jobs`} accent />
       </div>
 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-6">
