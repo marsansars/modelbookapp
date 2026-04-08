@@ -10,6 +10,31 @@ async function getUserId(): Promise<string> {
 
 // ---- User Settings ----
 
+export async function getDisplayName(): Promise<string | null> {
+  const userId = await getUserId();
+  const { data } = await supabase
+    .from('user_settings')
+    .select('display_name')
+    .eq('user_id', userId)
+    .maybeSingle();
+  return (data as any)?.display_name || null;
+}
+
+export async function setDisplayName(name: string): Promise<void> {
+  const userId = await getUserId();
+  const { data: existing } = await supabase
+    .from('user_settings')
+    .select('id')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (existing) {
+    await supabase.from('user_settings').update({ display_name: name } as any).eq('user_id', userId);
+  } else {
+    await supabase.from('user_settings').insert({ user_id: userId, display_name: name } as any);
+  }
+}
+
 export async function getDisplayCurrency(): Promise<CurrencyCode> {
   const userId = await getUserId();
   const { data } = await supabase
