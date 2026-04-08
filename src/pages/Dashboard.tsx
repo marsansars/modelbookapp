@@ -189,13 +189,6 @@ export default function Dashboard() {
               <p className="font-heading font-semibold text-primary">{fmt(totalWriteOffs)}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3 p-3 rounded-md bg-secondary border border-border">
-            <CheckCircle2 className="h-5 w-5 text-success shrink-0" />
-            <div>
-              <p className="text-xs text-muted-foreground">Total Expenses</p>
-              <p className="font-heading font-semibold text-foreground">{fmt(totalExpenses)}</p>
-            </div>
-          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
