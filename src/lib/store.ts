@@ -94,6 +94,7 @@ function mapJobFromDb(row: any): Job {
     agencyId: row.agency_id || undefined,
     status: row.status as Job['status'],
     notes: row.notes || undefined,
+    paidDate: row.paid_date || undefined,
     attachments: (row.attachments as unknown as JobAttachment[]) || [],
   };
 }
@@ -140,6 +141,7 @@ export async function updateJob(id: string, updates: Partial<Job>): Promise<void
   if (updates.netDays !== undefined) dbUpdates.net_days = updates.netDays;
   if (updates.agencyId !== undefined) dbUpdates.agency_id = updates.agencyId || null;
   if (updates.status !== undefined) dbUpdates.status = updates.status;
+  if (updates.paidDate !== undefined) dbUpdates.paid_date = updates.paidDate || null;
   if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
   if (updates.attachments !== undefined) dbUpdates.attachments = updates.attachments;
 

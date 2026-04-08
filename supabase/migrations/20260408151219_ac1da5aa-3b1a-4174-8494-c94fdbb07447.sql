@@ -1,0 +1,1 @@
+ALTER TABLE public.jobs ADD COLUMN paid_date text DEFAULT NULL;

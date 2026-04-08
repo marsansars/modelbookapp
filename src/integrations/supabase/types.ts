@@ -116,6 +116,7 @@ export type Database = {
           job_date: string
           net_days: number
           notes: string | null
+          paid_date: string | null
           rate: number
           status: string
           tax_percent: number
@@ -134,6 +135,7 @@ export type Database = {
           job_date: string
           net_days?: number
           notes?: string | null
+          paid_date?: string | null
           rate?: number
           status?: string
           tax_percent?: number
@@ -152,6 +154,7 @@ export type Database = {
           job_date?: string
           net_days?: number
           notes?: string | null
+          paid_date?: string | null
           rate?: number
           status?: string
           tax_percent?: number

@@ -26,6 +26,7 @@ export interface Job {
   netDays: number;
   agencyId?: string;
   status: 'pending' | 'invoiced' | 'paid' | 'overdue';
+  paidDate?: string;
   notes?: string;
   attachments?: JobAttachment[];
 }

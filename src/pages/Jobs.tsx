@@ -13,7 +13,10 @@ import { EditJobDialog } from "@/components/EditJobDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, ChevronDown, ChevronUp, Receipt, CheckCircle2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Trash2, ChevronDown, ChevronUp, Receipt, CheckCircle2, CalendarCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Jobs() {
@@ -24,6 +27,7 @@ export default function Jobs() {
   const [rates, setRates] = useState<Record<string, number>>({});
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
   const [cats, setCats] = useState<Record<string, ExpenseCategoryInfo>>({});
+  const [paymentDialog, setPaymentDialog] = useState<{ jobId: string; date: string } | null>(null);
 
   const reload = async () => {
     const [j, a, e, c] = await Promise.all([getJobs(), getAgencies(), getExpenses(), getAllExpenseCategories()]);
@@ -48,8 +52,15 @@ export default function Jobs() {
   const getAgencyName = (id?: string) => agencies.find(a => a.id === id)?.name;
   const getJobExpenses = (jobId: string) => expenses.filter(e => e.jobId === jobId);
 
-  const handleStatusChange = async (jobId: string, status: Job['status']) => {
-    await updateJob(jobId, { status });
+  const handleRecordPayment = async () => {
+    if (!paymentDialog) return;
+    await updateJob(paymentDialog.jobId, { status: 'paid', paidDate: paymentDialog.date });
+    setPaymentDialog(null);
+    await reload();
+  };
+
+  const handleUnmarkPaid = async (jobId: string) => {
+    await updateJob(jobId, { status: 'pending', paidDate: '' });
     await reload();
   };
 
@@ -117,20 +128,19 @@ export default function Jobs() {
                     <p className="text-xs text-muted-foreground mt-1">
                       {agencyName && <span className="text-primary">{agencyName} · </span>}
                       Job: {format(parseLocalDate(job.jobDate), 'MMM d, yyyy')} · Due: {format(getDueDate(job.jobDate, job.netDays), 'MMM d, yyyy')} (Net {job.netDays})
+                      {job.paidDate && <span className="text-success"> · Paid: {format(parseLocalDate(job.paidDate), 'MMM d, yyyy')}</span>}
                     </p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <Select value={job.status} onValueChange={v => handleStatusChange(job.id, v as Job['status'])}>
-                      <SelectTrigger className="w-28 h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="invoiced">Invoiced</SelectItem>
-                        <SelectItem value="paid">Paid</SelectItem>
-                        <SelectItem value="overdue">Overdue</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {job.status === 'paid' ? (
+                      <Button variant="outline" size="sm" className="h-8 text-xs text-success border-success/30 gap-1" onClick={() => handleUnmarkPaid(job.id)}>
+                        <CalendarCheck className="h-3.5 w-3.5" /> Paid
+                      </Button>
+                    ) : (
+                      <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={() => setPaymentDialog({ jobId: job.id, date: format(new Date(), 'yyyy-MM-dd') })}>
+                        <CalendarCheck className="h-3.5 w-3.5" /> Record Payment
+                      </Button>
+                    )}
                     <EditJobDialog job={job} onUpdated={reload} />
                     <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => handleDeleteJob(job.id)}>
                       <Trash2 className="h-4 w-4" />
@@ -229,6 +239,26 @@ export default function Jobs() {
           })}
         </div>
       )}
+
+      <Dialog open={!!paymentDialog} onOpenChange={open => !open && setPaymentDialog(null)}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-heading">Record Payment</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="paid-date">Payment Date</Label>
+              <Input
+                id="paid-date"
+                type="date"
+                value={paymentDialog?.date || ''}
+                onChange={e => setPaymentDialog(prev => prev ? { ...prev, date: e.target.value } : null)}
+              />
+            </div>
+            <Button className="w-full" onClick={handleRecordPayment}>Confirm Payment</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
