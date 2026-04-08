@@ -21,6 +21,8 @@ export default function Agencies() {
   const [displayCur, setDisplayCur] = useState<CurrencyCode>("USD");
   const [rates, setRates] = useState<Record<string, number>>({});
   const [expandedAgency, setExpandedAgency] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({ name: '', defaultAgentPercent: '', defaultCurrency: 'USD' as CurrencyCode, defaultNetDays: '' });
 
   const reload = async () => {
     const [a, j] = await Promise.all([getAgencies(), getJobs()]);
