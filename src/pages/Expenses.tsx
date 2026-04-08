@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { getExpenses, getJobs, deleteExpense, updateExpense, getDisplayCurrency, setDisplayCurrency } from "@/lib/store";
-import { Expense, Job, EXPENSE_CATEGORIES, CurrencyCode } from "@/lib/types";
+import { getExpenses, getJobs, deleteExpense, updateExpense, getDisplayCurrency, setDisplayCurrency, getAllExpenseCategories } from "@/lib/store";
+import { Expense, Job, CurrencyCode, ExpenseCategoryInfo } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { AddExpenseDialog } from "@/components/AddExpenseDialog";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { EditExpenseDialog } from "@/components/EditExpenseDialog";
+import { ManageCategoriesDialog } from "@/components/ManageCategoriesDialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trash2, CheckCircle2 } from "lucide-react";
@@ -16,10 +17,12 @@ export default function Expenses() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [displayCur, setDisplayCur] = useState<CurrencyCode>(getDisplayCurrency());
   const [rates, setRates] = useState<Record<string, number>>({});
+  const [cats, setCats] = useState<Record<string, ExpenseCategoryInfo>>({});
 
   const reload = () => {
     setExpenses(getExpenses());
     setJobs(getJobs());
+    setCats(getAllExpenseCategories());
   };
   useEffect(() => {
     reload();
@@ -52,6 +55,7 @@ export default function Expenses() {
           <p className="text-muted-foreground mt-1">Track every dollar you spend on the job.</p>
         </div>
         <div className="flex items-center gap-2">
+          <ManageCategoriesDialog onUpdated={reload} />
           <CurrencySelector value={displayCur} onChange={c => { setDisplayCur(c); setDisplayCurrency(c); }} />
           <AddExpenseDialog onAdded={reload} />
         </div>
@@ -60,8 +64,8 @@ export default function Expenses() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {Object.entries(byCategory).map(([cat, amt]) => (
           <div key={cat} className="glass-card p-4 text-center">
-            <p className="text-2xl">{EXPENSE_CATEGORIES[cat as keyof typeof EXPENSE_CATEGORIES]?.icon}</p>
-            <p className="text-xs text-muted-foreground mt-1">{EXPENSE_CATEGORIES[cat as keyof typeof EXPENSE_CATEGORIES]?.label}</p>
+            <p className="text-2xl">{cats[cat]?.icon || '📋'}</p>
+            <p className="text-xs text-muted-foreground mt-1">{cats[cat]?.label || cat}</p>
             <p className="font-heading font-semibold text-foreground mt-1">{fmt(amt)}</p>
           </div>
         ))}
@@ -92,10 +96,10 @@ export default function Expenses() {
                 className="glass-card p-4 flex items-center justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">{EXPENSE_CATEGORIES[exp.category]?.icon}</span>
+                  <span className="text-xl">{cats[exp.category]?.icon || '📋'}</span>
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="font-medium text-foreground">{exp.description || EXPENSE_CATEGORIES[exp.category]?.label}</p>
+                      <p className="font-medium text-foreground">{exp.description || cats[exp.category]?.label || exp.category}</p>
                       {exp.reimbursable && (
                         <Badge className={exp.reimbursed
                           ? "bg-success/20 text-success border-success/30 text-[10px] px-1.5 py-0"

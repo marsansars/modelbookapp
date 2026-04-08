@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { getJobs, updateJob, deleteJob, getAgencies, getExpenses, updateExpense, getDisplayCurrency, setDisplayCurrency } from "@/lib/store";
-import { Job, Agency, Expense, CurrencyCode, CURRENCIES, EXPENSE_CATEGORIES, calculateJobBreakdown, getDueDate } from "@/lib/types";
+import { getJobs, updateJob, deleteJob, getAgencies, getExpenses, updateExpense, getDisplayCurrency, setDisplayCurrency, getAllExpenseCategories } from "@/lib/store";
+import { Job, Agency, Expense, CurrencyCode, CURRENCIES, calculateJobBreakdown, getDueDate } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { AddJobDialog } from "@/components/AddJobDialog";
 import { AddExpenseDialog } from "@/components/AddExpenseDialog";
@@ -182,9 +182,9 @@ export default function Jobs() {
                             {jobExpenses.map(exp => (
                               <div key={exp.id} className="flex items-center justify-between p-2.5 rounded-md bg-secondary/30 text-sm">
                                 <div className="flex items-center gap-2.5">
-                                  <span>{EXPENSE_CATEGORIES[exp.category]?.icon}</span>
+                                  <span>{getAllExpenseCategories()[exp.category]?.icon || '📋'}</span>
                                   <div>
-                                    <p className="text-foreground">{exp.description || EXPENSE_CATEGORIES[exp.category]?.label}</p>
+                                    <p className="text-foreground">{exp.description || getAllExpenseCategories()[exp.category]?.label || exp.category}</p>
                                     <p className="text-xs text-muted-foreground">
                                       {format(new Date(exp.date), 'MMM d, yyyy')}
                                       {exp.reimbursable && (

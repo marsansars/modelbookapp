@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { getJobs, getExpenses, getDisplayCurrency, setDisplayCurrency } from "@/lib/store";
-import { Job, Expense, CurrencyCode, calculateJobBreakdown, EXPENSE_CATEGORIES } from "@/lib/types";
+import { getJobs, getExpenses, getDisplayCurrency, setDisplayCurrency, getAllExpenseCategories } from "@/lib/store";
+import { Job, Expense, CurrencyCode, calculateJobBreakdown } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { exportJobsCSV, exportExpensesCSV, exportSummaryCSV } from "@/lib/csv-export";
 import { StatCard } from "@/components/StatCard";
@@ -121,7 +121,7 @@ export default function Bookkeeping() {
               <div className="space-y-2">
                 {Object.entries(expByCategory).sort((a, b) => b[1] - a[1]).map(([cat, amt]) => (
                   <div key={cat} className="flex justify-between items-center text-sm">
-                    <span>{EXPENSE_CATEGORIES[cat as keyof typeof EXPENSE_CATEGORIES]?.icon} {EXPENSE_CATEGORIES[cat as keyof typeof EXPENSE_CATEGORIES]?.label}</span>
+                    <span>{getAllExpenseCategories()[cat]?.icon || '📋'} {getAllExpenseCategories()[cat]?.label || cat}</span>
                     <span className="font-medium">{fmt(amt)}</span>
                   </div>
                 ))}
