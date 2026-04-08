@@ -96,6 +96,38 @@ export default function Dashboard() {
         <StatCard label="Your Net" value={fmt(totalNet)} sublabel={`After ${fmt(totalExpenses)} expenses`} accent />
       </div>
 
+      {/* Upcoming Payments */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-6">
+        <h2 className="font-heading text-lg font-semibold mb-4">Upcoming Payments</h2>
+        {pendingJobs.length === 0 ? (
+          <p className="text-muted-foreground text-sm">No pending payments. Add a job to get started.</p>
+        ) : (
+          <div className="space-y-3">
+            {pendingJobs.map(job => {
+              const { netPay } = calculateJobBreakdown(job.rate, job.agentPercent, job.taxPercent);
+              const daysLeft = getDaysUntilDue(job.jobDate, job.netDays);
+              const agencyName = getAgencyName(job.agencyId);
+              return (
+                <div key={job.id} className="flex items-center justify-between p-3 rounded-md bg-secondary/50">
+                  <div>
+                    <p className="font-medium text-foreground">{job.client}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {agencyName && <span className="text-primary">{agencyName} · </span>}
+                      Due {format(getDueDate(job.jobDate, job.netDays), 'MMM d, yyyy')} (Net {job.netDays})
+                      {daysLeft <= 0 && ' — Follow up with accounting!'}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-foreground">{fmt(conv(netPay, job.currency))}</span>
+                    <DueDateBadge jobDate={job.jobDate} status={job.status} netDays={job.netDays} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </motion.div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-6">
           <EarningsChart jobs={jobs} displayCur={displayCur} rates={rates} />
@@ -184,57 +216,6 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-6">
-          <h2 className="font-heading text-lg font-semibold mb-4">Upcoming Payments</h2>
-          {pendingJobs.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No pending payments. Add a job to get started.</p>
-          ) : (
-            <div className="space-y-3">
-              {pendingJobs.map(job => {
-                const { netPay } = calculateJobBreakdown(job.rate, job.agentPercent, job.taxPercent);
-                const daysLeft = getDaysUntilDue(job.jobDate, job.netDays);
-                const agencyName = getAgencyName(job.agencyId);
-                return (
-                  <div key={job.id} className="flex items-center justify-between p-3 rounded-md bg-secondary/50">
-                    <div>
-                      <p className="font-medium text-foreground">{job.client}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {agencyName && <span className="text-primary">{agencyName} · </span>}
-                        Due {format(getDueDate(job.jobDate, job.netDays), 'MMM d, yyyy')} (Net {job.netDays})
-                        {daysLeft <= 0 && ' — Follow up with accounting!'}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-sm font-medium text-foreground">{fmt(conv(netPay, job.currency))}</span>
-                      <DueDateBadge jobDate={job.jobDate} status={job.status} netDays={job.netDays} />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </motion.div>
-
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="glass-card p-6">
-          <h2 className="font-heading text-lg font-semibold mb-4">Recent Expenses</h2>
-          {expenses.length === 0 ? (
-            <p className="text-muted-foreground text-sm">No expenses yet. Track your spending to stay organized.</p>
-          ) : (
-            <div className="space-y-3">
-              {expenses.slice(-5).reverse().map(exp => (
-                <div key={exp.id} className="flex items-center justify-between p-3 rounded-md bg-secondary/50">
-                  <div>
-                    <p className="font-medium text-foreground">{exp.description || exp.category}</p>
-                    <p className="text-xs text-muted-foreground">{format(new Date(exp.date), 'MMM d, yyyy')}</p>
-                  </div>
-                  <span className="text-sm font-medium text-destructive">-{fmt(conv(exp.amount, exp.currency))}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </motion.div>
-      </div>
     </div>
   );
 }
