@@ -78,10 +78,10 @@ export default function Jobs() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="space-y-3">
         <div>
-          <h1 className="text-3xl font-heading font-semibold">Jobs & Bookings</h1>
-          <p className="text-muted-foreground mt-1">Track every job, see what you're owed.</p>
+          <h1 className="text-2xl sm:text-3xl font-heading font-semibold">Jobs & Bookings</h1>
+          <p className="text-muted-foreground text-sm mt-1">Track every job, see what you're owed.</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <CurrencySelector value={displayCur} onChange={c => { setDisplayCur(c); setDisplayCurrency(c); }} />
@@ -164,28 +164,28 @@ export default function Jobs() {
                 transition={{ delay: i * 0.05 }}
                 className="glass-card p-5 space-y-4"
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3 mb-1">
-                      <h3 className="font-heading font-semibold text-lg text-foreground truncate">{job.client}</h3>
+                <div className="space-y-3">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <h3 className="font-heading font-semibold text-base sm:text-lg text-foreground">{job.client}</h3>
                       <DueDateBadge jobDate={job.jobDate} status={job.status} netDays={job.netDays} />
                       {reimbursableExpenses.length > 0 && (
-                        <Badge className={reimbursedCount === reimbursableExpenses.length
+                        <Badge className={`text-[11px] ${reimbursedCount === reimbursableExpenses.length
                           ? "bg-success/20 text-success border-success/30"
                           : "bg-warning/20 text-warning border-warning/30"
-                        }>
+                        }`}>
                           {reimbursedCount}/{reimbursableExpenses.length} reimbursed
                         </Badge>
                       )}
                     </div>
                     <p className="text-sm text-muted-foreground">{job.description}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                       {agencyName && <span className="text-primary">{agencyName} · </span>}
                       Job: {format(parseLocalDate(job.jobDate), 'MMM d, yyyy')} · Due: {format(getDueDate(job.jobDate, job.netDays), 'MMM d, yyyy')} (Net {job.netDays})
                       {job.paidDate && <span className="text-success"> · Paid: {format(parseLocalDate(job.paidDate), 'MMM d, yyyy')}</span>}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-1 flex-wrap">
                     {job.status === 'paid' ? (
                       <Button variant="outline" size="sm" className="h-8 text-xs text-success border-success/30 gap-1" onClick={() => handleUnmarkPaid(job.id)}>
                         <CalendarCheck className="h-3.5 w-3.5" /> Paid
@@ -215,20 +215,20 @@ export default function Jobs() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-3 border-t border-border/50">
-                  <div>
-                    <p className="text-muted-foreground text-xs mb-1">Total Rate ({CURRENCIES[job.currency].symbol})</p>
-                    <p className="font-medium text-foreground">{fmtOrig(job.rate, job.currency)}</p>
-                    {showConverted && <p className="text-xs text-muted-foreground">≈ {fmt(conv(job.rate, job.currency))}</p>}
+                <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-3 border-t border-border/50">
+                  <div className="min-w-0">
+                    <p className="text-muted-foreground text-[11px] sm:text-xs mb-1">Rate ({CURRENCIES[job.currency].symbol})</p>
+                    <p className="font-medium text-foreground text-sm sm:text-base truncate">{fmtOrig(job.rate, job.currency)}</p>
+                    {showConverted && <p className="text-[10px] sm:text-xs text-muted-foreground truncate">≈ {fmt(conv(job.rate, job.currency))}</p>}
                   </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs mb-1">Agent ({job.agentPercent}%)</p>
-                    <p className="font-medium text-foreground">-{fmtOrig(agentFee, job.currency)}</p>
+                  <div className="min-w-0">
+                    <p className="text-muted-foreground text-[11px] sm:text-xs mb-1">Agent ({job.agentPercent}%)</p>
+                    <p className="font-medium text-foreground text-sm sm:text-base truncate">-{fmtOrig(agentFee, job.currency)}</p>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs mb-1">Your Net</p>
-                    <p className="font-heading font-semibold text-primary">{fmtOrig(netPay, job.currency)}</p>
-                    {showConverted && <p className="text-xs text-muted-foreground">≈ {fmt(conv(netPay, job.currency))}</p>}
+                  <div className="min-w-0">
+                    <p className="text-muted-foreground text-[11px] sm:text-xs mb-1">Your Net</p>
+                    <p className="font-heading font-semibold text-primary text-sm sm:text-base truncate">{fmtOrig(netPay, job.currency)}</p>
+                    {showConverted && <p className="text-[10px] sm:text-xs text-muted-foreground truncate">≈ {fmt(conv(netPay, job.currency))}</p>}
                   </div>
                 </div>
 
