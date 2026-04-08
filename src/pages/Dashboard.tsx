@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { format, startOfMonth, startOfYear, endOfYear, subYears } from "date-fns";
+import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, subYears } from "date-fns";
 import { StatCard } from "@/components/StatCard";
 import { DueDateBadge } from "@/components/DueDateBadge";
 import { CurrencySelector } from "@/components/CurrencySelector";
@@ -10,6 +10,7 @@ import { Job, Expense, Agency, CurrencyCode, calculateJobBreakdown, getDueDate, 
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { motion } from "framer-motion";
 import { Receipt, FileText, Building2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type TimePeriod = 'month' | 'year' | 'last-year';
 
@@ -17,9 +18,9 @@ function getPeriodRange(period: TimePeriod): { start: Date; end: Date } {
   const now = new Date();
   switch (period) {
     case 'month':
-      return { start: startOfMonth(now), end: now };
+      return { start: startOfMonth(now), end: endOfMonth(now) };
     case 'year':
-      return { start: startOfYear(now), end: now };
+      return { start: startOfYear(now), end: endOfYear(now) };
     case 'last-year': {
       const lastYear = subYears(now, 1);
       return { start: startOfYear(lastYear), end: endOfYear(lastYear) };
@@ -144,21 +145,18 @@ export default function Dashboard() {
             <h1 className="text-3xl font-heading font-semibold text-foreground">Dashboard</h1>
             <p className="text-muted-foreground mt-1 font-body">Your financial overview at a glance.</p>
           </div>
-          <div className="flex items-center gap-1 bg-secondary/50 rounded-lg p-1">
-            {(Object.keys(PERIOD_LABELS) as TimePeriod[]).map((key) => (
-              <button
-                key={key}
-                onClick={() => setPeriod(key)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                  period === key
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {PERIOD_LABELS[key]}
-              </button>
-            ))}
-          </div>
+          <Select value={period} onValueChange={(v) => setPeriod(v as TimePeriod)}>
+            <SelectTrigger className="w-[140px] h-9 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(Object.keys(PERIOD_LABELS) as TimePeriod[]).map((key) => (
+                <SelectItem key={key} value={key} className="text-xs">
+                  {PERIOD_LABELS[key]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <CurrencySelector value={displayCur} onChange={handleCurrencyChange} />
       </div>
