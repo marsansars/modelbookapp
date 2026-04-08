@@ -35,7 +35,7 @@ export function AppSidebar({ displayName }: AppSidebarProps) {
         <div className={`px-4 mb-8 ${collapsed ? 'px-2' : ''}`}>
           {!collapsed ? (
             <h1 className="font-heading text-xl font-semibold text-gradient-gold">
-              {title}
+              ModelBook
             </h1>
           ) : (
             <span className="text-primary font-heading text-lg font-bold block text-center">M</span>
