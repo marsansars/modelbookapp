@@ -15,6 +15,7 @@ import Expenses from "./pages/Expenses";
 import Bookkeeping from "./pages/Bookkeeping";
 import Agencies from "./pages/Agencies";
 import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import { LogOut, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -137,6 +138,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/*" element={<ProtectedLayout />} />
           </Routes>
         </BrowserRouter>
