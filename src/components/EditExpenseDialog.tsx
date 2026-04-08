@@ -6,8 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Pencil } from "lucide-react";
-import { updateExpense, getJobs } from "@/lib/store";
-import { Expense, ExpenseCategory, EXPENSE_CATEGORIES, CurrencyCode, CURRENCIES, Job } from "@/lib/types";
+import { updateExpense, getJobs, getAllExpenseCategories } from "@/lib/store";
+import { Expense, ExpenseCategory, CurrencyCode, CURRENCIES, Job, ExpenseCategoryInfo } from "@/lib/types";
 
 interface Props {
   expense: Expense;
@@ -17,6 +17,7 @@ interface Props {
 export function EditExpenseDialog({ expense, onUpdated }: Props) {
   const [open, setOpen] = useState(false);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [categories, setCategories] = useState<Record<string, ExpenseCategoryInfo>>({});
   const [form, setForm] = useState({
     date: expense.date,
     category: expense.category,
@@ -30,6 +31,7 @@ export function EditExpenseDialog({ expense, onUpdated }: Props) {
   useEffect(() => {
     if (open) {
       setJobs(getJobs());
+      setCategories(getAllExpenseCategories());
       setForm({
         date: expense.date,
         category: expense.category,
@@ -78,7 +80,7 @@ export function EditExpenseDialog({ expense, onUpdated }: Props) {
             <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v as ExpenseCategory }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {Object.entries(EXPENSE_CATEGORIES).map(([k, v]) => (
+                {Object.entries(categories).map(([k, v]) => (
                   <SelectItem key={k} value={k}>{v.icon} {v.label}</SelectItem>
                 ))}
               </SelectContent>

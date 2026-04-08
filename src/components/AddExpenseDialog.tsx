@@ -6,8 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus } from "lucide-react";
-import { addExpense, getJobs } from "@/lib/store";
-import { Expense, ExpenseCategory, EXPENSE_CATEGORIES, CurrencyCode, CURRENCIES, Job } from "@/lib/types";
+import { addExpense, getJobs, getAllExpenseCategories } from "@/lib/store";
+import { Expense, ExpenseCategory, CurrencyCode, CURRENCIES, Job, ExpenseCategoryInfo } from "@/lib/types";
 
 interface Props {
   onAdded: () => void;
@@ -17,6 +17,7 @@ interface Props {
 export function AddExpenseDialog({ onAdded, defaultJobId }: Props) {
   const [open, setOpen] = useState(false);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [categories, setCategories] = useState<Record<string, ExpenseCategoryInfo>>({});
   const [form, setForm] = useState({
     date: '', category: 'meals' as ExpenseCategory, description: '', amount: '',
     currency: 'USD' as CurrencyCode, jobId: defaultJobId || '', reimbursable: false,
@@ -24,7 +25,7 @@ export function AddExpenseDialog({ onAdded, defaultJobId }: Props) {
 
   const handleOpen = (o: boolean) => {
     setOpen(o);
-    if (o) setJobs(getJobs());
+    if (o) { setJobs(getJobs()); setCategories(getAllExpenseCategories()); }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -65,7 +66,7 @@ export function AddExpenseDialog({ onAdded, defaultJobId }: Props) {
             <Select value={form.category} onValueChange={v => setForm(f => ({ ...f, category: v as ExpenseCategory }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {Object.entries(EXPENSE_CATEGORIES).map(([k, v]) => (
+                {Object.entries(categories).map(([k, v]) => (
                   <SelectItem key={k} value={k}>{v.icon} {v.label}</SelectItem>
                 ))}
               </SelectContent>
