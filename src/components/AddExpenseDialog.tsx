@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { addExpense } from "@/lib/store";
-import { Expense, ExpenseCategory, EXPENSE_CATEGORIES } from "@/lib/types";
+import { Expense, ExpenseCategory, EXPENSE_CATEGORIES, CurrencyCode, CURRENCIES } from "@/lib/types";
 
 interface Props {
   onAdded: () => void;
@@ -15,7 +15,7 @@ interface Props {
 export function AddExpenseDialog({ onAdded }: Props) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
-    date: '', category: 'meals' as ExpenseCategory, description: '', amount: '',
+    date: '', category: 'meals' as ExpenseCategory, description: '', amount: '', currency: 'USD' as CurrencyCode,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -26,9 +26,10 @@ export function AddExpenseDialog({ onAdded }: Props) {
       category: form.category,
       description: form.description.trim(),
       amount: parseFloat(form.amount) || 0,
+      currency: form.currency,
     };
     addExpense(expense);
-    setForm({ date: '', category: 'meals', description: '', amount: '' });
+    setForm({ date: '', category: 'meals', description: '', amount: '', currency: form.currency });
     setOpen(false);
     onAdded();
   };
@@ -62,9 +63,22 @@ export function AddExpenseDialog({ onAdded }: Props) {
             <Label htmlFor="expDesc">Description</Label>
             <Input id="expDesc" value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} placeholder="e.g. Uber to set" />
           </div>
-          <div>
-            <Label htmlFor="expAmt">Amount ($)</Label>
-            <Input id="expAmt" type="number" min="0" step="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} required />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label htmlFor="expAmt">Amount</Label>
+              <Input id="expAmt" type="number" min="0" step="0.01" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} required />
+            </div>
+            <div>
+              <Label>Currency</Label>
+              <Select value={form.currency} onValueChange={v => setForm(f => ({ ...f, currency: v as CurrencyCode }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(CURRENCIES).map(([code, { symbol }]) => (
+                    <SelectItem key={code} value={code}>{symbol} {code}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <Button type="submit" className="w-full">Save Expense</Button>
         </form>

@@ -1,33 +1,45 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { getExpenses, deleteExpense } from "@/lib/store";
-import { Expense, EXPENSE_CATEGORIES } from "@/lib/types";
+import { getExpenses, deleteExpense, getDisplayCurrency, setDisplayCurrency } from "@/lib/store";
+import { Expense, EXPENSE_CATEGORIES, CurrencyCode, CURRENCIES } from "@/lib/types";
+import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { AddExpenseDialog } from "@/components/AddExpenseDialog";
+import { CurrencySelector } from "@/components/CurrencySelector";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Expenses() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const reload = () => setExpenses(getExpenses());
-  useEffect(reload, []);
+  const [displayCur, setDisplayCur] = useState<CurrencyCode>(getDisplayCurrency());
+  const [rates, setRates] = useState<Record<string, number>>({});
 
-  const fmt = (n: number) => `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  const total = expenses.reduce((s, e) => s + e.amount, 0);
+  const reload = () => setExpenses(getExpenses());
+  useEffect(() => {
+    reload();
+    fetchExchangeRates().then(r => setRates(r.rates));
+  }, []);
+
+  const conv = (amount: number, from: CurrencyCode) => convertAmount(amount, from, displayCur, rates);
+  const fmt = (n: number) => formatCurrency(n, displayCur);
+  const total = expenses.reduce((s, e) => s + conv(e.amount, e.currency), 0);
 
   const byCategory = expenses.reduce((acc, e) => {
-    acc[e.category] = (acc[e.category] || 0) + e.amount;
+    acc[e.category] = (acc[e.category] || 0) + conv(e.amount, e.currency);
     return acc;
   }, {} as Record<string, number>);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-3xl font-heading font-semibold">Expenses</h1>
           <p className="text-muted-foreground mt-1">Track every dollar you spend on the job.</p>
         </div>
-        <AddExpenseDialog onAdded={reload} />
+        <div className="flex items-center gap-2">
+          <CurrencySelector value={displayCur} onChange={c => { setDisplayCur(c); setDisplayCurrency(c); }} />
+          <AddExpenseDialog onAdded={reload} />
+        </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -53,29 +65,35 @@ export default function Expenses() {
         </div>
       ) : (
         <div className="space-y-2">
-          {expenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((exp, i) => (
-            <motion.div
-              key={exp.id}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.03 }}
-              className="glass-card p-4 flex items-center justify-between"
-            >
-              <div className="flex items-center gap-3">
-                <span className="text-xl">{EXPENSE_CATEGORIES[exp.category]?.icon}</span>
-                <div>
-                  <p className="font-medium text-foreground">{exp.description || EXPENSE_CATEGORIES[exp.category]?.label}</p>
-                  <p className="text-xs text-muted-foreground">{format(new Date(exp.date), 'MMM d, yyyy')}</p>
+          {expenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((exp, i) => {
+            const showConverted = exp.currency !== displayCur;
+            return (
+              <motion.div
+                key={exp.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.03 }}
+                className="glass-card p-4 flex items-center justify-between"
+              >
+                <div className="flex items-center gap-3">
+                  <span className="text-xl">{EXPENSE_CATEGORIES[exp.category]?.icon}</span>
+                  <div>
+                    <p className="font-medium text-foreground">{exp.description || EXPENSE_CATEGORIES[exp.category]?.label}</p>
+                    <p className="text-xs text-muted-foreground">{format(new Date(exp.date), 'MMM d, yyyy')}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="font-medium text-foreground">{fmt(exp.amount)}</span>
-                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => { deleteExpense(exp.id); reload(); }}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </motion.div>
-          ))}
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <span className="font-medium text-foreground">{formatCurrency(exp.amount, exp.currency)}</span>
+                    {showConverted && <p className="text-xs text-muted-foreground">≈ {fmt(conv(exp.amount, exp.currency))}</p>}
+                  </div>
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => { deleteExpense(exp.id); reload(); }}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       )}
     </div>

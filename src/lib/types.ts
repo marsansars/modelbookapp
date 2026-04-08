@@ -1,11 +1,22 @@
+export interface Agency {
+  id: string;
+  name: string;
+  defaultAgentPercent: number;
+  defaultCurrency: CurrencyCode;
+  defaultNetDays: number;
+}
+
 export interface Job {
   id: string;
   client: string;
   description: string;
   jobDate: string;
   rate: number;
+  currency: CurrencyCode;
   agentPercent: number;
   taxPercent: number;
+  netDays: number;
+  agencyId?: string;
   status: 'pending' | 'invoiced' | 'paid' | 'overdue';
   notes?: string;
 }
@@ -16,6 +27,7 @@ export interface Expense {
   category: ExpenseCategory;
   description: string;
   amount: number;
+  currency: CurrencyCode;
   receipt?: string;
 }
 
@@ -38,16 +50,41 @@ export const EXPENSE_CATEGORIES: Record<ExpenseCategory, { label: string; icon: 
   other: { label: 'Other', icon: '📋' },
 };
 
-export const NET_DAYS = 60;
+export type CurrencyCode = 'USD' | 'EUR' | 'GBP' | 'JPY' | 'CHF' | 'AUD' | 'CAD' | 'SEK' | 'DKK' | 'NOK' | 'CNY' | 'KRW' | 'BRL' | 'ZAR' | 'HKD' | 'SGD' | 'AED' | 'INR' | 'MXN' | 'THB';
 
-export function getDueDate(jobDate: string): Date {
+export const CURRENCIES: Record<CurrencyCode, { label: string; symbol: string }> = {
+  USD: { label: 'US Dollar', symbol: '$' },
+  EUR: { label: 'Euro', symbol: '€' },
+  GBP: { label: 'British Pound', symbol: '£' },
+  JPY: { label: 'Japanese Yen', symbol: '¥' },
+  CHF: { label: 'Swiss Franc', symbol: 'CHF' },
+  AUD: { label: 'Australian Dollar', symbol: 'A$' },
+  CAD: { label: 'Canadian Dollar', symbol: 'C$' },
+  SEK: { label: 'Swedish Krona', symbol: 'kr' },
+  DKK: { label: 'Danish Krone', symbol: 'kr' },
+  NOK: { label: 'Norwegian Krone', symbol: 'kr' },
+  CNY: { label: 'Chinese Yuan', symbol: '¥' },
+  KRW: { label: 'South Korean Won', symbol: '₩' },
+  BRL: { label: 'Brazilian Real', symbol: 'R$' },
+  ZAR: { label: 'South African Rand', symbol: 'R' },
+  HKD: { label: 'Hong Kong Dollar', symbol: 'HK$' },
+  SGD: { label: 'Singapore Dollar', symbol: 'S$' },
+  AED: { label: 'UAE Dirham', symbol: 'د.إ' },
+  INR: { label: 'Indian Rupee', symbol: '₹' },
+  MXN: { label: 'Mexican Peso', symbol: 'Mex$' },
+  THB: { label: 'Thai Baht', symbol: '฿' },
+};
+
+export const DEFAULT_NET_DAYS = 60;
+
+export function getDueDate(jobDate: string, netDays: number = DEFAULT_NET_DAYS): Date {
   const d = new Date(jobDate);
-  d.setDate(d.getDate() + NET_DAYS);
+  d.setDate(d.getDate() + netDays);
   return d;
 }
 
-export function getDaysUntilDue(jobDate: string): number {
-  const due = getDueDate(jobDate);
+export function getDaysUntilDue(jobDate: string, netDays: number = DEFAULT_NET_DAYS): number {
+  const due = getDueDate(jobDate, netDays);
   const now = new Date();
   return Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 }
