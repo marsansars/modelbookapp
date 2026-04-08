@@ -1,0 +1,1 @@
+ALTER TABLE public.user_settings ADD COLUMN has_seen_tutorial boolean DEFAULT false;
