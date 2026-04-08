@@ -14,6 +14,12 @@ export interface JobAttachment {
   addedAt: string;
 }
 
+export interface LineItem {
+  id: string;
+  description: string;
+  amount: number;
+}
+
 export interface Job {
   id: string;
   client: string;
