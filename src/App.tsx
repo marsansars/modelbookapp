@@ -46,10 +46,14 @@ function ProtectedLayout() {
 
   useEffect(() => {
     if (user) {
-      getDisplayName().then((name) => {
+      Promise.all([getDisplayName(), getHasSeenTutorial()]).then(([name, seenTutorial]) => {
         setDisplayNameState(name);
         setNameLoaded(true);
-        if (!name) setShowWelcome(true);
+        if (!name) {
+          setShowWelcome(true);
+        } else if (!seenTutorial) {
+          setShowTutorial(true);
+        }
       });
     }
   }, [user]);
@@ -58,6 +62,12 @@ function ProtectedLayout() {
     await setDisplayName(name);
     setDisplayNameState(name);
     setShowWelcome(false);
+    setShowTutorial(true);
+  }, []);
+
+  const handleTutorialComplete = useCallback(async () => {
+    await setHasSeenTutorial(true);
+    setShowTutorial(false);
   }, []);
 
   const handleEditSubmit = useCallback(async () => {
