@@ -64,8 +64,8 @@ export default function Expenses() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {Object.entries(byCategory).map(([cat, amt]) => (
           <div key={cat} className="glass-card p-4 text-center">
-            <p className="text-2xl">{EXPENSE_CATEGORIES[cat as keyof typeof EXPENSE_CATEGORIES]?.icon}</p>
-            <p className="text-xs text-muted-foreground mt-1">{EXPENSE_CATEGORIES[cat as keyof typeof EXPENSE_CATEGORIES]?.label}</p>
+            <p className="text-2xl">{cats[cat]?.icon || '📋'}</p>
+            <p className="text-xs text-muted-foreground mt-1">{cats[cat]?.label || cat}</p>
             <p className="font-heading font-semibold text-foreground mt-1">{fmt(amt)}</p>
           </div>
         ))}
@@ -96,10 +96,10 @@ export default function Expenses() {
                 className="glass-card p-4 flex items-center justify-between"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">{EXPENSE_CATEGORIES[exp.category]?.icon}</span>
+                  <span className="text-xl">{cats[exp.category]?.icon || '📋'}</span>
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="font-medium text-foreground">{exp.description || EXPENSE_CATEGORIES[exp.category]?.label}</p>
+                      <p className="font-medium text-foreground">{exp.description || cats[exp.category]?.label || exp.category}</p>
                       {exp.reimbursable && (
                         <Badge className={exp.reimbursed
                           ? "bg-success/20 text-success border-success/30 text-[10px] px-1.5 py-0"
