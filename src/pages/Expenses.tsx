@@ -209,7 +209,7 @@ export default function Expenses() {
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {format(new Date(exp.date), 'MMM d, yyyy')}
+                      {format(parseLocalDate(exp.date), 'MMM d, yyyy')}
                       {agencyName && <span> · <span className="text-primary">{agencyName}</span></span>}
                       {jobName && <span> · {jobName}</span>}
                     </p>

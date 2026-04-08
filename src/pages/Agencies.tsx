@@ -187,8 +187,8 @@ export default function Agencies() {
                         breakdown.allJobs
                           .sort(
                             (a, b) =>
-                              new Date(b.jobDate).getTime() -
-                              new Date(a.jobDate).getTime()
+                              parseLocalDate(b.jobDate).getTime() -
+                              parseLocalDate(a.jobDate).getTime()
                           )
                           .map((job) => {
                             const { agentFee, netPay } = calculateJobBreakdown(
@@ -215,7 +215,7 @@ export default function Agencies() {
                                     />
                                   </div>
                                   <p className="text-xs text-muted-foreground mt-0.5">
-                                    {format(new Date(job.jobDate), "MMM d, yyyy")} ·{" "}
+                                    {format(parseLocalDate(job.jobDate), "MMM d, yyyy")} ·{" "}
                                     {job.description}
                                   </p>
                                 </div>
