@@ -38,6 +38,7 @@ function ProtectedLayout() {
   const [displayName, setDisplayNameState] = useState<string | null>(null);
   const [nameLoaded, setNameLoaded] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editValue, setEditValue] = useState("");
   const [showDisclaimer, setShowDisclaimer] = useState(true);
