@@ -80,6 +80,28 @@ export default function Agencies() {
   // Jobs not linked to any agency
   const unlinkedJobs = jobs.filter((j) => !j.agencyId);
 
+  const startEdit = (a: Agency) => {
+    setEditingId(a.id);
+    setEditForm({
+      name: a.name,
+      defaultAgentPercent: String(a.defaultAgentPercent),
+      defaultCurrency: a.defaultCurrency,
+      defaultNetDays: String(a.defaultNetDays),
+    });
+  };
+
+  const saveEdit = async () => {
+    if (!editingId || !editForm.name.trim()) return;
+    await updateAgency(editingId, {
+      name: editForm.name.trim(),
+      defaultAgentPercent: parseFloat(editForm.defaultAgentPercent) || 0,
+      defaultCurrency: editForm.defaultCurrency,
+      defaultNetDays: parseInt(editForm.defaultNetDays) || DEFAULT_NET_DAYS,
+    });
+    setEditingId(null);
+    await reload();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
