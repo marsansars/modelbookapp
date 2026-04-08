@@ -87,6 +87,16 @@ export default function Expenses() {
     return acc;
   }, {} as Record<string, { total: number; count: number }>);
 
+  // Group write-offs by category (include agent fees)
+  const writeOffsByCategory = writeOffExpenses.reduce((acc, e) => {
+    const key = e.category;
+    acc[key] = (acc[key] || 0) + conv(e.amount, e.currency);
+    return acc;
+  }, {} as Record<string, number>);
+  if (totalAgentFees > 0) {
+    writeOffsByCategory['Agency Commissions'] = (writeOffsByCategory['Agency Commissions'] || 0) + totalAgentFees;
+  }
+
   // Filter expenses
   const filteredExpenses = expenses.filter(e => {
     if (filter === 'reimbursable') return e.reimbursable;
@@ -152,6 +162,26 @@ export default function Expenses() {
                     <p className="text-xs text-muted-foreground">{data.count} expense{data.count !== 1 ? 's' : ''}</p>
                   </div>
                   <span className="font-heading font-semibold text-warning">{fmt(data.total)}</span>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {/* Tax Write-offs by Category */}
+      {Object.keys(writeOffsByCategory).length > 0 && (
+        <div className="glass-card p-5">
+          <h2 className="font-heading text-sm font-semibold mb-3 flex items-center gap-2">
+            <FileText className="h-4 w-4 text-primary" />
+            Tax Write-offs by Category
+          </h2>
+          <div className="space-y-2">
+            {Object.entries(writeOffsByCategory)
+              .sort((a, b) => b[1] - a[1])
+              .map(([cat, amount]) => (
+                <div key={cat} className="flex items-center justify-between p-3 rounded-md bg-secondary/30">
+                  <p className="text-sm font-medium text-foreground capitalize">{cat}</p>
+                  <span className="font-heading font-semibold text-primary">{fmt(amount)}</span>
                 </div>
               ))}
           </div>
