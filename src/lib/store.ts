@@ -142,10 +142,11 @@ async function saveCustomCategories(cats: Record<string, ExpenseCategoryInfo>): 
     .eq('user_id', userId)
     .maybeSingle();
 
+  const validatedCats = validateCustomCategories(cats);
   if (existing) {
-    await supabase.from('user_settings').update({ custom_categories: cats as any }).eq('user_id', userId);
+    await supabase.from('user_settings').update({ custom_categories: validatedCats as any }).eq('user_id', userId);
   } else {
-    await supabase.from('user_settings').insert({ user_id: userId, custom_categories: cats as any });
+    await supabase.from('user_settings').insert({ user_id: userId, custom_categories: validatedCats as any });
   }
 }
 
