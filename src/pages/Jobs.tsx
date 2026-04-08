@@ -13,7 +13,10 @@ import { EditJobDialog } from "@/components/EditJobDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, ChevronDown, ChevronUp, Receipt, CheckCircle2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Trash2, ChevronDown, ChevronUp, Receipt, CheckCircle2, CalendarCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Jobs() {
