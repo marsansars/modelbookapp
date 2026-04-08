@@ -18,6 +18,7 @@ import Agencies from "./pages/Agencies";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+import Install from "./pages/Install";
 import { LogOut, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -128,6 +129,7 @@ function ProtectedLayout() {
               <Route path="/agencies" element={<Agencies />} />
               <Route path="/expenses" element={<Expenses />} />
               <Route path="/bookkeeping" element={<Bookkeeping />} />
+              <Route path="/install" element={<Install />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
