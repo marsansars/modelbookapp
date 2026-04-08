@@ -19,31 +19,30 @@ export function ManageAgenciesDialog({ onChanged }: Props) {
     name: '', defaultAgentPercent: '20', defaultCurrency: 'USD' as CurrencyCode, defaultNetDays: String(DEFAULT_NET_DAYS),
   });
 
-  const reload = () => setAgencies(getAgencies());
+  const reload = async () => setAgencies(await getAgencies());
 
-  const handleOpen = (o: boolean) => {
+  const handleOpen = async (o: boolean) => {
     setOpen(o);
-    if (o) reload();
+    if (o) await reload();
   };
 
-  const handleAdd = (e: React.FormEvent) => {
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) return;
-    addAgency({
-      id: crypto.randomUUID(),
+    await addAgency({
       name: form.name.trim(),
       defaultAgentPercent: parseFloat(form.defaultAgentPercent) || 20,
       defaultCurrency: form.defaultCurrency,
       defaultNetDays: parseInt(form.defaultNetDays) || DEFAULT_NET_DAYS,
     });
     setForm({ name: '', defaultAgentPercent: '20', defaultCurrency: 'USD', defaultNetDays: String(DEFAULT_NET_DAYS) });
-    reload();
+    await reload();
     onChanged?.();
   };
 
-  const handleDelete = (id: string) => {
-    deleteAgency(id);
-    reload();
+  const handleDelete = async (id: string) => {
+    await deleteAgency(id);
+    await reload();
     onChanged?.();
   };
 

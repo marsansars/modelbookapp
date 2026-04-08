@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { addJob, getAgencies } from "@/lib/store";
-import { Job, Agency, CurrencyCode, CURRENCIES, DEFAULT_NET_DAYS } from "@/lib/types";
+import { Agency, CurrencyCode, CURRENCIES, DEFAULT_NET_DAYS } from "@/lib/types";
 
 interface Props {
   onAdded: () => void;
@@ -21,7 +21,11 @@ export function AddJobDialog({ onAdded }: Props) {
     netDays: String(DEFAULT_NET_DAYS), agencyId: '',
   });
 
-  useEffect(() => { setAgencies(getAgencies()); }, [open]);
+  useEffect(() => {
+    if (open) {
+      getAgencies().then(setAgencies);
+    }
+  }, [open]);
 
   const handleAgencyChange = (agencyId: string) => {
     if (agencyId === '_none') {
@@ -40,10 +44,9 @@ export function AddJobDialog({ onAdded }: Props) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const job: Job = {
-      id: crypto.randomUUID(),
+    await addJob({
       client: form.client.trim(),
       description: form.description.trim(),
       jobDate: form.jobDate,
@@ -54,8 +57,7 @@ export function AddJobDialog({ onAdded }: Props) {
       netDays: parseInt(form.netDays) || DEFAULT_NET_DAYS,
       agencyId: form.agencyId || undefined,
       status: 'pending',
-    };
-    addJob(job);
+    });
     setForm({ client: '', description: '', jobDate: '', rate: '', agentPercent: '20', taxPercent: '30', currency: 'USD', netDays: String(DEFAULT_NET_DAYS), agencyId: '' });
     setOpen(false);
     onAdded();

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { getJobs, updateJob, deleteJob, getAgencies, getExpenses, updateExpense, getDisplayCurrency, setDisplayCurrency, getAllExpenseCategories } from "@/lib/store";
-import { Job, Agency, Expense, CurrencyCode, CURRENCIES, calculateJobBreakdown, getDueDate } from "@/lib/types";
+import { Job, Agency, Expense, CurrencyCode, CURRENCIES, calculateJobBreakdown, getDueDate, ExpenseCategoryInfo } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { AddJobDialog } from "@/components/AddJobDialog";
 import { AddExpenseDialog } from "@/components/AddExpenseDialog";
@@ -13,7 +13,6 @@ import { EditJobDialog } from "@/components/EditJobDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Trash2, ChevronDown, ChevronUp, Receipt, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -21,30 +20,47 @@ export default function Jobs() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [displayCur, setDisplayCur] = useState<CurrencyCode>(getDisplayCurrency());
+  const [displayCur, setDisplayCur] = useState<CurrencyCode>('USD');
   const [rates, setRates] = useState<Record<string, number>>({});
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
+  const [cats, setCats] = useState<Record<string, ExpenseCategoryInfo>>({});
 
-  const reload = () => {
-    setJobs(getJobs());
-    setAgencies(getAgencies());
-    setExpenses(getExpenses());
+  const reload = async () => {
+    const [j, a, e, c] = await Promise.all([getJobs(), getAgencies(), getExpenses(), getAllExpenseCategories()]);
+    setJobs(j); setAgencies(a); setExpenses(e); setCats(c);
   };
+
   useEffect(() => {
-    reload();
-    fetchExchangeRates().then(r => setRates(r.rates));
+    const load = async () => {
+      const [j, a, e, cur, r, c] = await Promise.all([
+        getJobs(), getAgencies(), getExpenses(), getDisplayCurrency(),
+        fetchExchangeRates(), getAllExpenseCategories(),
+      ]);
+      setJobs(j); setAgencies(a); setExpenses(e); setDisplayCur(cur);
+      setRates(r.rates); setCats(c);
+    };
+    load();
   }, []);
 
   const conv = (amount: number, from: CurrencyCode) => convertAmount(amount, from, displayCur, rates);
   const fmt = (n: number) => formatCurrency(n, displayCur);
   const fmtOrig = (n: number, cur: CurrencyCode) => formatCurrency(n, cur);
   const getAgencyName = (id?: string) => agencies.find(a => a.id === id)?.name;
-
   const getJobExpenses = (jobId: string) => expenses.filter(e => e.jobId === jobId);
 
-  const toggleReimbursed = (expenseId: string, current: boolean) => {
-    updateExpense(expenseId, { reimbursed: !current });
-    reload();
+  const handleStatusChange = async (jobId: string, status: Job['status']) => {
+    await updateJob(jobId, { status });
+    await reload();
+  };
+
+  const handleDeleteJob = async (jobId: string) => {
+    await deleteJob(jobId);
+    await reload();
+  };
+
+  const toggleReimbursed = async (expenseId: string, current: boolean) => {
+    await updateExpense(expenseId, { reimbursed: !current });
+    await reload();
   };
 
   return (
@@ -84,7 +100,6 @@ export default function Jobs() {
                 transition={{ delay: i * 0.05 }}
                 className="glass-card p-5 space-y-4"
               >
-                {/* Top row: client info + status/delete */}
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-1">
@@ -106,7 +121,7 @@ export default function Jobs() {
                     </p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
-                    <Select value={job.status} onValueChange={v => { updateJob(job.id, { status: v as Job['status'] }); reload(); }}>
+                    <Select value={job.status} onValueChange={v => handleStatusChange(job.id, v as Job['status'])}>
                       <SelectTrigger className="w-28 h-8 text-xs">
                         <SelectValue />
                       </SelectTrigger>
@@ -118,13 +133,12 @@ export default function Jobs() {
                       </SelectContent>
                     </Select>
                     <EditJobDialog job={job} onUpdated={reload} />
-                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => { deleteJob(job.id); reload(); }}>
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => handleDeleteJob(job.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </div>
 
-                {/* Financial breakdown */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-3 border-t border-border/50">
                   <div>
                     <p className="text-muted-foreground text-xs mb-1">Rate ({CURRENCIES[job.currency].symbol})</p>
@@ -146,7 +160,6 @@ export default function Jobs() {
                   </div>
                 </div>
 
-                {/* Expand toggle */}
                 <button
                   onClick={() => setExpandedJob(isExpanded ? null : job.id)}
                   className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors w-full pt-1"
@@ -157,7 +170,6 @@ export default function Jobs() {
                   </span>
                 </button>
 
-                {/* Expanded section */}
                 <AnimatePresence>
                   {isExpanded && (
                     <motion.div
@@ -166,7 +178,6 @@ export default function Jobs() {
                       exit={{ height: 0, opacity: 0 }}
                       className="overflow-hidden space-y-4 pt-2 border-t border-border/50"
                     >
-                      {/* Job Expenses */}
                       <div>
                         <div className="flex items-center justify-between mb-2">
                           <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
@@ -182,9 +193,9 @@ export default function Jobs() {
                             {jobExpenses.map(exp => (
                               <div key={exp.id} className="flex items-center justify-between p-2.5 rounded-md bg-secondary/30 text-sm">
                                 <div className="flex items-center gap-2.5">
-                                  <span>{getAllExpenseCategories()[exp.category]?.icon || '📋'}</span>
+                                  <span>{cats[exp.category]?.icon || '📋'}</span>
                                   <div>
-                                    <p className="text-foreground">{exp.description || getAllExpenseCategories()[exp.category]?.label || exp.category}</p>
+                                    <p className="text-foreground">{exp.description || cats[exp.category]?.label || exp.category}</p>
                                     <p className="text-xs text-muted-foreground">
                                       {format(new Date(exp.date), 'MMM d, yyyy')}
                                       {exp.reimbursable && (
@@ -211,7 +222,6 @@ export default function Jobs() {
                         )}
                       </div>
 
-                      {/* Attachments */}
                       <div>
                         <h4 className="text-sm font-medium text-foreground mb-2">Call Sheets & Statements</h4>
                         <JobAttachments job={job} onChanged={reload} />

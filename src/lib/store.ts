@@ -1,4 +1,4 @@
-import { Job, Expense, Agency, CurrencyCode, ExpenseCategoryInfo, DEFAULT_EXPENSE_CATEGORIES } from './types';
+import { Job, Expense, Agency, CurrencyCode, ExpenseCategoryInfo, DEFAULT_EXPENSE_CATEGORIES, JobAttachment } from './types';
 import { supabase } from '@/integrations/supabase/client';
 
 // Helper to get current user id
@@ -22,9 +22,17 @@ export async function getDisplayCurrency(): Promise<CurrencyCode> {
 
 export async function setDisplayCurrency(currency: CurrencyCode): Promise<void> {
   const userId = await getUserId();
-  await supabase
+  const { data: existing } = await supabase
     .from('user_settings')
-    .upsert({ user_id: userId, display_currency: currency }, { onConflict: 'user_id' });
+    .select('id')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (existing) {
+    await supabase.from('user_settings').update({ display_currency: currency }).eq('user_id', userId);
+  } else {
+    await supabase.from('user_settings').insert({ user_id: userId, display_currency: currency });
+  }
 }
 
 export async function getCustomCategories(): Promise<Record<string, ExpenseCategoryInfo>> {
@@ -34,14 +42,23 @@ export async function getCustomCategories(): Promise<Record<string, ExpenseCateg
     .select('custom_categories')
     .eq('user_id', userId)
     .maybeSingle();
-  return (data?.custom_categories as Record<string, ExpenseCategoryInfo>) || {};
+  if (!data?.custom_categories) return {};
+  return data.custom_categories as unknown as Record<string, ExpenseCategoryInfo>;
 }
 
-export async function saveCustomCategories(cats: Record<string, ExpenseCategoryInfo>): Promise<void> {
+async function saveCustomCategories(cats: Record<string, ExpenseCategoryInfo>): Promise<void> {
   const userId = await getUserId();
-  await supabase
+  const { data: existing } = await supabase
     .from('user_settings')
-    .upsert({ user_id: userId, custom_categories: cats }, { onConflict: 'user_id' });
+    .select('id')
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  if (existing) {
+    await supabase.from('user_settings').update({ custom_categories: cats as any }).eq('user_id', userId);
+  } else {
+    await supabase.from('user_settings').insert({ user_id: userId, custom_categories: cats as any });
+  }
 }
 
 export async function getAllExpenseCategories(): Promise<Record<string, ExpenseCategoryInfo>> {
@@ -77,7 +94,7 @@ function mapJobFromDb(row: any): Job {
     agencyId: row.agency_id || undefined,
     status: row.status as Job['status'],
     notes: row.notes || undefined,
-    attachments: row.attachments || [],
+    attachments: (row.attachments as unknown as JobAttachment[]) || [],
   };
 }
 
@@ -107,12 +124,12 @@ export async function addJob(job: Omit<Job, 'id'>): Promise<void> {
     agency_id: job.agencyId || null,
     status: job.status,
     notes: job.notes || null,
-    attachments: job.attachments || [],
+    attachments: (job.attachments || []) as any,
   });
 }
 
 export async function updateJob(id: string, updates: Partial<Job>): Promise<void> {
-  const dbUpdates: any = {};
+  const dbUpdates: Record<string, any> = {};
   if (updates.client !== undefined) dbUpdates.client = updates.client;
   if (updates.description !== undefined) dbUpdates.description = updates.description;
   if (updates.jobDate !== undefined) dbUpdates.job_date = updates.jobDate;
@@ -124,7 +141,7 @@ export async function updateJob(id: string, updates: Partial<Job>): Promise<void
   if (updates.agencyId !== undefined) dbUpdates.agency_id = updates.agencyId || null;
   if (updates.status !== undefined) dbUpdates.status = updates.status;
   if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
-  if (updates.attachments !== undefined) dbUpdates.attachments = updates.attachments;
+  if (updates.attachments !== undefined) dbUpdates.attachments = updates.attachments as any;
 
   await supabase.from('jobs').update(dbUpdates).eq('id', id);
 }
@@ -178,7 +195,7 @@ export async function addExpense(expense: Omit<Expense, 'id'>): Promise<void> {
 }
 
 export async function updateExpense(id: string, updates: Partial<Expense>): Promise<void> {
-  const dbUpdates: any = {};
+  const dbUpdates: Record<string, any> = {};
   if (updates.date !== undefined) dbUpdates.date = updates.date;
   if (updates.category !== undefined) dbUpdates.category = updates.category;
   if (updates.description !== undefined) dbUpdates.description = updates.description;
@@ -231,7 +248,7 @@ export async function addAgency(agency: Omit<Agency, 'id'>): Promise<void> {
 }
 
 export async function updateAgency(id: string, updates: Partial<Agency>): Promise<void> {
-  const dbUpdates: any = {};
+  const dbUpdates: Record<string, any> = {};
   if (updates.name !== undefined) dbUpdates.name = updates.name;
   if (updates.defaultAgentPercent !== undefined) dbUpdates.default_agent_percent = updates.defaultAgentPercent;
   if (updates.defaultCurrency !== undefined) dbUpdates.default_currency = updates.defaultCurrency;

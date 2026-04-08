@@ -30,7 +30,7 @@ export function EditJobDialog({ job, onUpdated }: Props) {
 
   useEffect(() => {
     if (open) {
-      setAgencies(getAgencies());
+      getAgencies().then(setAgencies);
       setForm({
         client: job.client,
         description: job.description,
@@ -62,9 +62,9 @@ export function EditJobDialog({ job, onUpdated }: Props) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    updateJob(job.id, {
+    await updateJob(job.id, {
       client: form.client.trim(),
       description: form.description.trim(),
       jobDate: form.jobDate,
