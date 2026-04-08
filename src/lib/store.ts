@@ -1,4 +1,4 @@
-import { Job, Expense, Agency, CurrencyCode, ExpenseCategoryInfo, DEFAULT_EXPENSE_CATEGORIES, JobAttachment } from './types';
+import { Job, Expense, Agency, CurrencyCode, ExpenseCategoryInfo, DEFAULT_EXPENSE_CATEGORIES, JobAttachment, LineItem } from './types';
 import { supabase } from '@/integrations/supabase/client';
 
 // Helper to get current user id
@@ -121,6 +121,7 @@ function mapJobFromDb(row: any): Job {
     notes: row.notes || undefined,
     paidDate: row.paid_date || undefined,
     attachments: (row.attachments as unknown as JobAttachment[]) || [],
+    lineItems: (row.line_items as unknown as LineItem[]) || [],
   };
 }
 
