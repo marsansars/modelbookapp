@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 import { getJobs, getExpenses, getDisplayCurrency, setDisplayCurrency } from "@/lib/store";
 import { Job, Expense, CurrencyCode, calculateJobBreakdown, EXPENSE_CATEGORIES } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
+import { exportJobsCSV, exportExpensesCSV, exportSummaryCSV } from "@/lib/csv-export";
 import { StatCard } from "@/components/StatCard";
 import { CurrencySelector } from "@/components/CurrencySelector";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Bookkeeping() {
