@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Job, CurrencyCode, parseLocalDate } from "@/lib/types";
+import { Job, CurrencyCode, calculateJobBreakdown, parseLocalDate } from "@/lib/types";
 import { convertAmount, formatCurrency } from "@/lib/currency";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -31,7 +31,7 @@ export function EarningsChart({ jobs, displayCur, rates }: Props) {
       return d.getFullYear() === year && d.getMonth() === month;
     });
 
-    const totalIncome = filtered.reduce((s, j) => s + conv(j.rate, j.currency), 0);
+    const totalIncome = filtered.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent).netPay, j.currency), 0);
 
     let rows: { label: string; income: number }[];
     if (period === "this_month") {
@@ -46,7 +46,7 @@ export function EarningsChart({ jobs, displayCur, rates }: Props) {
         });
         rows.push({
           label: `${start}–${end}`,
-          income: weekJobs.reduce((s, j) => s + conv(j.rate, j.currency), 0),
+          income: weekJobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent).netPay, j.currency), 0),
         });
       }
     } else {
@@ -55,7 +55,7 @@ export function EarningsChart({ jobs, displayCur, rates }: Props) {
         const monthJobs = filtered.filter(j => parseLocalDate(j.jobDate).getMonth() === i);
         return {
           label,
-          income: monthJobs.reduce((s, j) => s + conv(j.rate, j.currency), 0),
+          income: monthJobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent).netPay, j.currency), 0),
         };
       });
     }
