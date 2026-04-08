@@ -152,6 +152,7 @@ export async function addJob(job: Omit<Job, 'id'>): Promise<void> {
     status: job.status,
     notes: job.notes || null,
     attachments: (job.attachments || []) as any,
+    line_items: (job.lineItems || []) as any,
   });
 }
 
@@ -170,6 +171,7 @@ export async function updateJob(id: string, updates: Partial<Job>): Promise<void
   if (updates.paidDate !== undefined) dbUpdates.paid_date = updates.paidDate || null;
   if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
   if (updates.attachments !== undefined) dbUpdates.attachments = updates.attachments;
+  if (updates.lineItems !== undefined) dbUpdates.line_items = updates.lineItems;
 
   await supabase.from('jobs').update(dbUpdates as any).eq('id', id);
 }
