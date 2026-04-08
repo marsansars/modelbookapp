@@ -1,5 +1,43 @@
-import { Job, Expense, Agency, CurrencyCode, ExpenseCategoryInfo, DEFAULT_EXPENSE_CATEGORIES, JobAttachment, LineItem } from './types';
+import { Job, Expense, Agency, CurrencyCode, ExpenseCategoryInfo, DEFAULT_EXPENSE_CATEGORIES, JobAttachment, LineItem, ATTACHMENT_LABELS } from './types';
 import { supabase } from '@/integrations/supabase/client';
+import { z } from 'zod';
+
+// ---- JSONB Validation Schemas ----
+
+const attachmentSchema = z.array(z.object({
+  id: z.string(),
+  name: z.string().max(500),
+  type: z.string().max(100),
+  dataUrl: z.string(),
+  addedAt: z.string(),
+  label: z.enum(['Call Sheet', 'Receipt', 'Statement']).optional(),
+})).max(50);
+
+const lineItemSchema = z.array(z.object({
+  id: z.string(),
+  description: z.string().max(500),
+  amount: z.number().finite(),
+})).max(100);
+
+const customCategoriesSchema = z.record(
+  z.string().max(50),
+  z.object({
+    label: z.string().max(100),
+    icon: z.string().max(10),
+  })
+).refine(obj => Object.keys(obj).length <= 50, { message: 'Too many categories' });
+
+function validateAttachments(data: unknown): JobAttachment[] {
+  return attachmentSchema.parse(data) as JobAttachment[];
+}
+
+function validateLineItems(data: unknown): LineItem[] {
+  return lineItemSchema.parse(data) as LineItem[];
+}
+
+function validateCustomCategories(data: unknown): Record<string, ExpenseCategoryInfo> {
+  return customCategoriesSchema.parse(data) as Record<string, ExpenseCategoryInfo>;
+}
 
 // Helper to get current user id
 async function getUserId(): Promise<string> {
@@ -104,10 +142,11 @@ async function saveCustomCategories(cats: Record<string, ExpenseCategoryInfo>): 
     .eq('user_id', userId)
     .maybeSingle();
 
+  const validatedCats = validateCustomCategories(cats);
   if (existing) {
-    await supabase.from('user_settings').update({ custom_categories: cats as any }).eq('user_id', userId);
+    await supabase.from('user_settings').update({ custom_categories: validatedCats as any }).eq('user_id', userId);
   } else {
-    await supabase.from('user_settings').insert({ user_id: userId, custom_categories: cats as any });
+    await supabase.from('user_settings').insert({ user_id: userId, custom_categories: validatedCats as any });
   }
 }
 
@@ -176,8 +215,8 @@ export async function addJob(job: Omit<Job, 'id'>): Promise<void> {
     agency_id: job.agencyId || null,
     status: job.status,
     notes: job.notes || null,
-    attachments: (job.attachments || []) as any,
-    line_items: (job.lineItems || []) as any,
+    attachments: validateAttachments(job.attachments || []) as any,
+    line_items: validateLineItems(job.lineItems || []) as any,
   });
 }
 
@@ -195,8 +234,8 @@ export async function updateJob(id: string, updates: Partial<Job>): Promise<void
   if (updates.status !== undefined) dbUpdates.status = updates.status;
   if (updates.paidDate !== undefined) dbUpdates.paid_date = updates.paidDate || null;
   if (updates.notes !== undefined) dbUpdates.notes = updates.notes;
-  if (updates.attachments !== undefined) dbUpdates.attachments = updates.attachments;
-  if (updates.lineItems !== undefined) dbUpdates.line_items = updates.lineItems;
+  if (updates.attachments !== undefined) dbUpdates.attachments = validateAttachments(updates.attachments);
+  if (updates.lineItems !== undefined) dbUpdates.line_items = validateLineItems(updates.lineItems);
 
   await supabase.from('jobs').update(dbUpdates as any).eq('id', id);
 }
