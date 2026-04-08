@@ -3,6 +3,8 @@ import { format } from "date-fns";
 import { StatCard } from "@/components/StatCard";
 import { DueDateBadge } from "@/components/DueDateBadge";
 import { CurrencySelector } from "@/components/CurrencySelector";
+import { EarningsChart } from "@/components/EarningsChart";
+import { PaymentStatusChart } from "@/components/PaymentStatusChart";
 import { getJobs, getExpenses, getDisplayCurrency, setDisplayCurrency, getAgencies } from "@/lib/store";
 import { Job, Expense, Agency, CurrencyCode, calculateJobBreakdown, getDueDate, getDaysUntilDue } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
@@ -58,6 +60,15 @@ export default function Dashboard() {
         <StatCard label="Agent Fees" value={fmt(totalAgent)} sublabel="Total commissions" />
         <StatCard label="Tax Reserve" value={fmt(totalTax)} sublabel="Set aside for taxes" />
         <StatCard label="Your Net" value={fmt(totalNet)} sublabel={`After ${fmt(totalExpenses)} expenses`} accent />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-6">
+          <EarningsChart jobs={jobs} displayCur={displayCur} rates={rates} />
+        </motion.div>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.05 }} className="glass-card p-6">
+          <PaymentStatusChart jobs={jobs} displayCur={displayCur} rates={rates} />
+        </motion.div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
