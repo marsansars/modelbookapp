@@ -60,7 +60,9 @@ export function PaymentStatusChart({ jobs, displayCur, rates }: Props) {
               {buckets.map((b, i) => <Cell key={i} fill={b.color} />)}
             </Pie>
             <Tooltip
-              contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12 }}
+              contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8, fontSize: 12, color: 'hsl(var(--foreground))' }}
+              itemStyle={{ color: 'hsl(var(--foreground))' }}
+              labelStyle={{ color: 'hsl(var(--foreground))' }}
               formatter={(value: number) => [fmt(value)]}
             />
           </PieChart>
