@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Job, CurrencyCode, calculateJobBreakdown, CURRENCIES } from "@/lib/types";
 import { convertAmount, formatCurrency } from "@/lib/currency";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LabelList } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type Period = "this_year" | "last_year" | "this_month";
