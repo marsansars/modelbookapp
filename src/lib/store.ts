@@ -214,8 +214,8 @@ export async function addJob(job: Omit<Job, 'id'>): Promise<void> {
     agency_id: job.agencyId || null,
     status: job.status,
     notes: job.notes || null,
-    attachments: (job.attachments || []) as any,
-    line_items: (job.lineItems || []) as any,
+    attachments: validateAttachments(job.attachments || []) as any,
+    line_items: validateLineItems(job.lineItems || []) as any,
   });
 }
 
