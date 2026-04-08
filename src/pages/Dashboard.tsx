@@ -49,6 +49,10 @@ export default function Dashboard() {
   }, 0);
   const totalExpenses = expenses.reduce((s, e) => s + conv(e.amount, e.currency), 0);
 
+  const paidJobs = jobs.filter(j => j.status === 'paid');
+  const paidJobsCount = paidJobs.length;
+  const paymentsReceived = paidJobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent).netPay, j.currency), 0);
+
   // Current (not yet due) vs Overdue earnings
   const currentEarnings = jobs
     .filter(j => j.status !== 'paid' && getDaysUntilDue(j.jobDate, j.netDays) >= 0)
@@ -130,7 +134,7 @@ export default function Dashboard() {
         </motion.div>
         <StatCard label="Total Earnings" value={fmt(totalNet)} sublabel={`${jobs.length} jobs`} accent />
         <StatCard label="Estimated Tax Planning" value={fmt(totalRecommendedTax)} sublabel="Set aside from net earnings" />
-        <StatCard label="Your Net" value={fmt(totalNet - totalRecommendedTax)} sublabel={`After ${fmt(totalExpenses)} expenses`} accent />
+        <StatCard label="Payments Received" value={fmt(paymentsReceived)} sublabel={`${paidJobsCount} paid job${paidJobsCount !== 1 ? 's' : ''}`} accent />
       </div>
 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-6">
