@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { getJobs, updateJob, deleteJob, getAgencies, getExpenses, updateExpense, getDisplayCurrency, setDisplayCurrency, getAllExpenseCategories } from "@/lib/store";
-import { Job, Agency, Expense, CurrencyCode, CURRENCIES, calculateJobBreakdown, getDueDate, ExpenseCategoryInfo } from "@/lib/types";
+import { Job, Agency, Expense, CurrencyCode, CURRENCIES, calculateJobBreakdown, getDueDate, ExpenseCategoryInfo, parseLocalDate } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { AddJobDialog } from "@/components/AddJobDialog";
 import { AddExpenseDialog } from "@/components/AddExpenseDialog";
@@ -82,7 +82,7 @@ export default function Jobs() {
         </div>
       ) : (
         <div className="space-y-3">
-          {jobs.sort((a, b) => new Date(b.jobDate).getTime() - new Date(a.jobDate).getTime()).map((job, i) => {
+          {jobs.sort((a, b) => parseLocalDate(b.jobDate).getTime() - parseLocalDate(a.jobDate).getTime()).map((job, i) => {
             const { agentFee, taxAmount, netPay } = calculateJobBreakdown(job.rate, job.agentPercent, job.taxPercent);
             const agencyName = getAgencyName(job.agencyId);
             const showConverted = job.currency !== displayCur;
@@ -116,7 +116,7 @@ export default function Jobs() {
                     <p className="text-sm text-muted-foreground">{job.description}</p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {agencyName && <span className="text-primary">{agencyName} · </span>}
-                      Job: {format(new Date(job.jobDate), 'MMM d, yyyy')} · Due: {format(getDueDate(job.jobDate, job.netDays), 'MMM d, yyyy')} (Net {job.netDays})
+                      Job: {format(parseLocalDate(job.jobDate), 'MMM d, yyyy')} · Due: {format(getDueDate(job.jobDate, job.netDays), 'MMM d, yyyy')} (Net {job.netDays})
                     </p>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
@@ -196,7 +196,7 @@ export default function Jobs() {
                                   <div>
                                     <p className="text-foreground">{exp.description || cats[exp.category]?.label || exp.category}</p>
                                     <p className="text-xs text-muted-foreground">
-                                      {format(new Date(exp.date), 'MMM d, yyyy')}
+                                      {format(parseLocalDate(exp.date), 'MMM d, yyyy')}
                                       {exp.reimbursable && (
                                         <span className={exp.reimbursed ? ' text-success' : ' text-warning'}> · {exp.reimbursed ? 'Reimbursed ✓' : 'Awaiting reimbursement'}</span>
                                       )}

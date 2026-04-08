@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { getExpenses, getJobs, deleteExpense, updateExpense, getDisplayCurrency, setDisplayCurrency, getAllExpenseCategories, getAgencies } from "@/lib/store";
-import { Expense, Job, Agency, CurrencyCode, ExpenseCategoryInfo } from "@/lib/types";
+import { Expense, Job, Agency, CurrencyCode, ExpenseCategoryInfo, parseLocalDate } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { AddExpenseDialog } from "@/components/AddExpenseDialog";
 import { CurrencySelector } from "@/components/CurrencySelector";
@@ -209,7 +209,7 @@ export default function Expenses() {
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {format(new Date(exp.date), 'MMM d, yyyy')}
+                      {format(parseLocalDate(exp.date), 'MMM d, yyyy')}
                       {agencyName && <span> · <span className="text-primary">{agencyName}</span></span>}
                       {jobName && <span> · {jobName}</span>}
                     </p>

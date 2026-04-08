@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { getAgencies, getJobs, getDisplayCurrency } from "@/lib/store";
-import { Agency, Job, CurrencyCode, CURRENCIES, calculateJobBreakdown, getDueDate } from "@/lib/types";
+import { Agency, Job, CurrencyCode, CURRENCIES, calculateJobBreakdown, getDueDate, parseLocalDate } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { ManageAgenciesDialog } from "@/components/ManageAgenciesDialog";
 import { CurrencySelector } from "@/components/CurrencySelector";
@@ -187,8 +187,8 @@ export default function Agencies() {
                         breakdown.allJobs
                           .sort(
                             (a, b) =>
-                              new Date(b.jobDate).getTime() -
-                              new Date(a.jobDate).getTime()
+                              parseLocalDate(b.jobDate).getTime() -
+                              parseLocalDate(a.jobDate).getTime()
                           )
                           .map((job) => {
                             const { agentFee, netPay } = calculateJobBreakdown(
@@ -215,7 +215,7 @@ export default function Agencies() {
                                     />
                                   </div>
                                   <p className="text-xs text-muted-foreground mt-0.5">
-                                    {format(new Date(job.jobDate), "MMM d, yyyy")} ·{" "}
+                                    {format(parseLocalDate(job.jobDate), "MMM d, yyyy")} ·{" "}
                                     {job.description}
                                   </p>
                                 </div>
