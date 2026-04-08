@@ -117,7 +117,7 @@ export function EarningsChart({ jobs, displayCur, rates }: Props) {
       {/* Summary box */}
       <div className="mt-4">
         <div className="rounded-lg bg-primary/10 p-4 text-center">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">Total Income</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{selectedIndex !== null ? `${displayLabel} Income` : 'Total Income'}</p>
           <p className="text-xl font-heading font-semibold text-primary">{fmt(displayIncome)}</p>
         </div>
       </div>
