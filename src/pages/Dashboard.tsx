@@ -41,9 +41,8 @@ export default function Dashboard() {
   const getAgencyName = (id?: string) => agencies.find(a => a.id === id)?.name;
 
   const totalEarnings = jobs.reduce((s, j) => s + conv(j.rate, j.currency), 0);
-  const totalAgentFees = jobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).agentFee, j.currency), 0);
-  const totalTax = jobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).taxAmount, j.currency), 0);
-  const totalNet = jobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0);
+  const totalAgentFees = jobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent).agentFee, j.currency), 0);
+  const totalNet = jobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent).netPay, j.currency), 0);
   const totalExpenses = expenses.reduce((s, e) => s + conv(e.amount, e.currency), 0);
 
   // Current (not yet due) vs Overdue earnings
@@ -126,7 +125,6 @@ export default function Dashboard() {
             {showOverdue ? `${overdueCount} overdue job${overdueCount !== 1 ? 's' : ''}` : `${currentCount} pending job${currentCount !== 1 ? 's' : ''}`}
           </p>
         </motion.div>
-        <StatCard label="Tax Reserve" value={fmt(totalTax)} sublabel="Set aside for taxes" />
         <StatCard label="Your Net" value={fmt(totalNet)} sublabel={`After ${fmt(totalExpenses)} expenses`} accent />
       </div>
 

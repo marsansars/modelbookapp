@@ -17,7 +17,7 @@ export function AddJobDialog({ onAdded }: Props) {
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [form, setForm] = useState({
     client: '', description: '', jobDate: '', rate: '',
-    agentPercent: '20', taxPercent: '30', currency: 'USD' as CurrencyCode,
+    agentPercent: '20', currency: 'USD' as CurrencyCode,
     netDays: String(DEFAULT_NET_DAYS), agencyId: '',
   });
 
@@ -53,12 +53,12 @@ export function AddJobDialog({ onAdded }: Props) {
       rate: parseFloat(form.rate) || 0,
       currency: form.currency,
       agentPercent: parseFloat(form.agentPercent) || 0,
-      taxPercent: parseFloat(form.taxPercent) || 0,
+      taxPercent: 0,
       netDays: parseInt(form.netDays) || DEFAULT_NET_DAYS,
       agencyId: form.agencyId || undefined,
       status: 'pending',
     });
-    setForm({ client: '', description: '', jobDate: '', rate: '', agentPercent: '20', taxPercent: '30', currency: 'USD', netDays: String(DEFAULT_NET_DAYS), agencyId: '' });
+    setForm({ client: '', description: '', jobDate: '', rate: '', agentPercent: '20', currency: 'USD', netDays: String(DEFAULT_NET_DAYS), agencyId: '' });
     setOpen(false);
     onAdded();
   };
@@ -120,14 +120,10 @@ export function AddJobDialog({ onAdded }: Props) {
               </Select>
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <Label htmlFor="agentPercent">Agent %</Label>
               <Input id="agentPercent" type="number" min="0" max="100" value={form.agentPercent} onChange={set('agentPercent')} />
-            </div>
-            <div>
-              <Label htmlFor="taxPercent">Tax %</Label>
-              <Input id="taxPercent" type="number" min="0" max="100" value={form.taxPercent} onChange={set('taxPercent')} />
             </div>
             <div>
               <Label htmlFor="netDays">Net Days</Label>

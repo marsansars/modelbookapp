@@ -83,7 +83,7 @@ export default function Jobs() {
       ) : (
         <div className="space-y-3">
           {jobs.sort((a, b) => parseLocalDate(b.jobDate).getTime() - parseLocalDate(a.jobDate).getTime()).map((job, i) => {
-            const { agentFee, taxAmount, netPay } = calculateJobBreakdown(job.rate, job.agentPercent, job.taxPercent);
+            const { agentFee, netPay } = calculateJobBreakdown(job.rate, job.agentPercent);
             const agencyName = getAgencyName(job.agencyId);
             const showConverted = job.currency !== displayCur;
             const jobExpenses = getJobExpenses(job.id);
@@ -138,7 +138,7 @@ export default function Jobs() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-3 border-t border-border/50">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-3 border-t border-border/50">
                   <div>
                     <p className="text-muted-foreground text-xs mb-1">Rate ({CURRENCIES[job.currency].symbol})</p>
                     <p className="font-medium text-foreground">{fmtOrig(job.rate, job.currency)}</p>
@@ -147,10 +147,6 @@ export default function Jobs() {
                   <div>
                     <p className="text-muted-foreground text-xs mb-1">Agent ({job.agentPercent}%)</p>
                     <p className="font-medium text-foreground">-{fmtOrig(agentFee, job.currency)}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs mb-1">Tax ({job.taxPercent}%)</p>
-                    <p className="font-medium text-foreground">-{fmtOrig(taxAmount, job.currency)}</p>
                   </div>
                   <div>
                     <p className="text-muted-foreground text-xs mb-1">Your Net</p>
