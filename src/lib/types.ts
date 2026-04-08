@@ -110,10 +110,10 @@ export function getDaysUntilDue(jobDate: string, netDays: number = DEFAULT_NET_D
   return Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 }
 
-export function calculateJobBreakdown(rate: number, agentPercent: number, taxPercent: number) {
+export function calculateJobBreakdown(rate: number, agentPercent: number, taxPercent: number = 0) {
   const agentFee = rate * (agentPercent / 100);
   const grossAfterAgent = rate - agentFee;
-  const taxAmount = grossAfterAgent * (taxPercent / 100);
-  const netPay = grossAfterAgent - taxAmount;
+  const taxAmount = 0;
+  const netPay = grossAfterAgent;
   return { agentFee, taxAmount, netPay, grossAfterAgent };
 }
