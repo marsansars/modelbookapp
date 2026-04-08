@@ -3,6 +3,8 @@ import { format } from "date-fns";
 import { StatCard } from "@/components/StatCard";
 import { DueDateBadge } from "@/components/DueDateBadge";
 import { CurrencySelector } from "@/components/CurrencySelector";
+import { EarningsChart } from "@/components/EarningsChart";
+import { PaymentStatusChart } from "@/components/PaymentStatusChart";
 import { getJobs, getExpenses, getDisplayCurrency, setDisplayCurrency, getAgencies } from "@/lib/store";
 import { Job, Expense, Agency, CurrencyCode, calculateJobBreakdown, getDueDate, getDaysUntilDue } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
