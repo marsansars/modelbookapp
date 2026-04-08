@@ -128,7 +128,7 @@ export default function Dashboard() {
             {showOverdue ? `${overdueCount} overdue job${overdueCount !== 1 ? 's' : ''}` : `${currentCount} pending job${currentCount !== 1 ? 's' : ''}`}
           </p>
         </motion.div>
-        <StatCard label="Total Earnings" value={fmt(totalEarnings)} sublabel={`${jobs.length} jobs`} accent />
+        <StatCard label="Total Earnings" value={fmt(totalNet)} sublabel={`${jobs.length} jobs`} accent />
         <StatCard label="Recommended Tax Savings" value={fmt(totalRecommendedTax)} sublabel="Set aside from net earnings" />
         <StatCard label="Your Net" value={fmt(totalNet - totalRecommendedTax)} sublabel={`After ${fmt(totalExpenses)} expenses`} accent />
       </div>
