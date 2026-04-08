@@ -9,6 +9,7 @@ import { getJobs, getExpenses, getDisplayCurrency, setDisplayCurrency, getAgenci
 import { Job, Expense, Agency, CurrencyCode, calculateJobBreakdown, getDueDate, getDaysUntilDue } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { motion } from "framer-motion";
+import { Receipt, FileText, CheckCircle2, Building2 } from "lucide-react";
 
 export default function Dashboard() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -50,6 +51,34 @@ export default function Dashboard() {
     .sort((a, b) => getDueDate(a.jobDate, a.netDays).getTime() - getDueDate(b.jobDate, b.netDays).getTime())
     .slice(0, 5);
 
+  // Expense breakdown
+  const reimbursableExpenses = expenses.filter(e => e.reimbursable);
+  const pendingReimbursement = reimbursableExpenses.filter(e => !e.reimbursed);
+  const writeOffExpenses = expenses.filter(e => !e.reimbursable);
+
+  const totalPendingReimbursement = pendingReimbursement.reduce((s, e) => s + conv(e.amount, e.currency), 0);
+  const totalWriteOffs = writeOffExpenses.reduce((s, e) => s + conv(e.amount, e.currency), 0);
+
+  // Group pending reimbursements by agency
+  const reimbursableByAgency = pendingReimbursement.reduce((acc, e) => {
+    const job = jobs.find(j => j.id === e.jobId);
+    const agencyName = job?.agencyId ? getAgencyName(job.agencyId) : undefined;
+    const clientName = job ? job.client : undefined;
+    const key = agencyName || clientName || 'Unlinked';
+    if (!acc[key]) acc[key] = { total: 0, count: 0, expenses: [] };
+    acc[key].total += conv(e.amount, e.currency);
+    acc[key].count += 1;
+    acc[key].expenses.push(e);
+    return acc;
+  }, {} as Record<string, { total: number; count: number; expenses: Expense[] }>);
+
+  // Group write-offs by category
+  const writeOffsByCategory = writeOffExpenses.reduce((acc, e) => {
+    const key = e.category;
+    acc[key] = (acc[key] || 0) + conv(e.amount, e.currency);
+    return acc;
+  }, {} as Record<string, number>);
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between flex-wrap gap-4">
@@ -75,6 +104,85 @@ export default function Dashboard() {
           <PaymentStatusChart jobs={jobs} displayCur={displayCur} rates={rates} />
         </motion.div>
       </div>
+
+      {/* Expense Breakdown Section */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }} className="glass-card p-6">
+        <h2 className="font-heading text-lg font-semibold mb-4">Expense Breakdown</h2>
+
+        {/* Summary row */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <div className="flex items-center gap-3 p-3 rounded-md bg-warning/10 border border-warning/20">
+            <Receipt className="h-5 w-5 text-warning shrink-0" />
+            <div>
+              <p className="text-xs text-muted-foreground">Pending Reimbursement</p>
+              <p className="font-heading font-semibold text-warning">{fmt(totalPendingReimbursement)}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-3 rounded-md bg-primary/10 border border-primary/20">
+            <FileText className="h-5 w-5 text-primary shrink-0" />
+            <div>
+              <p className="text-xs text-muted-foreground">Tax Write-offs</p>
+              <p className="font-heading font-semibold text-primary">{fmt(totalWriteOffs)}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 p-3 rounded-md bg-secondary border border-border">
+            <CheckCircle2 className="h-5 w-5 text-success shrink-0" />
+            <div>
+              <p className="text-xs text-muted-foreground">Total Expenses</p>
+              <p className="font-heading font-semibold text-foreground">{fmt(totalExpenses)}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Reimbursable by Agency */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
+              <Building2 className="h-4 w-4 text-warning" />
+              Reimbursable by Agency / Client
+            </h3>
+            {Object.keys(reimbursableByAgency).length === 0 ? (
+              <p className="text-xs text-muted-foreground p-3 rounded-md bg-secondary/30">No pending reimbursements.</p>
+            ) : (
+              <div className="space-y-2">
+                {Object.entries(reimbursableByAgency)
+                  .sort((a, b) => b[1].total - a[1].total)
+                  .map(([source, data]) => (
+                    <div key={source} className="flex items-center justify-between p-3 rounded-md bg-secondary/30">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">{source}</p>
+                        <p className="text-xs text-muted-foreground">{data.count} expense{data.count !== 1 ? 's' : ''}</p>
+                      </div>
+                      <span className="font-heading font-semibold text-warning">{fmt(data.total)}</span>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+
+          {/* Tax Write-offs by Category */}
+          <div>
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
+              <FileText className="h-4 w-4 text-primary" />
+              Tax Write-offs by Category
+            </h3>
+            {Object.keys(writeOffsByCategory).length === 0 ? (
+              <p className="text-xs text-muted-foreground p-3 rounded-md bg-secondary/30">No write-off expenses yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {Object.entries(writeOffsByCategory)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([cat, amount]) => (
+                    <div key={cat} className="flex items-center justify-between p-3 rounded-md bg-secondary/30">
+                      <p className="text-sm font-medium text-foreground capitalize">{cat}</p>
+                      <span className="font-heading font-semibold text-primary">{fmt(amount)}</span>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-6">
