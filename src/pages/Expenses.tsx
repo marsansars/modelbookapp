@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { getExpenses, getJobs, deleteExpense, updateExpense, getDisplayCurrency, setDisplayCurrency, getAllExpenseCategories, getAgencies } from "@/lib/store";
-import { Expense, Job, Agency, CurrencyCode, ExpenseCategoryInfo, parseLocalDate } from "@/lib/types";
+import { Expense, Job, Agency, CurrencyCode, ExpenseCategoryInfo, parseLocalDate, calculateJobBreakdown } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { AddExpenseDialog } from "@/components/AddExpenseDialog";
 import { CurrencySelector } from "@/components/CurrencySelector";
@@ -71,9 +71,10 @@ export default function Expenses() {
   const reimbursedExpenses = reimbursableExpenses.filter(e => e.reimbursed);
   const writeOffExpenses = expenses.filter(e => !e.reimbursable);
 
+  const totalAgentFees = jobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).agentFee, j.currency), 0);
   const totalReimbursable = pendingReimbursement.reduce((s, e) => s + conv(e.amount, e.currency), 0);
   const totalReimbursed = reimbursedExpenses.reduce((s, e) => s + conv(e.amount, e.currency), 0);
-  const totalWriteOffs = writeOffExpenses.reduce((s, e) => s + conv(e.amount, e.currency), 0);
+  const totalWriteOffs = writeOffExpenses.reduce((s, e) => s + conv(e.amount, e.currency), 0) + totalAgentFees;
 
   // Group reimbursable by agency/client
   const reimbursableBySource = pendingReimbursement.reduce((acc, e) => {
