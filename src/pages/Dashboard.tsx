@@ -70,7 +70,7 @@ export default function Dashboard() {
   const writeOffExpenses = expenses.filter(e => !e.reimbursable);
 
   const totalPendingReimbursement = pendingReimbursement.reduce((s, e) => s + conv(e.amount, e.currency), 0);
-  const totalWriteOffs = writeOffExpenses.reduce((s, e) => s + conv(e.amount, e.currency), 0);
+  const totalWriteOffs = writeOffExpenses.reduce((s, e) => s + conv(e.amount, e.currency), 0) + totalAgentFees;
 
   // Group pending reimbursements by agency
   const reimbursableByAgency = pendingReimbursement.reduce((acc, e) => {
@@ -85,12 +85,15 @@ export default function Dashboard() {
     return acc;
   }, {} as Record<string, { total: number; count: number; expenses: Expense[] }>);
 
-  // Group write-offs by category
+  // Group write-offs by category (include agent fees)
   const writeOffsByCategory = writeOffExpenses.reduce((acc, e) => {
     const key = e.category;
     acc[key] = (acc[key] || 0) + conv(e.amount, e.currency);
     return acc;
   }, {} as Record<string, number>);
+  if (totalAgentFees > 0) {
+    writeOffsByCategory['Agency Commissions'] = (writeOffsByCategory['Agency Commissions'] || 0) + totalAgentFees;
+  }
 
   return (
     <div className="space-y-8">
