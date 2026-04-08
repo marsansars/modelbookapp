@@ -84,7 +84,11 @@ export default function Dashboard() {
   }, 0);
   const totalExpenses = expenses.reduce((s, e) => s + conv(e.amount, e.currency), 0);
 
-  const paidJobs = jobs.filter(j => j.status === 'paid');
+  const paidJobs = allJobs.filter(j => {
+    if (j.status !== 'paid' || !j.paidDate) return false;
+    const d = parseLocalDate(j.paidDate);
+    return d >= start && d <= end;
+  });
   const paidJobsCount = paidJobs.length;
   const paymentsReceived = paidJobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent).netPay, j.currency), 0);
 
