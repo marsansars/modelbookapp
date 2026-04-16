@@ -205,7 +205,17 @@ export default function Dashboard() {
           <div className="relative">
             <p className="text-xs uppercase tracking-widest text-destructive font-body font-medium">Overdue</p>
             <p className="text-4xl md:text-5xl font-heading font-semibold text-destructive mt-2">{fmt(overdueEarnings)}</p>
-            <p className="text-sm text-muted-foreground mt-2">{overdueCount} overdue job{overdueCount !== 1 ? 's' : ''} · follow up</p>
+            <p className="text-sm text-muted-foreground mt-2">{overdueCount} overdue job{overdueCount !== 1 ? 's' : ''}</p>
+            {overdueCount > 0 && (
+              <Button
+                size="sm"
+                onClick={() => setFollowUpOpen(true)}
+                className="mt-4 bg-destructive/90 hover:bg-destructive text-destructive-foreground"
+              >
+                <Send className="h-3.5 w-3.5 mr-1.5" />
+                Chase Payment
+              </Button>
+            )}
           </div>
         </motion.div>
       </div>
