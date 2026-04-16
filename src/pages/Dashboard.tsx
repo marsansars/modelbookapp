@@ -11,6 +11,7 @@ import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currenc
 import { motion } from "framer-motion";
 import { Receipt, FileText, Building2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AddJobDialog } from "@/components/AddJobDialog";
 
 type TimePeriod = 'month' | 'year' | 'last-year';
 
