@@ -105,7 +105,7 @@ export default function Dashboard() {
     .reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0);
   const overdueCount = jobs.filter(j => j.status !== 'paid' && getDaysUntilDue(j.jobDate, j.netDays) < 0).length;
 
-  const [showOverdue, setShowOverdue] = useState(false);
+  
 
   const pendingJobs = jobs
     .filter(j => j.status !== 'paid')
