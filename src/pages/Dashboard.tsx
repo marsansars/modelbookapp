@@ -105,7 +105,7 @@ export default function Dashboard() {
     .reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0);
   const overdueCount = jobs.filter(j => j.status !== 'paid' && getDaysUntilDue(j.jobDate, j.netDays) < 0).length;
 
-  const [showOverdue, setShowOverdue] = useState(false);
+  
 
   const pendingJobs = jobs
     .filter(j => j.status !== 'paid')
@@ -170,108 +170,45 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ============ PREVIEW: OPTION A — Two Side-by-Side Hero Cards ============ */}
-      <div>
-        <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 mb-2 font-body">Option A · Two side-by-side hero cards</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative overflow-hidden rounded-xl p-6 border border-primary/30"
-            style={{
-              background: 'linear-gradient(135deg, hsl(42 78% 55% / 0.18), hsl(42 78% 55% / 0.04))',
-              boxShadow: '0 0 40px -10px hsl(42 78% 55% / 0.25)',
-            }}
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-30" style={{ background: 'hsl(42 78% 55%)' }} />
-            <div className="relative">
-              <p className="text-xs uppercase tracking-widest text-primary/80 font-body font-medium">Current Owed</p>
-              <p className="text-4xl md:text-5xl font-heading font-semibold text-gradient-gold mt-2">{fmt(currentEarnings)}</p>
-              <p className="text-sm text-muted-foreground mt-2">{currentCount} pending job{currentCount !== 1 ? 's' : ''} · on track</p>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative overflow-hidden rounded-xl p-6 border border-destructive/40"
-            style={{
-              background: 'linear-gradient(135deg, hsl(0 65% 55% / 0.18), hsl(0 65% 55% / 0.04))',
-              boxShadow: '0 0 40px -10px hsl(0 65% 55% / 0.3)',
-            }}
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-30" style={{ background: 'hsl(0 65% 55%)' }} />
-            <div className="relative">
-              <p className="text-xs uppercase tracking-widest text-destructive font-body font-medium">Overdue</p>
-              <p className="text-4xl md:text-5xl font-heading font-semibold text-destructive mt-2">{fmt(overdueEarnings)}</p>
-              <p className="text-sm text-muted-foreground mt-2">{overdueCount} overdue job{overdueCount !== 1 ? 's' : ''} · follow up</p>
-            </div>
-          </motion.div>
-        </div>
-      </div>
-
-      {/* ============ PREVIEW: OPTION C — Hero Band with Progress Bar ============ */}
-      <div>
-        <p className="text-[10px] uppercase tracking-widest text-muted-foreground/60 mb-2 font-body">Option C · Hero band with progress bar</p>
+      {/* Hero: Current Owed + Overdue */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-xl p-6 border border-border/60"
+          className="relative overflow-hidden rounded-xl p-6 border border-primary/30"
           style={{
-            background: 'linear-gradient(135deg, hsl(30 8% 14%), hsl(30 8% 10%))',
-            boxShadow: '0 0 40px -10px hsl(42 78% 55% / 0.15)',
+            background: 'linear-gradient(135deg, hsl(42 78% 55% / 0.18), hsl(42 78% 55% / 0.04))',
+            boxShadow: '0 0 40px -10px hsl(42 78% 55% / 0.25)',
           }}
         >
-          <div className="flex items-baseline justify-between flex-wrap gap-2">
-            <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground font-body font-medium">Total Owed to You</p>
-              <p className="text-4xl md:text-5xl font-heading font-semibold text-gradient-gold mt-2">
-                {fmt(currentEarnings + overdueEarnings)}
-              </p>
-            </div>
-            <p className="text-sm text-muted-foreground">{currentCount + overdueCount} open job{currentCount + overdueCount !== 1 ? 's' : ''}</p>
+          <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-30" style={{ background: 'hsl(42 78% 55%)' }} />
+          <div className="relative">
+            <p className="text-xs uppercase tracking-widest text-primary/80 font-body font-medium">Current Owed</p>
+            <p className="text-4xl md:text-5xl font-heading font-semibold text-gradient-gold mt-2">{fmt(currentEarnings)}</p>
+            <p className="text-sm text-muted-foreground mt-2">{currentCount} pending job{currentCount !== 1 ? 's' : ''} · on track</p>
           </div>
+        </motion.div>
 
-          {/* Segmented progress bar */}
-          {(currentEarnings + overdueEarnings) > 0 && (
-            <div className="mt-5">
-              <div className="flex h-3 w-full overflow-hidden rounded-full bg-secondary/50">
-                <div
-                  className="h-full transition-all"
-                  style={{
-                    width: `${(currentEarnings / (currentEarnings + overdueEarnings)) * 100}%`,
-                    background: 'linear-gradient(90deg, hsl(42 78% 55%), hsl(38 70% 65%))',
-                  }}
-                />
-                <div
-                  className="h-full transition-all"
-                  style={{
-                    width: `${(overdueEarnings / (currentEarnings + overdueEarnings)) * 100}%`,
-                    background: 'hsl(0 65% 55%)',
-                  }}
-                />
-              </div>
-              <div className="flex justify-between mt-3 text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-primary" />
-                  <span className="text-muted-foreground">Current</span>
-                  <span className="font-heading font-semibold text-foreground">{fmt(currentEarnings)}</span>
-                  <span className="text-xs text-muted-foreground">· {currentCount}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-destructive" />
-                  <span className="text-muted-foreground">Overdue</span>
-                  <span className="font-heading font-semibold text-destructive">{fmt(overdueEarnings)}</span>
-                  <span className="text-xs text-muted-foreground">· {overdueCount}</span>
-                </div>
-              </div>
-            </div>
-          )}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-xl p-6 border border-destructive/40"
+          style={{
+            background: 'linear-gradient(135deg, hsl(0 65% 55% / 0.18), hsl(0 65% 55% / 0.04))',
+            boxShadow: '0 0 40px -10px hsl(0 65% 55% / 0.3)',
+          }}
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-30" style={{ background: 'hsl(0 65% 55%)' }} />
+          <div className="relative">
+            <p className="text-xs uppercase tracking-widest text-destructive font-body font-medium">Overdue</p>
+            <p className="text-4xl md:text-5xl font-heading font-semibold text-destructive mt-2">{fmt(overdueEarnings)}</p>
+            <p className="text-sm text-muted-foreground mt-2">{overdueCount} overdue job{overdueCount !== 1 ? 's' : ''} · follow up</p>
+          </div>
         </motion.div>
       </div>
 
-      {/* Existing KPI tiles (unchanged) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Secondary KPIs */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard label="Payments Received" value={fmt(paymentsReceived)} sublabel={`${paidJobsCount} paid job${paidJobsCount !== 1 ? 's' : ''}`} accent />
         <StatCard label="Estimated Tax Planning" value={fmt(totalRecommendedTax)} sublabel="Set aside from net earnings" />
         <StatCard label="Total Earnings" value={fmt(totalNet)} sublabel={`${jobs.length} jobs`} accent />
