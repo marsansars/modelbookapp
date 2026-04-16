@@ -9,9 +9,11 @@ import { getJobs, getExpenses, getDisplayCurrency, setDisplayCurrency, getAgenci
 import { Job, Expense, Agency, CurrencyCode, calculateJobBreakdown, getDueDate, getDaysUntilDue, parseLocalDate } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { motion } from "framer-motion";
-import { Receipt, FileText, Building2 } from "lucide-react";
+import { Receipt, FileText, Building2, Send } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AddJobDialog } from "@/components/AddJobDialog";
+import { FollowUpDialog } from "@/components/FollowUpDialog";
+import { Button } from "@/components/ui/button";
 
 type TimePeriod = 'month' | 'year' | 'last-year';
 
@@ -42,6 +44,7 @@ export default function Dashboard() {
   const [displayCur, setDisplayCur] = useState<CurrencyCode>('USD');
   const [rates, setRates] = useState<Record<string, number>>({});
   const [period, setPeriod] = useState<TimePeriod>('year');
+  const [followUpOpen, setFollowUpOpen] = useState(false);
 
   const load = async () => {
     const [j, e, a, cur, r] = await Promise.all([
@@ -100,10 +103,10 @@ export default function Dashboard() {
     .reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0);
   const currentCount = jobs.filter(j => j.status !== 'paid' && getDaysUntilDue(j.jobDate, j.netDays) >= 0).length;
 
-  const overdueEarnings = jobs
-    .filter(j => j.status !== 'paid' && getDaysUntilDue(j.jobDate, j.netDays) < 0)
+  const overdueJobs = jobs.filter(j => j.status !== 'paid' && getDaysUntilDue(j.jobDate, j.netDays) < 0);
+  const overdueEarnings = overdueJobs
     .reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0);
-  const overdueCount = jobs.filter(j => j.status !== 'paid' && getDaysUntilDue(j.jobDate, j.netDays) < 0).length;
+  const overdueCount = overdueJobs.length;
 
   
 
@@ -202,7 +205,17 @@ export default function Dashboard() {
           <div className="relative">
             <p className="text-xs uppercase tracking-widest text-destructive font-body font-medium">Overdue</p>
             <p className="text-4xl md:text-5xl font-heading font-semibold text-destructive mt-2">{fmt(overdueEarnings)}</p>
-            <p className="text-sm text-muted-foreground mt-2">{overdueCount} overdue job{overdueCount !== 1 ? 's' : ''} · follow up</p>
+            <p className="text-sm text-muted-foreground mt-2">{overdueCount} overdue job{overdueCount !== 1 ? 's' : ''}</p>
+            {overdueCount > 0 && (
+              <Button
+                size="sm"
+                onClick={() => setFollowUpOpen(true)}
+                className="mt-4 bg-destructive/90 hover:bg-destructive text-destructive-foreground"
+              >
+                <Send className="h-3.5 w-3.5 mr-1.5" />
+                Chase Payment
+              </Button>
+            )}
           </div>
         </motion.div>
       </div>
@@ -322,6 +335,12 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
+      <FollowUpDialog
+        open={followUpOpen}
+        onOpenChange={setFollowUpOpen}
+        overdueJobs={overdueJobs}
+        agencies={agencies}
+      />
     </div>
   );
 }
