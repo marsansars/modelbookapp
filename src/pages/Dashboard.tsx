@@ -9,9 +9,11 @@ import { getJobs, getExpenses, getDisplayCurrency, setDisplayCurrency, getAgenci
 import { Job, Expense, Agency, CurrencyCode, calculateJobBreakdown, getDueDate, getDaysUntilDue, parseLocalDate } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { motion } from "framer-motion";
-import { Receipt, FileText, Building2 } from "lucide-react";
+import { Receipt, FileText, Building2, Send } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AddJobDialog } from "@/components/AddJobDialog";
+import { FollowUpDialog } from "@/components/FollowUpDialog";
+import { Button } from "@/components/ui/button";
 
 type TimePeriod = 'month' | 'year' | 'last-year';
 
