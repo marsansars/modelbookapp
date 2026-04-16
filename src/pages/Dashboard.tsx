@@ -43,15 +43,16 @@ export default function Dashboard() {
   const [rates, setRates] = useState<Record<string, number>>({});
   const [period, setPeriod] = useState<TimePeriod>('year');
 
+  const load = async () => {
+    const [j, e, a, cur, r] = await Promise.all([
+      getJobs(), getExpenses(), getAgencies(), getDisplayCurrency(),
+      fetchExchangeRates(),
+    ]);
+    setAllJobs(j); setAllExpenses(e); setAgencies(a); setDisplayCur(cur);
+    setRates(r.rates);
+  };
+
   useEffect(() => {
-    const load = async () => {
-      const [j, e, a, cur, r] = await Promise.all([
-        getJobs(), getExpenses(), getAgencies(), getDisplayCurrency(),
-        fetchExchangeRates(),
-      ]);
-      setAllJobs(j); setAllExpenses(e); setAgencies(a); setDisplayCur(cur);
-      setRates(r.rates);
-    };
     load();
   }, []);
 
