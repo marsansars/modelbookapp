@@ -11,6 +11,7 @@ import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currenc
 import { motion } from "framer-motion";
 import { Receipt, FileText, Building2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AddJobDialog } from "@/components/AddJobDialog";
 
 type TimePeriod = 'month' | 'year' | 'last-year';
 
@@ -42,15 +43,16 @@ export default function Dashboard() {
   const [rates, setRates] = useState<Record<string, number>>({});
   const [period, setPeriod] = useState<TimePeriod>('year');
 
+  const load = async () => {
+    const [j, e, a, cur, r] = await Promise.all([
+      getJobs(), getExpenses(), getAgencies(), getDisplayCurrency(),
+      fetchExchangeRates(),
+    ]);
+    setAllJobs(j); setAllExpenses(e); setAgencies(a); setDisplayCur(cur);
+    setRates(r.rates);
+  };
+
   useEffect(() => {
-    const load = async () => {
-      const [j, e, a, cur, r] = await Promise.all([
-        getJobs(), getExpenses(), getAgencies(), getDisplayCurrency(),
-        fetchExchangeRates(),
-      ]);
-      setAllJobs(j); setAllExpenses(e); setAgencies(a); setDisplayCur(cur);
-      setRates(r.rates);
-    };
     load();
   }, []);
 
@@ -162,7 +164,10 @@ export default function Dashboard() {
             </SelectContent>
           </Select>
         </div>
-        <CurrencySelector value={displayCur} onChange={handleCurrencyChange} />
+        <div className="flex items-center gap-2 flex-wrap">
+          <CurrencySelector value={displayCur} onChange={handleCurrencyChange} />
+          <AddJobDialog onAdded={load} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -206,16 +211,16 @@ export default function Dashboard() {
               const daysLeft = getDaysUntilDue(job.jobDate, job.netDays);
               const agencyName = getAgencyName(job.agencyId);
               return (
-                <div key={job.id} className="flex items-center justify-between p-3 rounded-md bg-secondary/50">
-                  <div>
-                    <p className="font-medium text-foreground">{job.client}</p>
+                <div key={job.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-md bg-secondary/50">
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground truncate">{job.client}</p>
                     <p className="text-xs text-muted-foreground">
                       {agencyName && <span className="text-primary">{agencyName} · </span>}
                       Due {format(getDueDate(job.jobDate, job.netDays), 'MMM d, yyyy')} (Net {job.netDays})
                       {daysLeft <= 0 && ' — Follow up with accounting!'}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
                     <span className="text-sm font-medium text-foreground">{fmt(conv(netPay, job.currency))}</span>
                     <DueDateBadge jobDate={job.jobDate} status={job.status} netDays={job.netDays} />
                   </div>
