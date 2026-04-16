@@ -211,16 +211,16 @@ export default function Dashboard() {
               const daysLeft = getDaysUntilDue(job.jobDate, job.netDays);
               const agencyName = getAgencyName(job.agencyId);
               return (
-                <div key={job.id} className="flex items-center justify-between p-3 rounded-md bg-secondary/50">
-                  <div>
-                    <p className="font-medium text-foreground">{job.client}</p>
+                <div key={job.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-md bg-secondary/50">
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground truncate">{job.client}</p>
                     <p className="text-xs text-muted-foreground">
                       {agencyName && <span className="text-primary">{agencyName} · </span>}
                       Due {format(getDueDate(job.jobDate, job.netDays), 'MMM d, yyyy')} (Net {job.netDays})
                       {daysLeft <= 0 && ' — Follow up with accounting!'}
                     </p>
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
                     <span className="text-sm font-medium text-foreground">{fmt(conv(netPay, job.currency))}</span>
                     <DueDateBadge jobDate={job.jobDate} status={job.status} netDays={job.netDays} />
                   </div>
