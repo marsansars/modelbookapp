@@ -335,6 +335,12 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
+      <FollowUpDialog
+        open={followUpOpen}
+        onOpenChange={setFollowUpOpen}
+        overdueJobs={overdueJobs}
+        agencies={agencies}
+      />
     </div>
   );
 }
