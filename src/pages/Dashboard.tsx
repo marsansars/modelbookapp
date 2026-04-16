@@ -164,7 +164,10 @@ export default function Dashboard() {
             </SelectContent>
           </Select>
         </div>
-        <CurrencySelector value={displayCur} onChange={handleCurrencyChange} />
+        <div className="flex items-center gap-2 flex-wrap">
+          <CurrencySelector value={displayCur} onChange={handleCurrencyChange} />
+          <AddJobDialog onAdded={load} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
