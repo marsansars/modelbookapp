@@ -133,13 +133,13 @@ export function AddJobDialog({ onAdded }: Props) {
             <div className="flex items-center justify-between">
               <Label>Rate Line Items</Label>
               <Button type="button" variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addLineItem}>
-                <Plus className="h-3 w-3" /> Add Line
+                <Plus className="h-3 w-3" /> Add Item
               </Button>
             </div>
             {lineItems.map((li, idx) => (
               <div key={li.id} className="flex items-center gap-2">
                 <Input
-                  placeholder={`Line ${idx + 1} description (e.g. Shoot day)`}
+                  placeholder="e.g. Day Rate, Usage, Fitting, Overtime"
                   value={li.description}
                   onChange={e => updateLineItem(li.id, 'description', e.target.value)}
                   className="flex-1"
