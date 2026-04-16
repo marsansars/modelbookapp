@@ -44,6 +44,7 @@ export default function Dashboard() {
   const [displayCur, setDisplayCur] = useState<CurrencyCode>('USD');
   const [rates, setRates] = useState<Record<string, number>>({});
   const [period, setPeriod] = useState<TimePeriod>('year');
+  const [followUpOpen, setFollowUpOpen] = useState(false);
 
   const load = async () => {
     const [j, e, a, cur, r] = await Promise.all([
