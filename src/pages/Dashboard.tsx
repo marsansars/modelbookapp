@@ -103,10 +103,10 @@ export default function Dashboard() {
     .reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0);
   const currentCount = jobs.filter(j => j.status !== 'paid' && getDaysUntilDue(j.jobDate, j.netDays) >= 0).length;
 
-  const overdueEarnings = jobs
-    .filter(j => j.status !== 'paid' && getDaysUntilDue(j.jobDate, j.netDays) < 0)
+  const overdueJobs = jobs.filter(j => j.status !== 'paid' && getDaysUntilDue(j.jobDate, j.netDays) < 0);
+  const overdueEarnings = overdueJobs
     .reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent, j.taxPercent).netPay, j.currency), 0);
-  const overdueCount = jobs.filter(j => j.status !== 'paid' && getDaysUntilDue(j.jobDate, j.netDays) < 0).length;
+  const overdueCount = overdueJobs.length;
 
   
 
