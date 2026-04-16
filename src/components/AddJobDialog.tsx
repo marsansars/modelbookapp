@@ -121,7 +121,7 @@ export function AddJobDialog({ onAdded }: Props) {
           </div>
           <div>
             <Label htmlFor="description">Description</Label>
-            <Input id="description" value={form.description} onChange={set('description')} placeholder="e.g. Editorial shoot" />
+            <Input id="description" value={form.description} onChange={set('description')} placeholder="e.g. Ecomm, Lookbook, Campaign" />
           </div>
           <div>
             <Label htmlFor="jobDate">Job Date</Label>
