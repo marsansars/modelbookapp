@@ -131,7 +131,7 @@ export function AddJobDialog({ onAdded }: Props) {
           {/* Line Items */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Rate Line Items</Label>
+              <Label>Add Item</Label>
               <Button type="button" variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={addLineItem}>
                 <Plus className="h-3 w-3" /> Add Item
               </Button>
