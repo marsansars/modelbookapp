@@ -8,7 +8,7 @@ export const tourSteps: TourStep[] = [
   {
     title: "Welcome to ModelBook",
     body: "A quick tour to show you where everything lives. Use the arrow keys or the buttons.",
-    route: "/",
+    route: "/guide",
   },
   {
     selector: '[data-tour="nav-jobs"]',
