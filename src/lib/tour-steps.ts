@@ -38,7 +38,7 @@ export const tourSteps: TourStep[] = [
     selector: '[data-tour="nav-invoices"]',
     route: "/expenses",
     title: "Invoices (optional)",
-    body: "Generate PDF invoices when you bill a client directly — most agencies invoice for you.",
+    body: "Generate PDF invoices when you bill a client directly.",
   },
   {
     selector: '[data-tour="nav-dashboard"]',
@@ -56,7 +56,7 @@ export const tourSteps: TourStep[] = [
     selector: '[data-tour="nav-bookkeeping"]',
     route: "/",
     title: "Bookkeeping",
-    body: "Export jobs and expenses as CSV for your accountant — filtered by any date range.",
+    body: "Export jobs and expenses as CSV and Excel for your accountant — filtered by any date range.",
   },
   {
     selector: '[data-tour="nav-guide"]',
