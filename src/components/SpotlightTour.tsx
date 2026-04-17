@@ -43,6 +43,7 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
   const navigate = useNavigate();
   const location = useLocation();
   const findIntervalRef = useRef<number | null>(null);
+  const { isMobile, setOpenMobile } = useSidebar();
 
   const step = steps[stepIndex];
   const isLast = stepIndex === steps.length - 1;
@@ -52,6 +53,12 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
   useEffect(() => {
     if (open) setStepIndex(0);
   }, [open]);
+
+  // On mobile, close the sidebar drawer whenever the step changes so the
+  // spotlight isn't blocked by an open sheet.
+  useEffect(() => {
+    if (open && isMobile) setOpenMobile(false);
+  }, [open, stepIndex, isMobile, setOpenMobile]);
 
   // Navigate when step requires a different route
   useEffect(() => {
