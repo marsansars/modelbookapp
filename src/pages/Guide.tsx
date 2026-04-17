@@ -1,7 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { SpotlightTour } from "@/components/SpotlightTour";
-import { tourSteps } from "@/lib/tour-steps";
+import { startTour } from "@/lib/tour-controller";
 import {
   Briefcase, Receipt, LayoutDashboard, Building2, BookOpen,
   Sparkles, FileCheck,
@@ -41,8 +39,6 @@ const sections = [
 ];
 
 export default function Guide() {
-  const [showTour, setShowTour] = useState(false);
-
   return (
     <div className="space-y-8">
       <div>
@@ -54,7 +50,7 @@ export default function Guide() {
 
       {/* Hero CTA */}
       <button
-        onClick={() => setShowTour(true)}
+        onClick={startTour}
         className="w-full glass-card p-6 sm:p-8 flex items-center gap-5 text-left hover:border-primary/40 transition-all group"
       >
         <div className="h-14 w-14 rounded-xl bg-primary/15 flex items-center justify-center shrink-0 group-hover:bg-primary/25 transition-colors">
@@ -98,13 +94,6 @@ export default function Guide() {
           })}
         </div>
       </div>
-
-      <SpotlightTour
-        open={showTour}
-        steps={tourSteps}
-        onComplete={() => setShowTour(false)}
-        onSkip={() => setShowTour(false)}
-      />
     </div>
   );
 }
