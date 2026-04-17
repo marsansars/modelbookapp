@@ -89,7 +89,13 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
 
   useLayoutEffect(() => {
     if (!open || !step) return;
-    setRect(null);
+
+    // Don't clear the rect — keep the previous spotlight visible so framer-motion
+    // can animate it smoothly to the new target instead of flashing/jumping.
+    // For steps without a selector (intro), hide the spotlight.
+    if (!step.selector) {
+      setRect(null);
+    }
 
     if (findIntervalRef.current) {
       window.clearInterval(findIntervalRef.current);
