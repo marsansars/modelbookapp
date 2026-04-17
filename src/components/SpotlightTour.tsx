@@ -154,10 +154,12 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
   const hasTarget = !!step.selector;
   const showSpotlight = hasTarget && rect !== null;
 
-  // Compute tooltip position
+  // Compute tooltip position — width adapts to viewport on mobile
+  const SIDE_MARGIN = 16;
+  const tooltipWidth = Math.min(TOOLTIP_WIDTH, viewport.w - SIDE_MARGIN * 2);
   let tooltipStyle: React.CSSProperties = {
     position: "fixed",
-    width: TOOLTIP_WIDTH,
+    width: tooltipWidth,
     zIndex: 10001,
   };
 
@@ -180,8 +182,8 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
     }
 
     // Center horizontally on the target, but clamp to viewport
-    let left = cutout.left + cutout.width / 2 - TOOLTIP_WIDTH / 2;
-    left = Math.max(16, Math.min(left, viewport.w - TOOLTIP_WIDTH - 16));
+    let left = cutout.left + cutout.width / 2 - tooltipWidth / 2;
+    left = Math.max(SIDE_MARGIN, Math.min(left, viewport.w - tooltipWidth - SIDE_MARGIN));
     tooltipStyle = { ...tooltipStyle, top, left };
   } else {
     // Centered fallback (intro / outro / target missing)
