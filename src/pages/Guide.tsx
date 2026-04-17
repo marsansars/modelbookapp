@@ -58,7 +58,7 @@ export default function Guide() {
         </div>
         <div className="flex-1 min-w-0">
           <h2 className="font-heading font-semibold text-xl text-foreground">
-            Start the interactive tour
+            Start interactive tour
           </h2>
           <p className="text-sm text-muted-foreground font-body mt-1">
             10 quick stops. Each one points to the exact spot in the app.
