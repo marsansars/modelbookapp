@@ -90,10 +90,12 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
   useLayoutEffect(() => {
     if (!open || !step) return;
 
-    // Don't clear the rect — keep the previous spotlight visible so framer-motion
-    // can animate it smoothly to the new target instead of flashing/jumping.
-    // For steps without a selector (intro), hide the spotlight.
-    if (!step.selector) {
+    // If the step has no selector (intro) OR requires a route change, hide
+    // the previous spotlight so it doesn't briefly appear in the wrong place
+    // on the new page. Same-route steps keep the rect so framer-motion can
+    // animate it smoothly to the new target.
+    const needsRouteChange = !!step.route && location.pathname !== step.route;
+    if (!step.selector || needsRouteChange) {
       setRect(null);
     }
 
