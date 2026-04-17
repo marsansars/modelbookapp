@@ -8,10 +8,12 @@ const attachmentSchema = z.array(z.object({
   id: z.string(),
   name: z.string().max(500),
   type: z.string().max(100),
-  dataUrl: z.string(),
+  storagePath: z.string().max(500).optional(),
+  dataUrl: z.string().optional(),
+  size: z.number().optional(),
   addedAt: z.string(),
   label: z.enum(['Call Sheet', 'Receipt', 'Statement']).optional(),
-})).max(50);
+}).refine(a => a.storagePath || a.dataUrl, { message: 'Attachment must have storagePath or dataUrl' })).max(50);
 
 const lineItemSchema = z.array(z.object({
   id: z.string(),

@@ -14,7 +14,11 @@ export interface JobAttachment {
   id: string;
   name: string;
   type: string;
-  dataUrl: string;
+  /** Path inside the `attachments` storage bucket. New attachments use this. */
+  storagePath?: string;
+  /** Legacy base64 data URL — kept for backward compatibility with old attachments. */
+  dataUrl?: string;
+  size?: number;
   addedAt: string;
   label?: AttachmentLabel;
 }
