@@ -180,11 +180,11 @@ export function AddJobDialog({ onAdded }: Props) {
           <div className="grid grid-cols-3 gap-3">
             <div>
               <Label htmlFor="agentPercent">Agent %</Label>
-              <Input id="agentPercent" type="number" min="0" max="100" value={form.agentPercent} onChange={set('agentPercent')} />
+              <Input id="agentPercent" type="number" min="0" max="100" step="0.01" value={form.agentPercent} onChange={set('agentPercent')} />
             </div>
             <div>
               <Label htmlFor="taxPercent">Tax %</Label>
-              <Input id="taxPercent" type="number" min="0" max="100" value={form.taxPercent} onChange={set('taxPercent')} />
+              <Input id="taxPercent" type="number" min="0" max="100" step="0.01" value={form.taxPercent} onChange={set('taxPercent')} />
             </div>
             <div>
               <Label htmlFor="netDays">Net Days</Label>
