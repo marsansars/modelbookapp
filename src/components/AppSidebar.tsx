@@ -26,7 +26,7 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ displayName }: AppSidebarProps) {
-  const { state, isMobile } = useSidebar();
+  const { state, isMobile, setOpenMobile } = useSidebar();
   // On mobile, the sidebar opens as a full sheet — always show labels there.
   // Only hide labels when desktop sidebar is icon-collapsed.
   const showLabels = isMobile || state !== "collapsed";
@@ -55,6 +55,7 @@ export function AppSidebar({ displayName }: AppSidebarProps) {
                       end={item.url === "/"}
                       className="flex items-center gap-3 px-3 py-2.5 rounded-md text-muted-foreground hover:bg-secondary transition-colors"
                       activeClassName="bg-secondary text-primary font-medium"
+                      onClick={() => { if (isMobile) setOpenMobile(false); }}
                     >
                       <item.icon className="h-5 w-5 shrink-0" />
                       {showLabels && <span className="font-body">{item.title}</span>}
