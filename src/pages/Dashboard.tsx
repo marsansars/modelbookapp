@@ -9,10 +9,11 @@ import { getJobs, getExpenses, getDisplayCurrency, setDisplayCurrency, getAgenci
 import { Job, Expense, Agency, CurrencyCode, calculateJobBreakdown, getDueDate, getDaysUntilDue, parseLocalDate } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { motion } from "framer-motion";
-import { Receipt, FileText, Building2, Send } from "lucide-react";
+import { Receipt, FileText, Building2, Send, CalendarCheck } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AddJobDialog } from "@/components/AddJobDialog";
 import { FollowUpDialog } from "@/components/FollowUpDialog";
+import { RecordPaymentDialog } from "@/components/RecordPaymentDialog";
 import { Button } from "@/components/ui/button";
 
 type TimePeriod = 'month' | 'year' | 'last-year';
@@ -45,6 +46,7 @@ export default function Dashboard() {
   const [rates, setRates] = useState<Record<string, number>>({});
   const [period, setPeriod] = useState<TimePeriod>('year');
   const [followUpOpen, setFollowUpOpen] = useState(false);
+  const [recordPaymentOpen, setRecordPaymentOpen] = useState(false);
 
   const load = async () => {
     const [j, e, a, cur, r] = await Promise.all([
@@ -169,6 +171,15 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <CurrencySelector value={displayCur} onChange={handleCurrencyChange} />
+          <Button
+            variant="outline"
+            onClick={() => setRecordPaymentOpen(true)}
+            disabled={allJobs.filter(j => j.status !== 'paid').length === 0}
+            className="gap-1.5 border-primary/40 hover:border-primary hover:bg-primary/5"
+          >
+            <CalendarCheck className="h-4 w-4 text-primary" />
+            Record Payment
+          </Button>
           <AddJobDialog onAdded={load} />
         </div>
       </div>
@@ -340,6 +351,14 @@ export default function Dashboard() {
         onOpenChange={setFollowUpOpen}
         overdueJobs={overdueJobs}
         agencies={agencies}
+      />
+
+      <RecordPaymentDialog
+        open={recordPaymentOpen}
+        onOpenChange={setRecordPaymentOpen}
+        unpaidJobs={allJobs.filter(j => j.status !== 'paid')}
+        agencies={agencies}
+        onRecorded={load}
       />
     </div>
   );
