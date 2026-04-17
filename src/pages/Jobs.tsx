@@ -314,25 +314,14 @@ export default function Jobs() {
         </div>
       )}
 
-      <Dialog open={!!paymentDialog} onOpenChange={open => !open && setPaymentDialog(null)}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="font-heading">Record Payment</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="paid-date">Payment Date</Label>
-              <Input
-                id="paid-date"
-                type="date"
-                value={paymentDialog?.date || ''}
-                onChange={e => setPaymentDialog(prev => prev ? { ...prev, date: e.target.value } : null)}
-              />
-            </div>
-            <Button className="w-full" onClick={handleRecordPayment}>Confirm Payment</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <RecordPaymentDialog
+        open={!!paymentDialog}
+        onOpenChange={(open) => !open && setPaymentDialog(null)}
+        jobId={paymentDialog?.jobId}
+        unpaidJobs={jobs.filter(j => j.status !== 'paid')}
+        agencies={agencies}
+        onRecorded={reload}
+      />
     </div>
   );
 }
