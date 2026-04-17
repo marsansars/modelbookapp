@@ -187,7 +187,7 @@ export default function Jobs() {
                         <CalendarCheck className="h-3.5 w-3.5" /> Paid
                       </Button>
                     ) : (
-                      <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={() => setPaymentDialog({ jobId: job.id, date: format(new Date(), 'yyyy-MM-dd') })}>
+                      <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={() => setPaymentDialog({ jobId: job.id })}>
                         <CalendarCheck className="h-3.5 w-3.5" /> Record Payment
                       </Button>
                     )}
