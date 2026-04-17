@@ -53,6 +53,12 @@ export const tourSteps: TourStep[] = [
     body: "Convert every figure on the dashboard into your preferred currency in one click.",
   },
   {
+    selector: '[data-tour="dash-chase"]',
+    route: "/",
+    title: "Chase Payment",
+    body: "When a job goes overdue, tap here to draft a polite follow-up email to the agency in seconds.",
+  },
+  {
     selector: '[data-tour="nav-bookkeeping"]',
     route: "/",
     title: "Bookkeeping",
