@@ -231,6 +231,7 @@ export default function Dashboard() {
               <Button
                 size="sm"
                 onClick={() => setFollowUpOpen(true)}
+                data-tour="dash-chase"
                 className="mt-4 bg-destructive/90 hover:bg-destructive text-destructive-foreground"
               >
                 <Send className="h-3.5 w-3.5 mr-1.5" />
