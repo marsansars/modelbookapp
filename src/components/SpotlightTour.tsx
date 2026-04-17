@@ -108,41 +108,58 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
       remeasureTimeoutRef.current = null;
     }
 
-    // Try repeatedly until target appears (route may still be mounting)
+    // Try repeatedly until target appears (route may still be mounting).
+     // Re-measure on every tick until the rect stops moving — important for
+     // the mobile sidebar sheet which slides in over ~300ms.
     let attempts = 0;
+    let lastKey = "";
+    let stableCount = 0;
+    const targetsSidebar = !!step.selector?.startsWith('[data-tour="nav-');
+    // Give the mobile sidebar sheet time to slide in before the first measure.
+    const startDelay = isMobile && targetsSidebar ? 280 : 0;
+
     const tryFind = () => {
       const r = measure();
       if (r) {
+        const key = `${Math.round(r.left)}:${Math.round(r.top)}:${Math.round(r.width)}:${Math.round(r.height)}`;
         setRect(r);
+
         if (step.selector) {
           const el = document.querySelector(step.selector) as HTMLElement | null;
-          // Use instant scroll — smooth scroll fights the spring animation and
-          // causes a laggy "chasing" effect on mobile.
           el?.scrollIntoView({ behavior: "auto", block: "center", inline: "center" });
-
-          remeasureTimeoutRef.current = window.setTimeout(() => {
-            const r2 = measure();
-            if (r2) setRect(r2);
-            remeasureTimeoutRef.current = null;
-          }, 80);
         }
 
-        if (findIntervalRef.current) {
-          window.clearInterval(findIntervalRef.current);
-          findIntervalRef.current = null;
+        // Wait for two stable measurements in a row before stopping the polling,
+        // so an in-flight slide animation can settle to its final position.
+        if (key === lastKey) {
+          stableCount++;
+        } else {
+          stableCount = 0;
+          lastKey = key;
         }
-      } else if (attempts++ > 40) {
+
+        if (stableCount >= 2 || attempts > 40) {
+          if (findIntervalRef.current) {
+            window.clearInterval(findIntervalRef.current);
+            findIntervalRef.current = null;
+          }
+        }
+      } else if (attempts > 40) {
         if (findIntervalRef.current) {
           window.clearInterval(findIntervalRef.current);
           findIntervalRef.current = null;
         }
       }
+      attempts++;
     };
 
-    tryFind();
-    findIntervalRef.current = window.setInterval(tryFind, 100);
+    const startTimeout = window.setTimeout(() => {
+      tryFind();
+      findIntervalRef.current = window.setInterval(tryFind, 80);
+    }, startDelay);
 
     return () => {
+      window.clearTimeout(startTimeout);
       if (findIntervalRef.current) {
         window.clearInterval(findIntervalRef.current);
         findIntervalRef.current = null;
@@ -152,7 +169,7 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
         remeasureTimeoutRef.current = null;
       }
     };
-  }, [open, step, measure, location.pathname]);
+  }, [open, step, measure, location.pathname, isMobile]);
 
   // Track viewport + window resize / scroll
   useEffect(() => {
