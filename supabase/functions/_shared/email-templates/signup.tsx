@@ -39,7 +39,7 @@ export const SignupEmail = ({
           <Link href={siteUrl} style={link}>
             <strong>ModelBook</strong>
           </Link>
-          — your financial command center.
+          — stop guessing. Start tracking.
         </Text>
         <Text style={text}>
           Please confirm your email address (
