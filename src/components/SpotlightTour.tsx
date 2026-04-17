@@ -54,11 +54,14 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
     if (open) setStepIndex(0);
   }, [open]);
 
-  // On mobile, close the sidebar drawer whenever the step changes so the
-  // spotlight isn't blocked by an open sheet.
+  // On mobile, sync the sidebar drawer with the current step:
+  // - open it when the step targets a sidebar nav item (selector starts with [data-tour="nav-)
+  // - close it for all other steps so the spotlight isn't blocked
   useEffect(() => {
-    if (open && isMobile) setOpenMobile(false);
-  }, [open, stepIndex, isMobile, setOpenMobile]);
+    if (!open || !isMobile) return;
+    const targetsSidebar = !!step?.selector?.startsWith('[data-tour="nav-');
+    setOpenMobile(targetsSidebar);
+  }, [open, stepIndex, step, isMobile, setOpenMobile]);
 
   // Navigate when step requires a different route
   useEffect(() => {
