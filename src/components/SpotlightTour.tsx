@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, X, Sparkles } from "lucide-react";
+import { useSidebar } from "@/components/ui/sidebar";
 
 export interface TourStep {
   /** CSS selector for the element to highlight. If omitted, shows a centered modal step. */
