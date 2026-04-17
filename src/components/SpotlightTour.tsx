@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, X, Sparkles } from "lucide-react";
+import { useSidebar } from "@/components/ui/sidebar";
 
 export interface TourStep {
   /** CSS selector for the element to highlight. If omitted, shows a centered modal step. */
@@ -42,6 +43,7 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
   const navigate = useNavigate();
   const location = useLocation();
   const findIntervalRef = useRef<number | null>(null);
+  const { isMobile, setOpenMobile } = useSidebar();
 
   const step = steps[stepIndex];
   const isLast = stepIndex === steps.length - 1;
@@ -51,6 +53,15 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
   useEffect(() => {
     if (open) setStepIndex(0);
   }, [open]);
+
+  // On mobile, sync the sidebar drawer with the current step:
+  // - open it when the step targets a sidebar nav item (selector starts with [data-tour="nav-)
+  // - close it for all other steps so the spotlight isn't blocked
+  useEffect(() => {
+    if (!open || !isMobile) return;
+    const targetsSidebar = !!step?.selector?.startsWith('[data-tour="nav-');
+    setOpenMobile(targetsSidebar);
+  }, [open, stepIndex, step, isMobile, setOpenMobile]);
 
   // Navigate when step requires a different route
   useEffect(() => {
