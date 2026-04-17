@@ -8,7 +8,8 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { WelcomeDialog } from "@/components/WelcomeDialog";
-import { OnboardingTutorial } from "@/components/OnboardingTutorial";
+import { SpotlightTour } from "@/components/SpotlightTour";
+import { tourSteps } from "@/lib/tour-steps";
 import { DisclaimerDialog } from "@/components/DisclaimerDialog";
 import { getDisplayName, setDisplayName, getHasSeenTutorial, setHasSeenTutorial } from "@/lib/store";
 import Index from "./pages/Index";
@@ -105,7 +106,12 @@ function ProtectedLayout() {
         onDisagree={() => signOut()}
       />
       <WelcomeDialog open={!showDisclaimer && disclaimerAgreed && showWelcome} onSave={handleSaveName} />
-      <OnboardingTutorial open={!showDisclaimer && disclaimerAgreed && !showWelcome && showTutorial} onComplete={handleTutorialComplete} />
+      <SpotlightTour
+        open={!showDisclaimer && disclaimerAgreed && !showWelcome && showTutorial}
+        steps={tourSteps}
+        onComplete={handleTutorialComplete}
+        onSkip={handleTutorialComplete}
+      />
       <div className="min-h-screen flex w-full">
         <AppSidebar displayName={displayName} />
         <div className="flex-1 flex flex-col min-w-0">
