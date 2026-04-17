@@ -131,10 +131,16 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
   useEffect(() => {
     if (!open) return;
     const onResize = () => {
-      setViewport({ w: window.innerWidth, h: window.innerHeight });
+      const w = window.visualViewport?.width ?? window.innerWidth;
+      const h = window.visualViewport?.height ?? window.innerHeight;
+      setViewport({ w, h });
       const r = measure();
       if (r) setRect(r);
     };
+
+    // Sync immediately on open so mobile previews don't use a stale desktop width.
+    onResize();
+
     window.addEventListener("resize", onResize);
     window.addEventListener("scroll", onResize, true);
     return () => {
