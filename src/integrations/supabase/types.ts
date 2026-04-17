@@ -103,6 +103,68 @@ export type Database = {
           },
         ]
       }
+      invoices: {
+        Row: {
+          bill_to_address: string | null
+          bill_to_email: string | null
+          bill_to_name: string
+          created_at: string
+          due_date: string
+          id: string
+          issue_date: string
+          job_id: string
+          notes: string | null
+          number: string
+          snapshot: Json
+          status: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bill_to_address?: string | null
+          bill_to_email?: string | null
+          bill_to_name?: string
+          created_at?: string
+          due_date: string
+          id?: string
+          issue_date: string
+          job_id: string
+          notes?: string | null
+          number: string
+          snapshot?: Json
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bill_to_address?: string | null
+          bill_to_email?: string | null
+          bill_to_name?: string
+          created_at?: string
+          due_date?: string
+          id?: string
+          issue_date?: string
+          job_id?: string
+          notes?: string | null
+          number?: string
+          snapshot?: Json
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
           agency_id: string | null
@@ -182,6 +244,12 @@ export type Database = {
           display_name: string | null
           has_seen_tutorial: boolean | null
           id: string
+          payment_instructions: string | null
+          sender_address: string | null
+          sender_email: string | null
+          sender_legal_name: string | null
+          sender_phone: string | null
+          sender_tax_id: string | null
           updated_at: string
           user_id: string
         }
@@ -192,6 +260,12 @@ export type Database = {
           display_name?: string | null
           has_seen_tutorial?: boolean | null
           id?: string
+          payment_instructions?: string | null
+          sender_address?: string | null
+          sender_email?: string | null
+          sender_legal_name?: string | null
+          sender_phone?: string | null
+          sender_tax_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -202,6 +276,12 @@ export type Database = {
           display_name?: string | null
           has_seen_tutorial?: boolean | null
           id?: string
+          payment_instructions?: string | null
+          sender_address?: string | null
+          sender_email?: string | null
+          sender_legal_name?: string | null
+          sender_phone?: string | null
+          sender_tax_id?: string | null
           updated_at?: string
           user_id?: string
         }

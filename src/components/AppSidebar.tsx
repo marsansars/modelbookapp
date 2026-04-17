@@ -1,4 +1,4 @@
-import { LayoutDashboard, Briefcase, Receipt, BookOpen, Building2, HelpCircle } from "lucide-react";
+import { LayoutDashboard, Briefcase, Receipt, BookOpen, Building2, HelpCircle, FileText } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -17,6 +17,7 @@ const items = [
   { title: "Jobs", url: "/jobs", icon: Briefcase },
   { title: "Agencies", url: "/agencies", icon: Building2 },
   { title: "Expenses", url: "/expenses", icon: Receipt },
+  { title: "Invoices", url: "/invoices", icon: FileText },
   { title: "Bookkeeping", url: "/bookkeeping", icon: BookOpen },
   { title: "Guide", url: "/guide", icon: HelpCircle },
 ];

@@ -16,6 +16,7 @@ import Jobs from "./pages/Jobs";
 import Expenses from "./pages/Expenses";
 import Bookkeeping from "./pages/Bookkeeping";
 import Agencies from "./pages/Agencies";
+import Invoices from "./pages/Invoices";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -142,6 +143,7 @@ function ProtectedLayout() {
               <Route path="/jobs" element={<Jobs />} />
               <Route path="/agencies" element={<Agencies />} />
               <Route path="/expenses" element={<Expenses />} />
+              <Route path="/invoices" element={<Invoices />} />
               <Route path="/bookkeeping" element={<Bookkeeping />} />
               <Route path="/install" element={<Install />} />
               <Route path="/guide" element={<Guide />} />

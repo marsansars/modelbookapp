@@ -1,4 +1,4 @@
-import { Job, Expense, Agency, CurrencyCode, ExpenseCategoryInfo, DEFAULT_EXPENSE_CATEGORIES, JobAttachment, LineItem, ATTACHMENT_LABELS } from './types';
+import { Job, Expense, Agency, CurrencyCode, ExpenseCategoryInfo, DEFAULT_EXPENSE_CATEGORIES, JobAttachment, LineItem, ATTACHMENT_LABELS, Invoice, InvoiceType, InvoiceStatus, InvoiceSnapshot, SenderInfo } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 
@@ -353,4 +353,116 @@ export async function updateAgency(id: string, updates: Partial<Agency>): Promis
 
 export async function deleteAgency(id: string): Promise<void> {
   await supabase.from('agencies').delete().eq('id', id);
+}
+
+// ---- Sender / Billing identity ----
+
+export async function getSenderInfo(): Promise<SenderInfo> {
+  const userId = await getUserId();
+  const { data } = await supabase
+    .from('user_settings')
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+  const r = data as any;
+  return {
+    legalName: r?.sender_legal_name || undefined,
+    address: r?.sender_address || undefined,
+    email: r?.sender_email || undefined,
+    phone: r?.sender_phone || undefined,
+    taxId: r?.sender_tax_id || undefined,
+    paymentInstructions: r?.payment_instructions || undefined,
+  };
+}
+
+export async function setSenderInfo(info: SenderInfo): Promise<void> {
+  const userId = await getUserId();
+  const payload = {
+    sender_legal_name: info.legalName || null,
+    sender_address: info.address || null,
+    sender_email: info.email || null,
+    sender_phone: info.phone || null,
+    sender_tax_id: info.taxId || null,
+    payment_instructions: info.paymentInstructions || null,
+  };
+  const { data: existing } = await supabase
+    .from('user_settings')
+    .select('id')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (existing) {
+    await supabase.from('user_settings').update(payload as any).eq('user_id', userId);
+  } else {
+    await supabase.from('user_settings').insert({ user_id: userId, ...payload } as any);
+  }
+}
+
+// ---- Invoices ----
+
+function mapInvoiceFromDb(row: any): Invoice {
+  return {
+    id: row.id,
+    jobId: row.job_id,
+    number: row.number,
+    type: row.type as InvoiceType,
+    issueDate: row.issue_date,
+    dueDate: row.due_date,
+    status: row.status as InvoiceStatus,
+    billToName: row.bill_to_name || '',
+    billToEmail: row.bill_to_email || undefined,
+    billToAddress: row.bill_to_address || undefined,
+    notes: row.notes || undefined,
+    snapshot: (row.snapshot as InvoiceSnapshot) || ({} as InvoiceSnapshot),
+    createdAt: row.created_at,
+  };
+}
+
+export async function getInvoices(): Promise<Invoice[]> {
+  const userId = await getUserId();
+  const { data, error } = await supabase
+    .from('invoices' as any)
+    .select('*')
+    .eq('user_id', userId)
+    .order('issue_date', { ascending: false });
+  if (error) throw error;
+  return ((data as any[]) || []).map(mapInvoiceFromDb);
+}
+
+export async function addInvoice(invoice: Omit<Invoice, 'id' | 'createdAt'>): Promise<Invoice> {
+  const userId = await getUserId();
+  const { data, error } = await supabase.from('invoices' as any).insert({
+    user_id: userId,
+    job_id: invoice.jobId,
+    number: invoice.number,
+    type: invoice.type,
+    issue_date: invoice.issueDate,
+    due_date: invoice.dueDate,
+    status: invoice.status,
+    bill_to_name: invoice.billToName,
+    bill_to_email: invoice.billToEmail || null,
+    bill_to_address: invoice.billToAddress || null,
+    notes: invoice.notes || null,
+    snapshot: invoice.snapshot as any,
+  } as any).select().single();
+  if (error) throw error;
+  return mapInvoiceFromDb(data);
+}
+
+export async function updateInvoice(id: string, updates: Partial<Invoice>): Promise<void> {
+  const dbUpdates: any = {};
+  if (updates.number !== undefined) dbUpdates.number = updates.number;
+  if (updates.type !== undefined) dbUpdates.type = updates.type;
+  if (updates.issueDate !== undefined) dbUpdates.issue_date = updates.issueDate;
+  if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
+  if (updates.status !== undefined) dbUpdates.status = updates.status;
+  if (updates.billToName !== undefined) dbUpdates.bill_to_name = updates.billToName;
+  if (updates.billToEmail !== undefined) dbUpdates.bill_to_email = updates.billToEmail || null;
+  if (updates.billToAddress !== undefined) dbUpdates.bill_to_address = updates.billToAddress || null;
+  if (updates.notes !== undefined) dbUpdates.notes = updates.notes || null;
+  if (updates.snapshot !== undefined) dbUpdates.snapshot = updates.snapshot;
+  await supabase.from('invoices' as any).update(dbUpdates).eq('id', id);
+}
+
+export async function deleteInvoice(id: string): Promise<void> {
+  await supabase.from('invoices' as any).delete().eq('id', id);
 }

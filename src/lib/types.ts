@@ -43,6 +43,45 @@ export interface Job {
   lineItems?: LineItem[];
 }
 
+export type InvoiceType = 'detailed' | 'clean';
+export type InvoiceStatus = 'draft' | 'sent' | 'paid';
+
+export interface InvoiceSnapshot {
+  client: string;
+  description: string;
+  jobDate: string;
+  currency: CurrencyCode;
+  agencyName?: string;
+  agentPercent: number;
+  rate: number;
+  lineItems: LineItem[];
+}
+
+export interface Invoice {
+  id: string;
+  jobId: string;
+  number: string;
+  type: InvoiceType;
+  issueDate: string;
+  dueDate: string;
+  status: InvoiceStatus;
+  billToName: string;
+  billToEmail?: string;
+  billToAddress?: string;
+  notes?: string;
+  snapshot: InvoiceSnapshot;
+  createdAt: string;
+}
+
+export interface SenderInfo {
+  legalName?: string;
+  address?: string;
+  email?: string;
+  phone?: string;
+  taxId?: string;
+  paymentInstructions?: string;
+}
+
 export interface Expense {
   id: string;
   date: string;
