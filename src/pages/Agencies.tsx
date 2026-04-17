@@ -154,7 +154,7 @@ export default function Agencies() {
                     <div className="grid grid-cols-3 gap-3">
                       <div>
                         <Label>Agent %</Label>
-                        <Input type="number" min="0" max="100" value={editForm.defaultAgentPercent} onChange={e => setEditForm(f => ({ ...f, defaultAgentPercent: e.target.value }))} />
+                        <Input type="number" min="0" max="100" step="0.01" value={editForm.defaultAgentPercent} onChange={e => setEditForm(f => ({ ...f, defaultAgentPercent: e.target.value }))} />
                       </div>
                       <div>
                         <Label>Currency</Label>

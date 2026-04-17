@@ -99,7 +99,7 @@ export function ManageAgenciesDialog({ onChanged }: Props) {
                     <div className="grid grid-cols-3 gap-3">
                       <div>
                         <Label>Agent %</Label>
-                        <Input type="number" min="0" max="100" value={editForm.defaultAgentPercent} onChange={e => setEditForm(f => ({ ...f, defaultAgentPercent: e.target.value }))} />
+                        <Input type="number" min="0" max="100" step="0.01" value={editForm.defaultAgentPercent} onChange={e => setEditForm(f => ({ ...f, defaultAgentPercent: e.target.value }))} />
                       </div>
                       <div>
                         <Label>Currency</Label>
@@ -154,7 +154,7 @@ export function ManageAgenciesDialog({ onChanged }: Props) {
           <div className="grid grid-cols-3 gap-3">
             <div>
               <Label htmlFor="defAgent">Agent %</Label>
-              <Input id="defAgent" type="number" min="0" max="100" value={form.defaultAgentPercent} onChange={e => setForm(f => ({ ...f, defaultAgentPercent: e.target.value }))} />
+              <Input id="defAgent" type="number" min="0" max="100" step="0.01" value={form.defaultAgentPercent} onChange={e => setForm(f => ({ ...f, defaultAgentPercent: e.target.value }))} />
             </div>
             <div>
               <Label>Currency</Label>

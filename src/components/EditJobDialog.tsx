@@ -199,11 +199,11 @@ export function EditJobDialog({ job, onUpdated }: Props) {
           <div className="grid grid-cols-3 gap-3">
             <div>
               <Label htmlFor="edit-agent">Agent %</Label>
-              <Input id="edit-agent" type="number" min="0" max="100" value={form.agentPercent} onChange={set('agentPercent')} />
+              <Input id="edit-agent" type="number" min="0" max="100" step="0.01" value={form.agentPercent} onChange={set('agentPercent')} />
             </div>
             <div>
               <Label htmlFor="edit-tax">Tax %</Label>
-              <Input id="edit-tax" type="number" min="0" max="100" value={form.taxPercent} onChange={set('taxPercent')} />
+              <Input id="edit-tax" type="number" min="0" max="100" step="0.01" value={form.taxPercent} onChange={set('taxPercent')} />
             </div>
             <div>
               <Label htmlFor="edit-net">Net Days</Label>
