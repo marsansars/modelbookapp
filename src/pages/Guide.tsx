@@ -3,7 +3,7 @@ import { useState } from "react";
 import { OnboardingTutorial } from "@/components/OnboardingTutorial";
 import {
   Briefcase, Receipt, LayoutDashboard, Building2, BookOpen,
-  Sparkles, HelpCircle, Plus, CalendarCheck, Paperclip, FileText
+  Sparkles, HelpCircle, Plus, CalendarCheck, Paperclip, FileText, FileCheck
 } from "lucide-react";
 
 const sections = [
@@ -58,6 +58,20 @@ const sections = [
       "Use the currency selector to view all amounts converted to your preferred currency",
       "Charts show your earnings over time and payment status breakdown",
       "Expense breakdowns show pending reimbursements and tax write-offs",
+    ],
+  },
+  {
+    icon: FileCheck,
+    title: "Invoices (Optional)",
+    description: "Generate professional PDF invoices for any job — only if you bill clients directly.",
+    details: [
+      "Most models won't need this — agencies usually invoice for you. Use it when you book direct or need to chase payment yourself",
+      "First time only: open Invoices in the sidebar and click 'Billing Info' to save your legal name, address, email, and tax ID. This auto-fills every invoice",
+      "Click 'New Invoice' and pick any job from the list — it pre-fills client, dates, line items, and totals from the job",
+      "Type your own invoice number in any format you want (e.g. INV-001, 2026-04-17)",
+      "Choose layout per invoice: 'Detailed' shows the agent fee deduction (good for your records), 'Clean' hides it (cleaner for the client)",
+      "Cycle status with one click: Draft → Sent → Paid",
+      "Download as PDF, or click the email button to open your mail app pre-filled with the client's address",
     ],
   },
   {
