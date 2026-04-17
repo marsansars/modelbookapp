@@ -34,7 +34,7 @@ const sections = [
   {
     icon: BookOpen,
     title: "Bookkeeping",
-    blurb: "CSV exports for your accountant.",
+    blurb: "CSV and Excel exports for your accountant.",
   },
 ];
 
