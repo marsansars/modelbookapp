@@ -1,4 +1,4 @@
-import { LayoutDashboard, Briefcase, Receipt, BookOpen, Building2, HelpCircle, FileText } from "lucide-react";
+import { LayoutDashboard, Briefcase, Receipt, BookOpen, Building2, HelpCircle, FileText, Settings as SettingsIcon } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
