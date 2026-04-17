@@ -20,6 +20,7 @@ const items = [
   { title: "Invoices", url: "/invoices", icon: FileText, tour: "nav-invoices" },
   { title: "Bookkeeping", url: "/bookkeeping", icon: BookOpen, tour: "nav-bookkeeping" },
   { title: "Guide", url: "/guide", icon: HelpCircle, tour: "nav-guide" },
+  { title: "Settings", url: "/settings", icon: SettingsIcon, tour: "nav-settings" },
 ];
 
 interface AppSidebarProps {
