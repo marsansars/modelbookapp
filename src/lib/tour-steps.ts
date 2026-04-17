@@ -68,6 +68,12 @@ export const tourSteps: TourStep[] = [
     selector: '[data-tour="nav-guide"]',
     route: "/",
     title: "Need a refresher?",
-    body: "The Guide page lets you replay this tour anytime. You're all set — start tracking.",
+    body: "The Guide page lets you replay this tour anytime.",
+  },
+  {
+    selector: '[data-tour="feedback-button"]',
+    route: "/",
+    title: "Give feedback",
+    body: "Spotted a bug or have an idea? Tap this floating button anywhere in the app to send it straight to us — screenshot included.",
   },
 ];
