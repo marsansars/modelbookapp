@@ -13,13 +13,13 @@ import {
 } from "@/components/ui/sidebar";
 
 const items = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Jobs", url: "/jobs", icon: Briefcase },
-  { title: "Agencies", url: "/agencies", icon: Building2 },
-  { title: "Expenses", url: "/expenses", icon: Receipt },
-  { title: "Invoices", url: "/invoices", icon: FileText },
-  { title: "Bookkeeping", url: "/bookkeeping", icon: BookOpen },
-  { title: "Guide", url: "/guide", icon: HelpCircle },
+  { title: "Dashboard", url: "/", icon: LayoutDashboard, tour: "nav-dashboard" },
+  { title: "Jobs", url: "/jobs", icon: Briefcase, tour: "nav-jobs" },
+  { title: "Agencies", url: "/agencies", icon: Building2, tour: "nav-agencies" },
+  { title: "Expenses", url: "/expenses", icon: Receipt, tour: "nav-expenses" },
+  { title: "Invoices", url: "/invoices", icon: FileText, tour: "nav-invoices" },
+  { title: "Bookkeeping", url: "/bookkeeping", icon: BookOpen, tour: "nav-bookkeeping" },
+  { title: "Guide", url: "/guide", icon: HelpCircle, tour: "nav-guide" },
 ];
 
 interface AppSidebarProps {
@@ -54,6 +54,7 @@ export function AppSidebar({ displayName }: AppSidebarProps) {
                     <NavLink
                       to={item.url}
                       end={item.url === "/"}
+                      data-tour={item.tour}
                       className="flex items-center gap-3 px-3 py-2.5 rounded-md text-muted-foreground hover:bg-secondary transition-colors"
                       activeClassName="bg-secondary text-primary font-medium"
                       onClick={() => { if (isMobile) setOpenMobile(false); }}

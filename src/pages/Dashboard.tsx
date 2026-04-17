@@ -180,7 +180,7 @@ export default function Dashboard() {
           </Select>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <CurrencySelector value={displayCur} onChange={handleCurrencyChange} />
+          <div data-tour="dash-currency"><CurrencySelector value={displayCur} onChange={handleCurrencyChange} /></div>
           <Button
             variant="outline"
             onClick={() => setRecordPaymentOpen(true)}
