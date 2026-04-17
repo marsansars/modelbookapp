@@ -1,0 +1,355 @@
+import { useEffect, useMemo, useState } from 'react';
+import { format, parseISO, subDays, startOfDay } from 'date-fns';
+import { Navigate, Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
+import { Card } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from '@/components/ui/table';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { Users, Briefcase, FileText, MessageSquare, Receipt, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+
+interface UserRow {
+  id: string;
+  email: string;
+  created_at: string;
+  jobCount: number;
+  expenseCount: number;
+  invoiceCount: number;
+  agencyCount: number;
+  totalBilled: number;
+  lastActive: string | null;
+}
+
+interface FeedbackRow {
+  id: string;
+  user_id: string;
+  page_url: string | null;
+  severity: 'bug' | 'idea' | 'question' | 'other';
+  message: string;
+  screenshot_path: string | null;
+  status: 'open' | 'in_progress' | 'resolved';
+  admin_note: string | null;
+  user_agent: string | null;
+  created_at: string;
+  email?: string;
+}
+
+export default function Admin() {
+  const { isAdmin, loading: roleLoading } = useIsAdmin();
+  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<UserRow[]>([]);
+  const [feedback, setFeedback] = useState<FeedbackRow[]>([]);
+  const [signupSeries, setSignupSeries] = useState<{ date: string; count: number }[]>([]);
+  const [screenshotUrls, setScreenshotUrls] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    void loadAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin]);
+
+  const loadAll = async () => {
+    setLoading(true);
+    try {
+      const [
+        { data: jobs },
+        { data: expenses },
+        { data: invoices },
+        { data: agencies },
+        { data: settings },
+        { data: fb },
+        { data: roles },
+      ] = await Promise.all([
+        supabase.from('jobs').select('user_id, rate, created_at, updated_at'),
+        supabase.from('expenses').select('user_id, created_at, updated_at'),
+        supabase.from('invoices').select('user_id, created_at, updated_at'),
+        supabase.from('agencies').select('user_id, created_at'),
+        supabase.from('user_settings').select('user_id, display_name, created_at'),
+        supabase.from('feedback').select('*').order('created_at', { ascending: false }),
+        supabase.from('user_roles').select('user_id, role, created_at'),
+      ]);
+
+      // Build user map keyed by user_id from all available sources
+      const map = new Map<string, UserRow>();
+      const ensure = (id: string, createdAt?: string) => {
+        if (!map.has(id)) {
+          map.set(id, {
+            id,
+            email: id.slice(0, 8) + '…',
+            created_at: createdAt || new Date().toISOString(),
+            jobCount: 0, expenseCount: 0, invoiceCount: 0, agencyCount: 0,
+            totalBilled: 0, lastActive: null,
+          });
+        }
+        return map.get(id)!;
+      };
+
+      (roles || []).forEach(r => ensure(r.user_id, r.created_at));
+      (settings || []).forEach(s => {
+        const u = ensure(s.user_id, s.created_at);
+        if (s.display_name) u.email = s.display_name;
+      });
+      (jobs || []).forEach(j => {
+        const u = ensure(j.user_id, j.created_at);
+        u.jobCount += 1;
+        u.totalBilled += Number(j.rate || 0);
+        const d = j.updated_at || j.created_at;
+        if (!u.lastActive || d > u.lastActive) u.lastActive = d;
+      });
+      (expenses || []).forEach(e => {
+        const u = ensure(e.user_id, e.created_at);
+        u.expenseCount += 1;
+        const d = e.updated_at || e.created_at;
+        if (!u.lastActive || d > u.lastActive) u.lastActive = d;
+      });
+      (invoices || []).forEach(i => {
+        const u = ensure(i.user_id, i.created_at);
+        u.invoiceCount += 1;
+        const d = i.updated_at || i.created_at;
+        if (!u.lastActive || d > u.lastActive) u.lastActive = d;
+      });
+      (agencies || []).forEach(a => {
+        const u = ensure(a.user_id, a.created_at);
+        u.agencyCount += 1;
+      });
+
+      const userArray = Array.from(map.values()).sort((a, b) => b.created_at.localeCompare(a.created_at));
+
+      // 30-day signup chart (based on earliest known created_at per user)
+      const days: { date: string; count: number }[] = [];
+      for (let i = 29; i >= 0; i--) {
+        const d = startOfDay(subDays(new Date(), i));
+        days.push({ date: format(d, 'MMM d'), count: 0 });
+      }
+      userArray.forEach(u => {
+        const created = startOfDay(parseISO(u.created_at));
+        const idx = days.findIndex(d => d.date === format(created, 'MMM d'));
+        if (idx >= 0) days[idx].count += 1;
+      });
+
+      // Feedback with email lookup from user map
+      const feedbackWithEmail: FeedbackRow[] = (fb || []).map(f => ({
+        ...f,
+        severity: f.severity as FeedbackRow['severity'],
+        status: f.status as FeedbackRow['status'],
+        email: map.get(f.user_id)?.email,
+      }));
+
+      setUsers(userArray);
+      setSignupSeries(days);
+      setFeedback(feedbackWithEmail);
+
+      // Sign URLs for screenshots
+      const urls: Record<string, string> = {};
+      for (const f of feedbackWithEmail) {
+        if (f.screenshot_path) {
+          const { data } = await supabase.storage
+            .from('feedback-screenshots')
+            .createSignedUrl(f.screenshot_path, 3600);
+          if (data) urls[f.id] = data.signedUrl;
+        }
+      }
+      setScreenshotUrls(urls);
+    } catch (err: any) {
+      toast.error(`Failed to load admin data: ${err?.message || err}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateFeedbackStatus = async (id: string, status: FeedbackRow['status']) => {
+    const { error } = await supabase.from('feedback').update({ status }).eq('id', id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setFeedback(prev => prev.map(f => f.id === id ? { ...f, status } : f));
+  };
+
+  const deleteFeedback = async (id: string) => {
+    if (!confirm('Delete this feedback?')) return;
+    const { error } = await supabase.from('feedback').delete().eq('id', id);
+    if (error) { toast.error(error.message); return; }
+    setFeedback(prev => prev.filter(f => f.id !== id));
+  };
+
+  const kpis = useMemo(() => {
+    const newThisWeek = users.filter(u => parseISO(u.created_at) > subDays(new Date(), 7)).length;
+    const totalJobs = users.reduce((s, u) => s + u.jobCount, 0);
+    const totalInvoices = users.reduce((s, u) => s + u.invoiceCount, 0);
+    const totalBilled = users.reduce((s, u) => s + u.totalBilled, 0);
+    const openFeedback = feedback.filter(f => f.status === 'open').length;
+    return { totalUsers: users.length, newThisWeek, totalJobs, totalInvoices, totalBilled, openFeedback };
+  }, [users, feedback]);
+
+  if (roleLoading) {
+    return <div className="p-6"><Skeleton className="h-8 w-40" /></div>;
+  }
+  if (!isAdmin) return <Navigate to="/" replace />;
+
+  const severityColor = (s: string) => ({
+    bug: 'bg-red-500/20 text-red-400 border-red-500/30',
+    idea: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    question: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+    other: 'bg-muted text-muted-foreground',
+  } as Record<string, string>)[s] || '';
+
+  const statusColor = (s: string) => ({
+    open: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
+    in_progress: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
+    resolved: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+  } as Record<string, string>)[s] || '';
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div>
+          <h1 className="text-3xl font-heading font-semibold">Admin · Back Office</h1>
+          <p className="text-muted-foreground mt-1">Beta usage, activity, and feedback.</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={loadAll} disabled={loading}>Refresh</Button>
+      </div>
+
+      {/* KPIs */}
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-3">
+        {[
+          { label: 'Total users', value: kpis.totalUsers, icon: Users },
+          { label: 'New this week', value: kpis.newThisWeek, icon: Users },
+          { label: 'Total jobs', value: kpis.totalJobs, icon: Briefcase },
+          { label: 'Total invoices', value: kpis.totalInvoices, icon: FileText },
+          { label: 'Total billed', value: `$${kpis.totalBilled.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, icon: Receipt },
+          { label: 'Open feedback', value: kpis.openFeedback, icon: MessageSquare },
+        ].map(k => {
+          const Icon = k.icon;
+          return (
+            <Card key={k.label} className="p-4 glass-card">
+              <Icon className="h-4 w-4 text-primary mb-2" />
+              <p className="text-xs text-muted-foreground">{k.label}</p>
+              <p className="font-heading text-xl font-semibold mt-1">{k.value}</p>
+            </Card>
+          );
+        })}
+      </div>
+
+      <Tabs defaultValue="users" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="users">Users ({users.length})</TabsTrigger>
+          <TabsTrigger value="feedback">Feedback ({feedback.length})</TabsTrigger>
+          <TabsTrigger value="signups">Signups (30d)</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="users">
+          <Card className="glass-card overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead>Joined</TableHead>
+                  <TableHead className="text-right">Jobs</TableHead>
+                  <TableHead className="text-right">Expenses</TableHead>
+                  <TableHead className="text-right">Invoices</TableHead>
+                  <TableHead className="text-right">Agencies</TableHead>
+                  <TableHead className="text-right">Total billed</TableHead>
+                  <TableHead>Last active</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading && Array.from({ length: 3 }).map((_, i) => (
+                  <TableRow key={i}><TableCell colSpan={8}><Skeleton className="h-6 w-full" /></TableCell></TableRow>
+                ))}
+                {!loading && users.length === 0 && (
+                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No users yet</TableCell></TableRow>
+                )}
+                {users.map(u => (
+                  <TableRow key={u.id}>
+                    <TableCell className="font-medium">{u.email}</TableCell>
+                    <TableCell className="text-muted-foreground">{format(parseISO(u.created_at), 'MMM d, yyyy')}</TableCell>
+                    <TableCell className="text-right">{u.jobCount}</TableCell>
+                    <TableCell className="text-right">{u.expenseCount}</TableCell>
+                    <TableCell className="text-right">{u.invoiceCount}</TableCell>
+                    <TableCell className="text-right">{u.agencyCount}</TableCell>
+                    <TableCell className="text-right">${u.totalBilled.toLocaleString(undefined, { maximumFractionDigits: 0 })}</TableCell>
+                    <TableCell className="text-muted-foreground text-xs">
+                      {u.lastActive ? format(parseISO(u.lastActive), 'MMM d, HH:mm') : '—'}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="feedback">
+          <div className="space-y-3">
+            {loading && <Skeleton className="h-32 w-full" />}
+            {!loading && feedback.length === 0 && (
+              <Card className="glass-card p-8 text-center text-muted-foreground">No feedback yet</Card>
+            )}
+            {feedback.map(f => (
+              <Card key={f.id} className="glass-card p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge variant="outline" className={severityColor(f.severity)}>{f.severity}</Badge>
+                    <Badge variant="outline" className={statusColor(f.status)}>{f.status.replace('_', ' ')}</Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {f.email || f.user_id.slice(0, 8)} · {format(parseISO(f.created_at), 'MMM d, HH:mm')}
+                    </span>
+                    {f.page_url && <span className="text-xs text-muted-foreground">on <code className="bg-secondary px-1 rounded">{f.page_url}</code></span>}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Select value={f.status} onValueChange={(v) => updateFeedbackStatus(f.id, v as any)}>
+                      <SelectTrigger className="h-8 w-32 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="open">Open</SelectItem>
+                        <SelectItem value="in_progress">In progress</SelectItem>
+                        <SelectItem value="resolved">Resolved</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => deleteFeedback(f.id)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-sm whitespace-pre-wrap">{f.message}</p>
+                {screenshotUrls[f.id] && (
+                  <a href={screenshotUrls[f.id]} target="_blank" rel="noreferrer" className="block">
+                    <img src={screenshotUrls[f.id]} alt="Screenshot" className="max-h-48 rounded border border-border" />
+                  </a>
+                )}
+                {f.user_agent && <p className="text-[10px] text-muted-foreground truncate">{f.user_agent}</p>}
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="signups">
+          <Card className="glass-card p-5">
+            <div className="h-72 w-full">
+              <ResponsiveContainer>
+                <LineChart data={signupSeries}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={11} />
+                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} allowDecimals={false} />
+                  <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                  <Line type="monotone" dataKey="count" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      <p className="text-xs text-muted-foreground">
+        Admin route is hidden from the sidebar. Bookmark <Link className="underline" to="/admin">/admin</Link>.
+      </p>
+    </div>
+  );
+}
