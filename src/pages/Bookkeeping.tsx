@@ -3,10 +3,17 @@ import { getJobs, getExpenses, getDisplayCurrency, setDisplayCurrency, getAllExp
 import { Job, Expense, CurrencyCode, calculateJobBreakdown, ExpenseCategoryInfo } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { exportJobsCSV, exportExpensesCSV, exportSummaryCSV } from "@/lib/csv-export";
+import { exportJobsXLSX, exportExpensesXLSX, exportSummaryXLSX } from "@/lib/xlsx-export";
 import { StatCard } from "@/components/StatCard";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Download, FileSpreadsheet, FileText, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Bookkeeping() {
@@ -61,15 +68,53 @@ export default function Bookkeeping() {
         <div className="flex items-center gap-2 flex-wrap">
           <CurrencySelector value={displayCur} onChange={c => { setDisplayCur(c); setDisplayCurrency(c); }} />
           <div className="flex gap-1.5">
-            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => exportSummaryCSV(jobs, expenses, displayCur, rates)}>
-              <Download className="h-3.5 w-3.5" /> Summary
-            </Button>
-            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => exportJobsCSV(jobs, displayCur, rates)}>
-              <Download className="h-3.5 w-3.5" /> Jobs
-            </Button>
-            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={() => exportExpensesCSV(expenses, jobs, displayCur, rates)}>
-              <Download className="h-3.5 w-3.5" /> Expenses
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                  <Download className="h-3.5 w-3.5" /> Summary <ChevronDown className="h-3 w-3 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => exportSummaryCSV(jobs, expenses, displayCur, rates)}>
+                  <FileText className="h-4 w-4 mr-2" /> CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportSummaryXLSX(jobs, expenses, displayCur, rates)}>
+                  <FileSpreadsheet className="h-4 w-4 mr-2" /> Excel (.xlsx)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                  <Download className="h-3.5 w-3.5" /> Jobs <ChevronDown className="h-3 w-3 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => exportJobsCSV(jobs, displayCur, rates)}>
+                  <FileText className="h-4 w-4 mr-2" /> CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportJobsXLSX(jobs, displayCur, rates)}>
+                  <FileSpreadsheet className="h-4 w-4 mr-2" /> Excel (.xlsx)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                  <Download className="h-3.5 w-3.5" /> Expenses <ChevronDown className="h-3 w-3 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => exportExpensesCSV(expenses, jobs, displayCur, rates)}>
+                  <FileText className="h-4 w-4 mr-2" /> CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => exportExpensesXLSX(expenses, jobs, displayCur, rates)}>
+                  <FileSpreadsheet className="h-4 w-4 mr-2" /> Excel (.xlsx)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
