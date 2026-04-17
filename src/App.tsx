@@ -108,7 +108,7 @@ function ProtectedLayout() {
         <div className="flex-1 flex flex-col min-w-0">
           <header className="h-14 flex items-center justify-between border-b border-border px-4">
             <div className="flex items-center gap-2">
-              <SidebarTrigger />
+              <SidebarTrigger className="h-10 w-10 rounded-lg border border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary shadow-sm [&_svg]:size-5" />
               {isEditingName ? (
                 <form
                   onSubmit={(e) => { e.preventDefault(); handleEditSubmit(); }}
