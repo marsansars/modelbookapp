@@ -22,6 +22,8 @@ import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import Install from "./pages/Install";
 import Guide from "./pages/Guide";
+import Admin from "./pages/Admin";
+import { FeedbackButton } from "@/components/FeedbackButton";
 import { LogOut, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -147,9 +149,11 @@ function ProtectedLayout() {
               <Route path="/bookkeeping" element={<Bookkeeping />} />
               <Route path="/install" element={<Install />} />
               <Route path="/guide" element={<Guide />} />
+              <Route path="/admin" element={<Admin />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
+          <FeedbackButton />
         </div>
       </div>
     </SidebarProvider>
