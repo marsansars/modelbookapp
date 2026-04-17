@@ -1,4 +1,4 @@
-import { LayoutDashboard, Briefcase, Receipt, BookOpen, Building2, HelpCircle, FileText } from "lucide-react";
+import { LayoutDashboard, Briefcase, Receipt, BookOpen, Building2, HelpCircle, FileText, Settings as SettingsIcon } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -20,6 +20,7 @@ const items = [
   { title: "Invoices", url: "/invoices", icon: FileText, tour: "nav-invoices" },
   { title: "Bookkeeping", url: "/bookkeeping", icon: BookOpen, tour: "nav-bookkeeping" },
   { title: "Guide", url: "/guide", icon: HelpCircle, tour: "nav-guide" },
+  { title: "Settings", url: "/settings", icon: SettingsIcon, tour: "nav-settings" },
 ];
 
 interface AppSidebarProps {

@@ -25,6 +25,7 @@ import NotFound from "./pages/NotFound";
 import Install from "./pages/Install";
 import Guide from "./pages/Guide";
 import Admin from "./pages/Admin";
+import Settings from "./pages/Settings";
 import { FeedbackButton } from "@/components/FeedbackButton";
 import { LogOut, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -162,6 +163,7 @@ function ProtectedLayout() {
               <Route path="/install" element={<Install />} />
               <Route path="/guide" element={<Guide />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </main>
