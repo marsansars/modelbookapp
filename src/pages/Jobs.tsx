@@ -10,6 +10,7 @@ import { CurrencySelector } from "@/components/CurrencySelector";
 import { DueDateBadge } from "@/components/DueDateBadge";
 import { JobAttachments } from "@/components/JobAttachments";
 import { EditJobDialog } from "@/components/EditJobDialog";
+import { RecordPaymentDialog } from "@/components/RecordPaymentDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -27,7 +28,7 @@ export default function Jobs() {
   const [rates, setRates] = useState<Record<string, number>>({});
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
   const [cats, setCats] = useState<Record<string, ExpenseCategoryInfo>>({});
-  const [paymentDialog, setPaymentDialog] = useState<{ jobId: string; date: string } | null>(null);
+  const [paymentDialog, setPaymentDialog] = useState<{ jobId: string } | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'overdue'>('all');
   const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'>('date-desc');
 
@@ -54,12 +55,7 @@ export default function Jobs() {
   const getAgencyName = (id?: string) => agencies.find(a => a.id === id)?.name;
   const getJobExpenses = (jobId: string) => expenses.filter(e => e.jobId === jobId);
 
-  const handleRecordPayment = async () => {
-    if (!paymentDialog) return;
-    await updateJob(paymentDialog.jobId, { status: 'paid', paidDate: paymentDialog.date });
-    setPaymentDialog(null);
-    await reload();
-  };
+  // Payment recording is now handled inside RecordPaymentDialog (with confetti + animation).
 
   const handleUnmarkPaid = async (jobId: string) => {
     await updateJob(jobId, { status: 'pending', paidDate: '' });
@@ -191,7 +187,7 @@ export default function Jobs() {
                         <CalendarCheck className="h-3.5 w-3.5" /> Paid
                       </Button>
                     ) : (
-                      <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={() => setPaymentDialog({ jobId: job.id, date: format(new Date(), 'yyyy-MM-dd') })}>
+                      <Button variant="outline" size="sm" className="h-8 text-xs gap-1" onClick={() => setPaymentDialog({ jobId: job.id })}>
                         <CalendarCheck className="h-3.5 w-3.5" /> Record Payment
                       </Button>
                     )}
@@ -318,25 +314,14 @@ export default function Jobs() {
         </div>
       )}
 
-      <Dialog open={!!paymentDialog} onOpenChange={open => !open && setPaymentDialog(null)}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="font-heading">Record Payment</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="paid-date">Payment Date</Label>
-              <Input
-                id="paid-date"
-                type="date"
-                value={paymentDialog?.date || ''}
-                onChange={e => setPaymentDialog(prev => prev ? { ...prev, date: e.target.value } : null)}
-              />
-            </div>
-            <Button className="w-full" onClick={handleRecordPayment}>Confirm Payment</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <RecordPaymentDialog
+        open={!!paymentDialog}
+        onOpenChange={(open) => !open && setPaymentDialog(null)}
+        jobId={paymentDialog?.jobId}
+        unpaidJobs={jobs.filter(j => j.status !== 'paid')}
+        agencies={agencies}
+        onRecorded={reload}
+      />
     </div>
   );
 }
