@@ -10,6 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Logo } from "@/components/Logo";
 
 interface WelcomeDialogProps {
   open: boolean;
@@ -29,9 +30,10 @@ export function WelcomeDialog({ open, onSave }: WelcomeDialogProps) {
   return (
     <Dialog open={open}>
       <DialogContent className="sm:max-w-md" onPointerDownOutside={(e) => e.preventDefault()}>
-        <DialogHeader>
-          <DialogTitle className="font-heading text-gradient-gold text-xl">
-            Welcome to ModelBook!
+        <DialogHeader className="items-center text-center">
+          <Logo heightClass="h-14" />
+          <DialogTitle className="font-heading text-foreground text-xl pt-2">
+            Welcome!
           </DialogTitle>
           <DialogDescription className="font-body">
             What's your first name? We'll personalize the app just for you.

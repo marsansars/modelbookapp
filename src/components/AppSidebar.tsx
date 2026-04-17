@@ -1,6 +1,7 @@
 import { LayoutDashboard, Briefcase, Receipt, BookOpen, Building2, HelpCircle } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { Logo } from "@/components/Logo";
 import {
   Sidebar,
   SidebarContent,
@@ -33,13 +34,11 @@ export function AppSidebar({ displayName }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
       <SidebarContent className="pt-6">
-        <div className={`px-4 mb-8 ${collapsed ? 'px-2' : ''}`}>
+        <div className={`mb-8 ${collapsed ? 'px-2' : 'px-4'}`}>
           {!collapsed ? (
-            <h1 className="font-heading text-xl font-semibold text-gradient-gold">
-              ModelBook
-            </h1>
+            <Logo heightClass="h-10" />
           ) : (
-            <span className="text-primary font-heading text-lg font-bold block text-center">M</span>
+            <span className="text-primary font-heading text-2xl italic block text-center leading-none">M</span>
           )}
         </div>
         <SidebarGroup>
