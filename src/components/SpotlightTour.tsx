@@ -43,6 +43,7 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
   const navigate = useNavigate();
   const location = useLocation();
   const findIntervalRef = useRef<number | null>(null);
+  const remeasureTimeoutRef = useRef<number | null>(null);
   const { isMobile, setOpenMobile } = useSidebar();
 
   const step = steps[stepIndex];
@@ -55,13 +56,13 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
   }, [open]);
 
   // On mobile, sync the sidebar drawer with the current step:
-  // - open it when the step targets a sidebar nav item (selector starts with [data-tour="nav-)
+  // - open it when the step targets a sidebar nav item
   // - close it for all other steps so the spotlight isn't blocked
   useEffect(() => {
     if (!open || !isMobile) return;
     const targetsSidebar = !!step?.selector?.startsWith('[data-tour="nav-');
     setOpenMobile(targetsSidebar);
-  }, [open, stepIndex, step, isMobile, setOpenMobile]);
+  }, [open, step, isMobile, setOpenMobile, location.pathname]);
 
   // Navigate when step requires a different route
   useEffect(() => {
@@ -90,9 +91,17 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
     if (!open || !step) return;
     setRect(null);
 
+    if (findIntervalRef.current) {
+      window.clearInterval(findIntervalRef.current);
+      findIntervalRef.current = null;
+    }
+    if (remeasureTimeoutRef.current) {
+      window.clearTimeout(remeasureTimeoutRef.current);
+      remeasureTimeoutRef.current = null;
+    }
+
     // Try repeatedly until target appears (route may still be mounting)
     let attempts = 0;
-    if (findIntervalRef.current) window.clearInterval(findIntervalRef.current);
     const tryFind = () => {
       const r = measure();
       if (r) {
@@ -100,12 +109,14 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
         if (step.selector) {
           const el = document.querySelector(step.selector) as HTMLElement | null;
           el?.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
-          // Re-measure after scroll
-          window.setTimeout(() => {
+
+          remeasureTimeoutRef.current = window.setTimeout(() => {
             const r2 = measure();
             if (r2) setRect(r2);
+            remeasureTimeoutRef.current = null;
           }, 350);
         }
+
         if (findIntervalRef.current) {
           window.clearInterval(findIntervalRef.current);
           findIntervalRef.current = null;
@@ -117,12 +128,18 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
         }
       }
     };
+
     tryFind();
     findIntervalRef.current = window.setInterval(tryFind, 100);
+
     return () => {
       if (findIntervalRef.current) {
         window.clearInterval(findIntervalRef.current);
         findIntervalRef.current = null;
+      }
+      if (remeasureTimeoutRef.current) {
+        window.clearTimeout(remeasureTimeoutRef.current);
+        remeasureTimeoutRef.current = null;
       }
     };
   }, [open, step, measure, location.pathname]);
