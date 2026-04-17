@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { WelcomeDialog } from "@/components/WelcomeDialog";
 import { SpotlightTour } from "@/components/SpotlightTour";
 import { tourSteps } from "@/lib/tour-steps";
+import { onStartTour } from "@/lib/tour-controller";
 import { DisclaimerDialog } from "@/components/DisclaimerDialog";
 import { getDisplayName, setDisplayName, getHasSeenTutorial, setHasSeenTutorial } from "@/lib/store";
 import Index from "./pages/Index";
@@ -61,6 +62,11 @@ function ProtectedLayout() {
       });
     }
   }, [user]);
+
+  // Allow any page (e.g. Guide) to replay the tour via window event.
+  useEffect(() => {
+    return onStartTour(() => setShowTutorial(true));
+  }, []);
 
   const handleSaveName = useCallback(async (name: string) => {
     await setDisplayName(name);

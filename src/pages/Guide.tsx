@@ -1,7 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { SpotlightTour } from "@/components/SpotlightTour";
-import { tourSteps } from "@/lib/tour-steps";
+import { startTour } from "@/lib/tour-controller";
 import {
   Briefcase, Receipt, LayoutDashboard, Building2, BookOpen,
   Sparkles, FileCheck,
