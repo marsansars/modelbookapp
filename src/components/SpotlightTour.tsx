@@ -114,13 +114,15 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
         setRect(r);
         if (step.selector) {
           const el = document.querySelector(step.selector) as HTMLElement | null;
-          el?.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+          // Use instant scroll — smooth scroll fights the spring animation and
+          // causes a laggy "chasing" effect on mobile.
+          el?.scrollIntoView({ behavior: "auto", block: "center", inline: "center" });
 
           remeasureTimeoutRef.current = window.setTimeout(() => {
             const r2 = measure();
             if (r2) setRect(r2);
             remeasureTimeoutRef.current = null;
-          }, 350);
+          }, 80);
         }
 
         if (findIntervalRef.current) {
