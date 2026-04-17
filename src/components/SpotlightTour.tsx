@@ -89,7 +89,13 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
 
   useLayoutEffect(() => {
     if (!open || !step) return;
-    setRect(null);
+
+    // Don't clear the rect — keep the previous spotlight visible so framer-motion
+    // can animate it smoothly to the new target instead of flashing/jumping.
+    // For steps without a selector (intro), hide the spotlight.
+    if (!step.selector) {
+      setRect(null);
+    }
 
     if (findIntervalRef.current) {
       window.clearInterval(findIntervalRef.current);
@@ -108,13 +114,15 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
         setRect(r);
         if (step.selector) {
           const el = document.querySelector(step.selector) as HTMLElement | null;
-          el?.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+          // Use instant scroll — smooth scroll fights the spring animation and
+          // causes a laggy "chasing" effect on mobile.
+          el?.scrollIntoView({ behavior: "auto", block: "center", inline: "center" });
 
           remeasureTimeoutRef.current = window.setTimeout(() => {
             const r2 = measure();
             if (r2) setRect(r2);
             remeasureTimeoutRef.current = null;
-          }, 350);
+          }, 80);
         }
 
         if (findIntervalRef.current) {
@@ -248,11 +256,15 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
           <mask id={maskId}>
             <rect width="100%" height="100%" fill="white" />
             {showSpotlight && rect && (
-              <rect
-                x={rect.left - padding}
-                y={rect.top - padding}
-                width={rect.width + padding * 2}
-                height={rect.height + padding * 2}
+              <motion.rect
+                initial={false}
+                animate={{
+                  x: rect.left - padding,
+                  y: rect.top - padding,
+                  width: rect.width + padding * 2,
+                  height: rect.height + padding * 2,
+                }}
+                transition={{ type: "spring", stiffness: 320, damping: 32, mass: 0.6 }}
                 rx={10}
                 ry={10}
                 fill="black"
@@ -269,11 +281,15 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
         />
         {/* Glow ring around the cutout */}
         {showSpotlight && rect && (
-          <rect
-            x={rect.left - padding}
-            y={rect.top - padding}
-            width={rect.width + padding * 2}
-            height={rect.height + padding * 2}
+          <motion.rect
+            initial={false}
+            animate={{
+              x: rect.left - padding,
+              y: rect.top - padding,
+              width: rect.width + padding * 2,
+              height: rect.height + padding * 2,
+            }}
+            transition={{ type: "spring", stiffness: 320, damping: 32, mass: 0.6 }}
             rx={10}
             ry={10}
             fill="none"
