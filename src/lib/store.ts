@@ -1,4 +1,4 @@
-import { Job, Expense, Agency, CurrencyCode, ExpenseCategoryInfo, DEFAULT_EXPENSE_CATEGORIES, JobAttachment, LineItem, ATTACHMENT_LABELS } from './types';
+import { Job, Expense, Agency, CurrencyCode, ExpenseCategoryInfo, DEFAULT_EXPENSE_CATEGORIES, JobAttachment, LineItem, ATTACHMENT_LABELS, Invoice, InvoiceType, InvoiceStatus, InvoiceSnapshot, SenderInfo } from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { z } from 'zod';
 
