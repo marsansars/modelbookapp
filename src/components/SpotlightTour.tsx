@@ -265,9 +265,9 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
       <AnimatePresence mode="wait">
         <motion.div
           key={stepIndex}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
+          initial={{ opacity: 0, scale: 0.98 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.98 }}
           transition={{ duration: 0.18 }}
           style={tooltipStyle}
           className="pointer-events-auto rounded-xl border border-border bg-card shadow-2xl p-5"
