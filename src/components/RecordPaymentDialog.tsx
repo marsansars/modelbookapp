@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { updateJob } from "@/lib/store";
-import { Job, Agency, calculateJobBreakdown, getDaysUntilDue } from "@/lib/types";
+import { Job, Agency, CurrencyCode, calculateJobBreakdown, getDaysUntilDue } from "@/lib/types";
 import { formatCurrency } from "@/lib/currency";
 import { toast } from "sonner";
 
@@ -70,7 +70,7 @@ export function RecordPaymentDialog({
   const [selectedId, setSelectedId] = useState<string>("");
   const [date, setDate] = useState<string>(format(new Date(), "yyyy-MM-dd"));
   const [submitting, setSubmitting] = useState(false);
-  const [celebrate, setCelebrate] = useState<{ amount: number; currency: string; client: string } | null>(null);
+  const [celebrate, setCelebrate] = useState<{ amount: number; currency: CurrencyCode; client: string } | null>(null);
 
   // Sort unpaid jobs: overdue first, then by closest due date.
   const sortedJobs = useMemo(() => {
