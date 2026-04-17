@@ -197,13 +197,13 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
     left = Math.max(SIDE_MARGIN, Math.min(left, viewport.w - tooltipWidth - SIDE_MARGIN));
     tooltipStyle = { ...tooltipStyle, top, left };
   } else {
-    // Centered fallback (intro / outro / target missing)
-    tooltipStyle = {
-      ...tooltipStyle,
-      top: "50%",
-      left: "50%",
-      transform: "translate(-50%, -50%)",
-    };
+    // Centered fallback (intro / outro / target missing).
+    // Use numeric top/left (not translate) so framer-motion's transform
+    // animation doesn't override our centering on mobile.
+    const TOOLTIP_HEIGHT_EST = 240;
+    const top = Math.max(16, Math.round((viewport.h - TOOLTIP_HEIGHT_EST) / 2));
+    const left = Math.max(SIDE_MARGIN, Math.round((viewport.w - tooltipWidth) / 2));
+    tooltipStyle = { ...tooltipStyle, top, left };
   }
 
   // Spotlight via SVG mask
