@@ -249,7 +249,41 @@ export default function Dashboard() {
       </div>
 
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="glass-card p-6">
-        <EarningsChart jobs={jobs} displayCur={displayCur} rates={rates} />
+        <Carousel
+          setApi={setChartApi}
+          opts={{ loop: false, align: "start" }}
+          className="relative"
+        >
+          <CarouselContent>
+            <CarouselItem>
+              <EarningsChart jobs={jobs} displayCur={displayCur} rates={rates} />
+            </CarouselItem>
+            <CarouselItem>
+              <PaymentsReceivedChart jobs={allJobs} displayCur={displayCur} rates={rates} />
+            </CarouselItem>
+          </CarouselContent>
+          <CarouselPrevious className="hidden sm:flex -left-2 h-8 w-8" />
+          <CarouselNext className="hidden sm:flex -right-2 h-8 w-8" />
+        </Carousel>
+
+        {/* Page indicator */}
+        <div className="flex items-center justify-center gap-2 mt-4">
+          {["Earnings", "Payments Received"].map((label, i) => (
+            <button
+              key={label}
+              onClick={() => chartApi?.scrollTo(i)}
+              aria-label={`Show ${label}`}
+              className={`h-1.5 rounded-full transition-all ${
+                chartIndex === i
+                  ? "w-8 bg-primary"
+                  : "w-1.5 bg-muted-foreground/30 hover:bg-muted-foreground/60"
+              }`}
+            />
+          ))}
+        </div>
+        <p className="text-center text-[10px] uppercase tracking-widest text-muted-foreground/60 mt-2 sm:hidden">
+          Swipe to switch views
+        </p>
       </motion.div>
 
       {/* Upcoming Payments */}
