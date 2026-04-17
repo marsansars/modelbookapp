@@ -10,6 +10,7 @@ import { CurrencySelector } from "@/components/CurrencySelector";
 import { DueDateBadge } from "@/components/DueDateBadge";
 import { JobAttachments } from "@/components/JobAttachments";
 import { EditJobDialog } from "@/components/EditJobDialog";
+import { RecordPaymentDialog } from "@/components/RecordPaymentDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -27,7 +28,7 @@ export default function Jobs() {
   const [rates, setRates] = useState<Record<string, number>>({});
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
   const [cats, setCats] = useState<Record<string, ExpenseCategoryInfo>>({});
-  const [paymentDialog, setPaymentDialog] = useState<{ jobId: string; date: string } | null>(null);
+  const [paymentDialog, setPaymentDialog] = useState<{ jobId: string } | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'overdue'>('all');
   const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'>('date-desc');
 
@@ -54,12 +55,7 @@ export default function Jobs() {
   const getAgencyName = (id?: string) => agencies.find(a => a.id === id)?.name;
   const getJobExpenses = (jobId: string) => expenses.filter(e => e.jobId === jobId);
 
-  const handleRecordPayment = async () => {
-    if (!paymentDialog) return;
-    await updateJob(paymentDialog.jobId, { status: 'paid', paidDate: paymentDialog.date });
-    setPaymentDialog(null);
-    await reload();
-  };
+  // Payment recording is now handled inside RecordPaymentDialog (with confetti + animation).
 
   const handleUnmarkPaid = async (jobId: string) => {
     await updateJob(jobId, { status: 'pending', paidDate: '' });
