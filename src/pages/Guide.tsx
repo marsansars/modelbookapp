@@ -3,7 +3,7 @@ import { useState } from "react";
 import { OnboardingTutorial } from "@/components/OnboardingTutorial";
 import {
   Briefcase, Receipt, LayoutDashboard, Building2, BookOpen,
-  Sparkles, HelpCircle, Plus, CalendarCheck, Paperclip, FileText
+  Sparkles, HelpCircle, Plus, CalendarCheck, Paperclip, FileText, FileCheck
 } from "lucide-react";
 
 const sections = [
