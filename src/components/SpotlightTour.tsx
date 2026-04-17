@@ -159,6 +159,7 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
     }, startDelay);
 
     return () => {
+      window.clearTimeout(startTimeout);
       if (findIntervalRef.current) {
         window.clearInterval(findIntervalRef.current);
         findIntervalRef.current = null;
@@ -168,7 +169,7 @@ export function SpotlightTour({ open, steps, onComplete, onSkip }: Props) {
         remeasureTimeoutRef.current = null;
       }
     };
-  }, [open, step, measure, location.pathname]);
+  }, [open, step, measure, location.pathname, isMobile]);
 
   // Track viewport + window resize / scroll
   useEffect(() => {
