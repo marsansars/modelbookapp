@@ -26,15 +26,17 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ displayName }: AppSidebarProps) {
-  const { state } = useSidebar();
-  const collapsed = state === "collapsed";
+  const { state, isMobile } = useSidebar();
+  // On mobile, the sidebar opens as a full sheet — always show labels there.
+  // Only hide labels when desktop sidebar is icon-collapsed.
+  const showLabels = isMobile || state !== "collapsed";
   const location = useLocation();
 
   return (
     <Sidebar collapsible="icon" className="border-r border-border">
       <SidebarContent className="pt-6">
-        <div className={`mb-8 ${collapsed ? 'px-2' : 'px-4'}`}>
-          {!collapsed ? (
+        <div className={`mb-8 ${showLabels ? 'px-4' : 'px-2'}`}>
+          {showLabels ? (
             <h1 className="font-heading text-xl font-semibold text-gradient-gold">
               ModelBook
             </h1>
@@ -55,7 +57,7 @@ export function AppSidebar({ displayName }: AppSidebarProps) {
                       activeClassName="bg-secondary text-primary font-medium"
                     >
                       <item.icon className="h-5 w-5 shrink-0" />
-                      {!collapsed && <span className="font-body">{item.title}</span>}
+                      {showLabels && <span className="font-body">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
