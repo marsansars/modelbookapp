@@ -4,6 +4,8 @@ import { StatCard } from "@/components/StatCard";
 import { DueDateBadge } from "@/components/DueDateBadge";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { EarningsChart } from "@/components/EarningsChart";
+import { PaymentsReceivedChart } from "@/components/PaymentsReceivedChart";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 
 import { getJobs, getExpenses, getDisplayCurrency, setDisplayCurrency, getAgencies } from "@/lib/store";
 import { Job, Expense, Agency, CurrencyCode, calculateJobBreakdown, getDueDate, getDaysUntilDue, parseLocalDate } from "@/lib/types";
@@ -47,6 +49,14 @@ export default function Dashboard() {
   const [period, setPeriod] = useState<TimePeriod>('year');
   const [followUpOpen, setFollowUpOpen] = useState(false);
   const [recordPaymentOpen, setRecordPaymentOpen] = useState(false);
+  const [chartApi, setChartApi] = useState<CarouselApi | null>(null);
+  const [chartIndex, setChartIndex] = useState(0);
+
+  useEffect(() => {
+    if (!chartApi) return;
+    setChartIndex(chartApi.selectedScrollSnap());
+    chartApi.on("select", () => setChartIndex(chartApi.selectedScrollSnap()));
+  }, [chartApi]);
 
   const load = async () => {
     const [j, e, a, cur, r] = await Promise.all([
