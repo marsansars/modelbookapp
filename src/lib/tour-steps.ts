@@ -56,7 +56,7 @@ export const tourSteps: TourStep[] = [
     selector: '[data-tour="dash-chase"]',
     route: "/",
     title: "Chase Payment",
-    body: "When a job goes overdue, tap here to draft a polite follow-up email to the agency in seconds.",
+    body: "When a job goes overdue, tap here to draft a polite follow-up email to the agency or the client in seconds.",
   },
   {
     selector: '[data-tour="nav-bookkeeping"]',
