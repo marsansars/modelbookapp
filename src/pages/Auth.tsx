@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { Logo } from "@/components/Logo";
 
 export default function Auth() {
   const { user, loading: authLoading } = useAuth();
@@ -66,9 +67,9 @@ export default function Auth() {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-sm space-y-6"
       >
-        <div className="text-center">
-          <h1 className="font-heading text-3xl font-semibold text-gradient-gold">ModelBook</h1>
-          <p className="text-muted-foreground mt-2 font-body">
+        <div className="text-center flex flex-col items-center">
+          <Logo heightClass="h-20" />
+          <p className="text-muted-foreground mt-4 font-body">
             {forgotPassword
               ? "Enter your email to reset your password"
               : isLogin
