@@ -231,16 +231,31 @@ export function SendExpensesDialog({ open, onOpenChange, job, agencies, expenses
 
           <div className="space-y-2">
             <Label>Receipts PDF</Label>
-            {pdfLink ? (
-              <div className="flex items-center gap-2">
-                <div className="flex-1 truncate rounded-md border border-border/50 bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
+            {pdfBlob ? (
+              <div className="space-y-2">
+                <div className="rounded-md border border-border/50 bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
                   <FileText className="inline h-3.5 w-3.5 mr-1.5 -mt-0.5" />
-                  Report ready · link valid 30 days
+                  {pdfFilename} · {(pdfBlob.size / 1024 / 1024).toFixed(2)} MB
                 </div>
-                <Button size="sm" variant="ghost" onClick={() => copy(pdfLink, 'link')} className="h-9 text-xs">
-                  {copied === 'link' ? <Check className="h-3.5 w-3.5 mr-1" /> : <Copy className="h-3.5 w-3.5 mr-1" />}
-                  Copy link
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button onClick={handleShare} disabled={sharing} variant="outline" className="flex-1">
+                    {sharing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Share2 className="h-4 w-4 mr-2" />}
+                    Share / Attach
+                  </Button>
+                  <Button onClick={handleDownload} variant="outline" className="flex-1">
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </Button>
+                  {pdfLink && (
+                    <Button size="default" variant="ghost" onClick={() => copy(pdfLink, 'link')} className="flex-1">
+                      {copied === 'link' ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
+                      Copy link
+                    </Button>
+                  )}
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  On phone: tap <strong>Share / Attach</strong> and pick Mail/Gmail to send the PDF as an attachment. On desktop: <strong>Download</strong> the PDF and attach it manually.
+                </p>
               </div>
             ) : (
               <Button onClick={handleGenerate} disabled={generating || jobExpenses.length === 0} variant="outline" className="w-full">
