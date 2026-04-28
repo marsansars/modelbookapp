@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, Download, Mail, Trash2, Settings, Building2 } from "lucide-react";
+import { FileText, Plus, Download, Mail, Trash2, Settings, Building2, Pencil } from "lucide-react";
 import { getInvoices, deleteInvoice, getSenderInfo, updateInvoice } from "@/lib/store";
 import { Invoice, SenderInfo, parseLocalDate, CURRENCIES, calculateJobBreakdown } from "@/lib/types";
 import { downloadInvoicePdf } from "@/lib/invoice-pdf";
 import { NewInvoiceDialog } from "@/components/NewInvoiceDialog";
+import { EditInvoiceDialog } from "@/components/EditInvoiceDialog";
 import { SenderInfoDialog } from "@/components/SenderInfoDialog";
 import { toast } from "sonner";
 
@@ -15,6 +16,7 @@ export default function Invoices() {
   const [sender, setSender] = useState<SenderInfo>({});
   const [newOpen, setNewOpen] = useState(false);
   const [senderOpen, setSenderOpen] = useState(false);
+  const [editing, setEditing] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
 
   const reload = async () => {
@@ -160,6 +162,9 @@ export default function Invoices() {
                     <Button variant="outline" size="sm" className="gap-1.5" onClick={() => handleEmail(inv)} disabled={!inv.billToEmail}>
                       <Mail className="h-3.5 w-3.5" /> Email
                     </Button>
+                    <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setEditing(inv)}>
+                      <Pencil className="h-3.5 w-3.5" /> Edit
+                    </Button>
                     <Button variant="ghost" size="sm" className="gap-1.5 ml-auto text-muted-foreground hover:text-destructive" onClick={() => handleDelete(inv)}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -172,6 +177,7 @@ export default function Invoices() {
       )}
 
       <NewInvoiceDialog open={newOpen} onOpenChange={setNewOpen} onCreated={() => reload()} />
+      <EditInvoiceDialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)} invoice={editing} onSaved={() => reload()} />
       <SenderInfoDialog open={senderOpen} onOpenChange={setSenderOpen} onSaved={(s) => setSender(s)} />
     </div>
   );
