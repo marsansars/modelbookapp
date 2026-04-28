@@ -121,8 +121,21 @@ export function NewInvoiceDialog({ open, onOpenChange, presetJobId, onCreated }:
           agentPercent: job.agentPercent,
           rate: job.rate,
           lineItems: job.lineItems || [],
+          expenses: selectedExpenses.map(e => ({
+            id: e.id,
+            date: e.date,
+            description: e.description,
+            amount: e.amount,
+            currency: e.currency,
+          })),
         },
       });
+      // Mark reimbursable expenses as reimbursed so they wash in bookkeeping
+      await Promise.all(
+        selectedExpenses
+          .filter(e => e.reimbursable && !e.reimbursed)
+          .map(e => updateExpense(e.id, { reimbursed: true }).catch(() => {}))
+      );
       toast.success('Invoice created');
       onCreated(invoice);
       onOpenChange(false);
