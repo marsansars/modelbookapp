@@ -22,6 +22,8 @@ export function NewInvoiceDialog({ open, onOpenChange, presetJobId, onCreated }:
   const [jobs, setJobs] = useState<Job[]>([]);
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [existing, setExisting] = useState<Invoice[]>([]);
+  const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
+  const [selectedExpenseIds, setSelectedExpenseIds] = useState<Set<string>>(new Set());
   const [jobId, setJobId] = useState<string>('');
   const [number, setNumber] = useState('');
   const [type, setType] = useState<InvoiceType>('detailed');
@@ -35,16 +37,30 @@ export function NewInvoiceDialog({ open, onOpenChange, presetJobId, onCreated }:
 
   useEffect(() => {
     if (!open) return;
-    Promise.all([getJobs(), getAgencies(), getInvoices()]).then(([j, a, i]) => {
+    Promise.all([getJobs(), getAgencies(), getInvoices(), getExpenses()]).then(([j, a, i, e]) => {
       setJobs(j);
       setAgencies(a);
       setExisting(i);
+      setAllExpenses(e);
       if (presetJobId) setJobId(presetJobId);
     });
   }, [open, presetJobId]);
 
   const job = jobs.find(j => j.id === jobId);
   const agency = job?.agencyId ? agencies.find(a => a.id === job.agencyId) : undefined;
+
+  // Expenses linked to the selected job (any reimbursable expense — let the user decide)
+  const jobExpenses = useMemo(() => {
+    if (!job) return [];
+    return allExpenses.filter(e => e.jobId === job.id);
+  }, [job, allExpenses]);
+
+  // Auto-select reimbursable + not-yet-reimbursed expenses by default
+  useEffect(() => {
+    if (!job) { setSelectedExpenseIds(new Set()); return; }
+    const auto = jobExpenses.filter(e => e.reimbursable && !e.reimbursed).map(e => e.id);
+    setSelectedExpenseIds(new Set(auto));
+  }, [jobId, jobExpenses.length]);
 
   // Auto-fill bill-to and due date when job changes
   useEffect(() => {
@@ -62,8 +78,22 @@ export function NewInvoiceDialog({ open, onOpenChange, presetJobId, onCreated }:
       : job.rate;
   }, [job]);
 
+  const selectedExpenses = useMemo(
+    () => jobExpenses.filter(e => selectedExpenseIds.has(e.id)),
+    [jobExpenses, selectedExpenseIds]
+  );
+  const expensesTotal = selectedExpenses.reduce((s, e) => s + (e.amount || 0), 0);
+
   const { agentFee, netPay } = job ? calculateJobBreakdown(subtotal, job.agentPercent) : { agentFee: 0, netPay: 0 };
-  const total = type === 'detailed' ? netPay : subtotal;
+  const total = (type === 'detailed' ? netPay : subtotal) + expensesTotal;
+
+  const toggleExpense = (id: string) => {
+    setSelectedExpenseIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
 
   const create = async () => {
     if (!job) { toast.error('Pick a job first'); return; }
