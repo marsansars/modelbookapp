@@ -63,8 +63,9 @@ export default function Invoices() {
     const sub = inv.snapshot.lineItems.length > 0
       ? inv.snapshot.lineItems.reduce((s, li) => s + (li.amount || 0), 0)
       : inv.snapshot.rate;
+    const expensesTotal = (inv.snapshot.expenses || []).reduce((s, e) => s + (e.amount || 0), 0);
     const { netPay } = calculateJobBreakdown(sub, inv.snapshot.agentPercent);
-    return { sub, total: inv.type === 'detailed' ? netPay : sub };
+    return { sub, total: (inv.type === 'detailed' ? netPay : sub) + expensesTotal };
   };
 
   return (
