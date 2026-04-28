@@ -2,11 +2,12 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, Download, Mail, Trash2, Settings, Building2 } from "lucide-react";
+import { FileText, Plus, Download, Mail, Trash2, Settings, Building2, Pencil } from "lucide-react";
 import { getInvoices, deleteInvoice, getSenderInfo, updateInvoice } from "@/lib/store";
 import { Invoice, SenderInfo, parseLocalDate, CURRENCIES, calculateJobBreakdown } from "@/lib/types";
 import { downloadInvoicePdf } from "@/lib/invoice-pdf";
 import { NewInvoiceDialog } from "@/components/NewInvoiceDialog";
+import { EditInvoiceDialog } from "@/components/EditInvoiceDialog";
 import { SenderInfoDialog } from "@/components/SenderInfoDialog";
 import { toast } from "sonner";
 
