@@ -32,6 +32,9 @@ export function SendExpensesDialog({ open, onOpenChange, job, agencies, expenses
   const [body, setBody] = useState("");
   const [generating, setGenerating] = useState(false);
   const [pdfLink, setPdfLink] = useState<string | null>(null);
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
+  const [pdfFilename, setPdfFilename] = useState<string>("");
+  const [sharing, setSharing] = useState(false);
   const [copied, setCopied] = useState<"subject" | "body" | "all" | "link" | null>(null);
 
   const jobExpenses = useMemo(
