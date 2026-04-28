@@ -6,6 +6,7 @@ import { FileText, Plus, Download, Mail, Trash2, Settings, Building2, Pencil } f
 import { getInvoices, deleteInvoice, getSenderInfo, updateInvoice } from "@/lib/store";
 import { Invoice, SenderInfo, parseLocalDate, CURRENCIES, calculateJobBreakdown } from "@/lib/types";
 import { downloadInvoicePdf } from "@/lib/invoice-pdf";
+import { openMailtoDraft } from "@/lib/email";
 import { NewInvoiceDialog } from "@/components/NewInvoiceDialog";
 import { EditInvoiceDialog } from "@/components/EditInvoiceDialog";
 import { SenderInfoDialog } from "@/components/SenderInfoDialog";
@@ -44,7 +45,7 @@ export default function Invoices() {
     }
     const subject = `Invoice ${inv.number} from ${sender.legalName || 'me'}`;
     const body = `Hi,\n\nPlease find invoice ${inv.number} for ${inv.snapshot.client} attached.\n\nTotal due by ${parseLocalDate(inv.dueDate).toLocaleDateString()}.\n\nThank you!\n${sender.legalName || ''}`;
-    window.location.href = `mailto:${inv.billToEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    openMailtoDraft({ to: inv.billToEmail, subject, body });
     handleDownload(inv);
   };
 
