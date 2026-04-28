@@ -10,6 +10,7 @@ import { Job, Agency, Expense, ExpenseCategoryInfo, JobAttachment, parseLocalDat
 import { generateExpenseReportPdf, groupExpensesByCategory } from "@/lib/expense-pdf";
 import { uploadBlob, getAttachmentUrl } from "@/lib/storage";
 import { getDisplayName } from "@/lib/store";
+import { openGmailCompose, openMailtoDraft } from "@/lib/email";
 import { toast } from "@/hooks/use-toast";
 
 interface Props {
@@ -170,24 +171,11 @@ export function SendExpensesDialog({ open, onOpenChange, job, agencies, expenses
   };
 
   const openInMail = () => {
-    const to = recipientEmail.trim();
-    // Use an anchor click — more reliable than window.location.href, which can
-    // be swallowed by PWAs / Gmail handlers and just opens the inbox.
-    const url = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    const a = document.createElement('a');
-    a.href = url;
-    a.rel = 'noopener noreferrer';
-    a.target = '_self';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
+    openMailtoDraft({ to: recipientEmail, subject, body });
   };
 
   const openInGmail = () => {
-    const to = recipientEmail.trim();
-    // Gmail web compose — guaranteed to open a new draft, not the inbox.
-    const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
+    openGmailCompose({ to: recipientEmail, subject, body });
   };
 
   if (!job) return null;
