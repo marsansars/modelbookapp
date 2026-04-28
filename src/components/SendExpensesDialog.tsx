@@ -98,16 +98,64 @@ export function SendExpensesDialog({ open, onOpenChange, job, agencies, expenses
       const blob = await generateExpenseReportPdf({ job, agency, expenses: jobExpenses, cats, receipts, yourName });
       const safeClient = job.client.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 40);
       const filename = `expenses-${safeClient}-${job.jobDate}.pdf`;
-      const { storagePath } = await uploadBlob(blob, filename, 'application/pdf');
-      // Long-lived signed URL (30 days)
-      const url = await getAttachmentUrl(storagePath, 60 * 60 * 24 * 30);
-      setPdfLink(url);
-      toast({ title: 'Report generated', description: 'Link added to the email body.' });
+      setPdfBlob(blob);
+      setPdfFilename(filename);
+      // Also upload for a backup link (useful if share/attach isn't available)
+      try {
+        const { storagePath } = await uploadBlob(blob, filename, 'application/pdf');
+        const url = await getAttachmentUrl(storagePath, 60 * 60 * 24 * 30);
+        setPdfLink(url);
+      } catch {
+        // Non-fatal — share/download still work from the in-memory blob
+      }
+      toast({ title: 'Report ready', description: 'Use Share or Download to attach it to your email.' });
     } catch (err: any) {
       toast({ title: 'Could not generate report', description: err?.message || String(err), variant: 'destructive' });
     } finally {
       setGenerating(false);
     }
+  };
+
+  const handleShare = async () => {
+    if (!pdfBlob) return;
+    setSharing(true);
+    try {
+      const file = new File([pdfBlob], pdfFilename, { type: 'application/pdf' });
+      const nav = navigator as any;
+      const canShareFiles = typeof nav.canShare === 'function' && nav.canShare({ files: [file] });
+      if (canShareFiles && typeof nav.share === 'function') {
+        await nav.share({ files: [file], title: subject, text: body });
+      } else {
+        // Desktop fallback — download the file so the user can attach it manually
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = pdfFilename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        toast({ title: 'PDF downloaded', description: 'Attach it to your email manually.' });
+      }
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') {
+        toast({ title: 'Share failed', description: err?.message || String(err), variant: 'destructive' });
+      }
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  const handleDownload = () => {
+    if (!pdfBlob) return;
+    const url = URL.createObjectURL(pdfBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = pdfFilename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   const copy = async (text: string, key: typeof copied) => {
