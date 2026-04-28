@@ -19,13 +19,14 @@ export const openMailtoDraft = ({
 }) => {
   const mailtoUrl = buildMailtoUrl({ to, subject, body });
 
-  const link = document.createElement("a");
-  link.href = mailtoUrl;
-  link.target = "_top";
-  link.rel = "noopener noreferrer";
-  link.style.display = "none";
+  try {
+    if (window.top && window.top !== window) {
+      window.top.location.href = mailtoUrl;
+      return;
+    }
+  } catch {
+    // Fall back to the current window when top navigation isn't available.
+  }
 
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
+  window.location.href = mailtoUrl;
 };

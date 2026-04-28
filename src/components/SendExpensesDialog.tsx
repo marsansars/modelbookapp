@@ -10,7 +10,7 @@ import { Job, Agency, Expense, ExpenseCategoryInfo, JobAttachment, parseLocalDat
 import { generateExpenseReportPdf, groupExpensesByCategory } from "@/lib/expense-pdf";
 import { uploadBlob, getAttachmentUrl } from "@/lib/storage";
 import { getDisplayName } from "@/lib/store";
-import { openMailtoDraft } from "@/lib/email";
+import { buildMailtoUrl } from "@/lib/email";
 import { toast } from "@/hooks/use-toast";
 
 interface Props {
@@ -170,9 +170,7 @@ export function SendExpensesDialog({ open, onOpenChange, job, agencies, expenses
     }
   };
 
-  const openInMail = () => {
-    openMailtoDraft({ to: recipientEmail, subject, body });
-  };
+  const mailtoHref = buildMailtoUrl({ to: recipientEmail, subject, body });
 
   if (!job) return null;
 
@@ -290,9 +288,11 @@ export function SendExpensesDialog({ open, onOpenChange, job, agencies, expenses
               {copied === 'all' ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
               Copy All
             </Button>
-            <Button onClick={openInMail} className="flex-1">
-              <Mail className="h-4 w-4 mr-2" />
-              Open in Email
+            <Button asChild className="flex-1">
+              <a href={mailtoHref} target="_top" rel="noopener noreferrer">
+                <Mail className="h-4 w-4 mr-2" />
+                Open in Email
+              </a>
             </Button>
           </div>
         </div>

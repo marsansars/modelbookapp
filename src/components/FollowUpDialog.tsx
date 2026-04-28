@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Job, Agency, parseLocalDate, getDaysUntilDue } from "@/lib/types";
 import { getDisplayName } from "@/lib/store";
-import { openMailtoDraft } from "@/lib/email";
+import { buildMailtoUrl } from "@/lib/email";
 import { toast } from "@/hooks/use-toast";
 
 interface FollowUpDialogProps {
@@ -83,9 +83,7 @@ ${yourName || "[Your Name]"}`;
     }
   };
 
-  const openInMail = () => {
-    openMailtoDraft({ to: recipientEmail, subject, body });
-  };
+  const mailtoHref = buildMailtoUrl({ to: recipientEmail, subject, body });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -180,9 +178,11 @@ ${yourName || "[Your Name]"}`;
                   {copied === "all" ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
                   Copy All
                 </Button>
-                <Button onClick={openInMail} className="flex-1">
-                  <Mail className="h-4 w-4 mr-2" />
-                  Open in Email
+                <Button asChild className="flex-1">
+                  <a href={mailtoHref} target="_top" rel="noopener noreferrer">
+                    <Mail className="h-4 w-4 mr-2" />
+                    Open in Email
+                  </a>
                 </Button>
               </div>
             </>
