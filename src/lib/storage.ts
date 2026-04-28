@@ -58,3 +58,25 @@ export async function deleteAttachment(storagePath: string): Promise<void> {
   const { error } = await supabase.storage.from(BUCKET).remove([storagePath]);
   if (error) console.warn('Failed to delete attachment:', error);
 }
+
+/** Upload an arbitrary blob (e.g. a generated PDF) to the attachments bucket. */
+export async function uploadBlob(blob: Blob, filename: string, contentType?: string): Promise<{ storagePath: string; size: number; type: string; name: string }> {
+  if (blob.size > MAX_FILE_SIZE) {
+    throw new Error(`${filename} is too large (max 25MB)`);
+  }
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
+
+  const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_').slice(-80);
+  const path = `${user.id}/${crypto.randomUUID()}-${safeName}`;
+  const type = contentType || blob.type || 'application/octet-stream';
+
+  const { error } = await supabase.storage.from(BUCKET).upload(path, blob, {
+    cacheControl: '3600',
+    contentType: type,
+    upsert: false,
+  });
+  if (error) throw error;
+
+  return { storagePath: path, size: blob.size, type, name: filename };
+}

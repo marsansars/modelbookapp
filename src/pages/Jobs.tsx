@@ -11,13 +11,14 @@ import { DueDateBadge } from "@/components/DueDateBadge";
 import { JobAttachments } from "@/components/JobAttachments";
 import { EditJobDialog } from "@/components/EditJobDialog";
 import { RecordPaymentDialog } from "@/components/RecordPaymentDialog";
+import { SendExpensesDialog } from "@/components/SendExpensesDialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Trash2, ChevronDown, ChevronUp, Receipt, CheckCircle2, CalendarCheck, ArrowUpDown, Filter } from "lucide-react";
+import { Trash2, ChevronDown, ChevronUp, Receipt, CheckCircle2, CalendarCheck, ArrowUpDown, Filter, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Jobs() {
@@ -29,6 +30,7 @@ export default function Jobs() {
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
   const [cats, setCats] = useState<Record<string, ExpenseCategoryInfo>>({});
   const [paymentDialog, setPaymentDialog] = useState<{ jobId: string } | null>(null);
+  const [sendExpensesJobId, setSendExpensesJobId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'overdue'>('all');
   const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'>('date-desc');
 
@@ -299,6 +301,17 @@ export default function Jobs() {
                             ))}
                           </div>
                         )}
+                        {jobExpenses.length > 0 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="mt-3 w-full sm:w-auto gap-1.5 text-xs"
+                            onClick={() => setSendExpensesJobId(job.id)}
+                          >
+                            <Send className="h-3.5 w-3.5" />
+                            Send Expenses to Agent
+                          </Button>
+                        )}
                       </div>
 
                       <div>
@@ -321,6 +334,15 @@ export default function Jobs() {
         unpaidJobs={jobs.filter(j => j.status !== 'paid')}
         agencies={agencies}
         onRecorded={reload}
+      />
+
+      <SendExpensesDialog
+        open={!!sendExpensesJobId}
+        onOpenChange={(open) => !open && setSendExpensesJobId(null)}
+        job={jobs.find(j => j.id === sendExpensesJobId)}
+        agencies={agencies}
+        expenses={expenses}
+        cats={cats}
       />
     </div>
   );
