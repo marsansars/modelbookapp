@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { addInvoice, getJobs, getAgencies, getInvoices } from "@/lib/store";
-import { Job, Agency, Invoice, InvoiceType, parseLocalDate, getDueDate, CURRENCIES, calculateJobBreakdown } from "@/lib/types";
+import { addInvoice, getJobs, getAgencies, getInvoices, getExpenses, updateExpense } from "@/lib/store";
+import { Job, Agency, Invoice, InvoiceType, Expense, parseLocalDate, getDueDate, CURRENCIES, calculateJobBreakdown } from "@/lib/types";
 import { toast } from "sonner";
 
 interface Props {
