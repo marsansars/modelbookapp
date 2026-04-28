@@ -17,7 +17,7 @@ export const buildGmailComposeUrl = ({
   subject: string;
   body: string;
 }) =>
-  `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to?.trim() || "")}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  `https://mail.google.com/mail/u/0/?tf=cm&source=mailto&to=${encodeURIComponent(to?.trim() || "")}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
 export const openMailtoDraft = ({
   to,
@@ -28,13 +28,7 @@ export const openMailtoDraft = ({
   subject: string;
   body: string;
 }) => {
-  const a = document.createElement("a");
-  a.href = buildMailtoUrl({ to, subject, body });
-  a.rel = "noopener noreferrer";
-  a.target = "_blank";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+  window.location.assign(buildMailtoUrl({ to, subject, body }));
 };
 
 export const openGmailCompose = ({
@@ -46,5 +40,5 @@ export const openGmailCompose = ({
   subject: string;
   body: string;
 }) => {
-  window.open(buildGmailComposeUrl({ to, subject, body }), "_blank", "noopener,noreferrer");
+  window.location.assign(buildGmailComposeUrl({ to, subject, body }));
 };
