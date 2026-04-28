@@ -186,6 +186,38 @@ export function NewInvoiceDialog({ open, onOpenChange, presetJobId, onCreated }:
             </div>
           )}
 
+          {job && jobExpenses.length > 0 && (
+            <div className="rounded-md border border-border p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm">Bill expenses from this job</Label>
+                <span className="text-xs text-muted-foreground">{selectedExpenses.length} selected · {fmtMoney(expensesTotal)}</span>
+              </div>
+              <div className="space-y-1.5 max-h-44 overflow-y-auto">
+                {jobExpenses.map(e => {
+                  const checked = selectedExpenseIds.has(e.id);
+                  const sym = CURRENCIES[e.currency]?.symbol || '';
+                  return (
+                    <label key={e.id} className="flex items-start gap-2 text-sm cursor-pointer hover:bg-secondary/40 rounded px-2 py-1.5">
+                      <Checkbox checked={checked} onCheckedChange={() => toggleExpense(e.id)} className="mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-foreground truncate">{e.description || 'Expense'}</span>
+                          <span className="text-foreground tabular-nums">{sym}{e.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground flex items-center gap-2">
+                          <span>{parseLocalDate(e.date).toLocaleDateString()}</span>
+                          {e.reimbursable && <span className="text-primary">Reimbursable</span>}
+                          {e.reimbursed && <span className="text-success">Already reimbursed</span>}
+                        </div>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">Selected reimbursable expenses will be marked as reimbursed once the invoice is created.</p>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <div>
               <Label>Invoice #</Label>
