@@ -80,19 +80,15 @@ export function SendExpensesDialog({ open, onOpenChange, job, agencies, expenses
       }
       lines.push('');
     }
-    if (pdfLink) {
-      lines.push('Full report (summary + receipts):');
-      lines.push(pdfLink);
-      lines.push('');
-    } else {
-      lines.push('[Generate the report to insert the receipts link here]');
+    if (pdfBlob || pdfLink) {
+      lines.push('Receipts are attached as a PDF (summary + every receipt).');
       lines.push('');
     }
     lines.push('Thanks,');
     lines.push(yourName || '[Your Name]');
     setBody(lines.join('\n'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [job?.id, recipientName, yourName, pdfLink, groups.length]);
+  }, [job?.id, recipientName, yourName, pdfLink, pdfBlob, groups.length]);
 
   const handleGenerate = async () => {
     if (!job) return;
