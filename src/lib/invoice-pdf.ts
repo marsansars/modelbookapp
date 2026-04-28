@@ -163,7 +163,7 @@ export function generateInvoicePdf(invoice: Invoice, sender: SenderInfo): jsPDF 
     drawRow(`Agent commission (${snap.agentPercent}%)`, `−${money(agentFee, snap.currency)}`);
   }
   if (expensesTotal > 0) {
-    drawRow('Reimbursable expenses', money(expensesTotal, snap.currency));
+    drawRow('Expenses', money(expensesTotal, snap.currency));
   }
 
   // Gold total bar
