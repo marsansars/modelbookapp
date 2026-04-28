@@ -55,6 +55,8 @@ export function SendExpensesDialog({ open, onOpenChange, job, agencies, expenses
   useEffect(() => {
     if (!open || !job) return;
     setPdfLink(null);
+    setPdfBlob(null);
+    setPdfFilename("");
     setCopied(null);
     getDisplayName().then((n) => { if (n) setYourName(n); });
     if (agencyName && !recipientName) setRecipientName(agencyName);
