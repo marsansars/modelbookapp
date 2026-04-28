@@ -17,5 +17,15 @@ export const openMailtoDraft = ({
   subject: string;
   body: string;
 }) => {
-  window.location.href = buildMailtoUrl({ to, subject, body });
+  const mailtoUrl = buildMailtoUrl({ to, subject, body });
+
+  const link = document.createElement("a");
+  link.href = mailtoUrl;
+  link.target = "_top";
+  link.rel = "noopener noreferrer";
+  link.style.display = "none";
+
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
 };
