@@ -260,12 +260,24 @@ export default function Jobs() {
                       className="overflow-hidden space-y-4 pt-2 border-t border-border/50"
                     >
                       <div>
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
                           <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
                             <Receipt className="h-4 w-4 text-muted-foreground" />
                             Linked Expenses
                           </h4>
-                          <AddExpenseDialog onAdded={reload} defaultJobId={job.id} />
+                          <div className="flex items-center gap-2">
+                            {jobExpenses.length > 0 && (
+                              <Button
+                                size="sm"
+                                className="gap-1.5"
+                                onClick={() => setSendExpensesJobId(job.id)}
+                              >
+                                <Send className="h-3.5 w-3.5" />
+                                Send Expenses
+                              </Button>
+                            )}
+                            <AddExpenseDialog onAdded={reload} defaultJobId={job.id} />
+                          </div>
                         </div>
                         {jobExpenses.length === 0 ? (
                           <p className="text-xs text-muted-foreground">No expenses linked to this job yet.</p>
@@ -300,17 +312,6 @@ export default function Jobs() {
                               </div>
                             ))}
                           </div>
-                        )}
-                        {jobExpenses.length > 0 && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="mt-3 w-full sm:w-auto gap-1.5 text-xs"
-                            onClick={() => setSendExpensesJobId(job.id)}
-                          >
-                            <Send className="h-3.5 w-3.5" />
-                            Send Expenses to Agent
-                          </Button>
                         )}
                       </div>
 
