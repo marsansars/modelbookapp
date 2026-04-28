@@ -26,6 +26,7 @@ import Install from "./pages/Install";
 import Guide from "./pages/Guide";
 import Admin from "./pages/Admin";
 import Settings from "./pages/Settings";
+import Unsubscribe from "./pages/Unsubscribe";
 import { FeedbackButton } from "@/components/FeedbackButton";
 import { LogOut, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -184,6 +185,7 @@ const App = () => (
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/*" element={<ProtectedLayout />} />
           </Routes>
         </BrowserRouter>
