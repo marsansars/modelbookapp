@@ -121,7 +121,7 @@ export function generateInvoicePdf(invoice: Invoice, sender: SenderInfo): jsPDF 
 
   const expenseRows: any[] = expenses.length > 0
     ? [
-        [{ content: 'REIMBURSABLE EXPENSES', colSpan: 2, styles: { fontStyle: 'bold', fontSize: 9, textColor: MUTED, cellPadding: { top: 14, bottom: 6, left: 0, right: 0 } } }],
+        [{ content: 'EXPENSES', colSpan: 2, styles: { fontStyle: 'bold', fontSize: 9, textColor: MUTED, cellPadding: { top: 14, bottom: 6, left: 0, right: 0 } } }],
         ...expenses.map(e => [`${fmtDate(e.date)} — ${e.description || 'Expense'}`, money(e.amount, snap.currency)]),
       ]
     : [];
