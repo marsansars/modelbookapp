@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Job, Agency, parseLocalDate, getDaysUntilDue } from "@/lib/types";
 import { getDisplayName } from "@/lib/store";
+import { openGmailCompose, openMailtoDraft } from "@/lib/email";
 import { toast } from "@/hooks/use-toast";
 
 interface FollowUpDialogProps {
@@ -21,6 +22,7 @@ interface FollowUpDialogProps {
 export function FollowUpDialog({ open, onOpenChange, overdueJobs, agencies }: FollowUpDialogProps) {
   const [selectedJobId, setSelectedJobId] = useState<string>("");
   const [recipientName, setRecipientName] = useState("");
+  const [recipientEmail, setRecipientEmail] = useState("");
   const [yourName, setYourName] = useState("");
   const [copied, setCopied] = useState<"subject" | "body" | "all" | null>(null);
 
@@ -82,8 +84,11 @@ ${yourName || "[Your Name]"}`;
   };
 
   const openInMail = () => {
-    const url = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = url;
+    openMailtoDraft({ to: recipientEmail, subject, body });
+  };
+
+  const openInGmail = () => {
+    openGmailCompose({ to: recipientEmail, subject, body });
   };
 
   return (
@@ -142,6 +147,17 @@ ${yourName || "[Your Name]"}`;
               </div>
 
               <div className="space-y-2">
+                <Label htmlFor="recipient-email">Recipient email</Label>
+                <Input
+                  id="recipient-email"
+                  type="email"
+                  value={recipientEmail}
+                  onChange={e => setRecipientEmail(e.target.value)}
+                  placeholder="accounting@agency.com"
+                />
+              </div>
+
+              <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label>Subject</Label>
                   <Button size="sm" variant="ghost" onClick={() => copy(subject, "subject")} className="h-7 text-xs">
@@ -168,11 +184,18 @@ ${yourName || "[Your Name]"}`;
                   {copied === "all" ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
                   Copy All
                 </Button>
+                <Button onClick={openInGmail} variant="outline" className="flex-1">
+                  <Mail className="h-4 w-4 mr-2" />
+                  Gmail
+                </Button>
                 <Button onClick={openInMail} className="flex-1">
                   <Mail className="h-4 w-4 mr-2" />
                   Open in Email
                 </Button>
               </div>
+              <p className="text-[11px] text-muted-foreground -mt-1 leading-snug">
+                If <strong>Open in Email</strong> opens your inbox instead of a new draft, use <strong>Gmail</strong> for a pre-filled compose window.
+              </p>
             </>
           )}
         </div>
