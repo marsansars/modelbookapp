@@ -50,6 +50,14 @@ export interface Job {
 export type InvoiceType = 'detailed' | 'clean';
 export type InvoiceStatus = 'draft' | 'sent' | 'paid';
 
+export interface InvoiceExpenseItem {
+  id: string;
+  date: string;
+  description: string;
+  amount: number;
+  currency: CurrencyCode;
+}
+
 export interface InvoiceSnapshot {
   client: string;
   description: string;
@@ -59,6 +67,7 @@ export interface InvoiceSnapshot {
   agentPercent: number;
   rate: number;
   lineItems: LineItem[];
+  expenses?: InvoiceExpenseItem[];
 }
 
 export interface Invoice {
