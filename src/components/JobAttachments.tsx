@@ -109,13 +109,34 @@ export function JobAttachments({ job, onChanged }: Props) {
     setPendingFiles(files => files.map((f, i) => i === idx ? { ...f, label } : f));
   };
 
-  const openAttachment = async (att: JobAttachment) => {
-    try {
-      const url = att.storagePath ? await getAttachmentUrl(att.storagePath, 600) : att.dataUrl;
-      if (!url) throw new Error('No URL available');
-      window.open(url, '_blank', 'noopener,noreferrer');
-    } catch (err: any) {
-      toast.error(`Could not open file: ${err?.message || err}`);
+  const openAttachment = (att: JobAttachment) => {
+    // Open the window synchronously inside the user gesture so mobile
+    // browsers (iOS Safari especially) don't block it as a popup.
+    const newWin = window.open('about:blank', '_blank');
+
+    const finish = (url: string | undefined) => {
+      if (!url) {
+        if (newWin) newWin.close();
+        toast.error('Could not open file: no URL available');
+        return;
+      }
+      if (newWin && !newWin.closed) {
+        newWin.location.href = url;
+      } else {
+        // Popup was blocked — fall back to navigating the current tab.
+        window.location.href = url;
+      }
+    };
+
+    if (att.storagePath) {
+      getAttachmentUrl(att.storagePath, 600)
+        .then(finish)
+        .catch((err: any) => {
+          if (newWin) newWin.close();
+          toast.error(`Could not open file: ${err?.message || err}`);
+        });
+    } else {
+      finish(att.dataUrl);
     }
   };
 
