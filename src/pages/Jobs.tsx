@@ -30,6 +30,7 @@ export default function Jobs() {
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
   const [cats, setCats] = useState<Record<string, ExpenseCategoryInfo>>({});
   const [paymentDialog, setPaymentDialog] = useState<{ jobId: string } | null>(null);
+  const [sendExpensesJobId, setSendExpensesJobId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'overdue'>('all');
   const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'>('date-desc');
 
