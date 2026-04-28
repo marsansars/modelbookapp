@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { addInvoice, getJobs, getAgencies, getInvoices } from "@/lib/store";
-import { Job, Agency, Invoice, InvoiceType, parseLocalDate, getDueDate, CURRENCIES, calculateJobBreakdown } from "@/lib/types";
+import { addInvoice, getJobs, getAgencies, getInvoices, getExpenses, updateExpense } from "@/lib/store";
+import { Job, Agency, Invoice, InvoiceType, Expense, parseLocalDate, getDueDate, CURRENCIES, calculateJobBreakdown } from "@/lib/types";
 import { toast } from "sonner";
 
 interface Props {
@@ -21,6 +22,8 @@ export function NewInvoiceDialog({ open, onOpenChange, presetJobId, onCreated }:
   const [jobs, setJobs] = useState<Job[]>([]);
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [existing, setExisting] = useState<Invoice[]>([]);
+  const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
+  const [selectedExpenseIds, setSelectedExpenseIds] = useState<Set<string>>(new Set());
   const [jobId, setJobId] = useState<string>('');
   const [number, setNumber] = useState('');
   const [type, setType] = useState<InvoiceType>('detailed');
@@ -34,16 +37,30 @@ export function NewInvoiceDialog({ open, onOpenChange, presetJobId, onCreated }:
 
   useEffect(() => {
     if (!open) return;
-    Promise.all([getJobs(), getAgencies(), getInvoices()]).then(([j, a, i]) => {
+    Promise.all([getJobs(), getAgencies(), getInvoices(), getExpenses()]).then(([j, a, i, e]) => {
       setJobs(j);
       setAgencies(a);
       setExisting(i);
+      setAllExpenses(e);
       if (presetJobId) setJobId(presetJobId);
     });
   }, [open, presetJobId]);
 
   const job = jobs.find(j => j.id === jobId);
   const agency = job?.agencyId ? agencies.find(a => a.id === job.agencyId) : undefined;
+
+  // Expenses linked to the selected job (any reimbursable expense — let the user decide)
+  const jobExpenses = useMemo(() => {
+    if (!job) return [];
+    return allExpenses.filter(e => e.jobId === job.id);
+  }, [job, allExpenses]);
+
+  // Auto-select reimbursable + not-yet-reimbursed expenses by default
+  useEffect(() => {
+    if (!job) { setSelectedExpenseIds(new Set()); return; }
+    const auto = jobExpenses.filter(e => e.reimbursable && !e.reimbursed).map(e => e.id);
+    setSelectedExpenseIds(new Set(auto));
+  }, [jobId, jobExpenses.length]);
 
   // Auto-fill bill-to and due date when job changes
   useEffect(() => {
@@ -61,8 +78,22 @@ export function NewInvoiceDialog({ open, onOpenChange, presetJobId, onCreated }:
       : job.rate;
   }, [job]);
 
+  const selectedExpenses = useMemo(
+    () => jobExpenses.filter(e => selectedExpenseIds.has(e.id)),
+    [jobExpenses, selectedExpenseIds]
+  );
+  const expensesTotal = selectedExpenses.reduce((s, e) => s + (e.amount || 0), 0);
+
   const { agentFee, netPay } = job ? calculateJobBreakdown(subtotal, job.agentPercent) : { agentFee: 0, netPay: 0 };
-  const total = type === 'detailed' ? netPay : subtotal;
+  const total = (type === 'detailed' ? netPay : subtotal) + expensesTotal;
+
+  const toggleExpense = (id: string) => {
+    setSelectedExpenseIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
 
   const create = async () => {
     if (!job) { toast.error('Pick a job first'); return; }
@@ -90,14 +121,28 @@ export function NewInvoiceDialog({ open, onOpenChange, presetJobId, onCreated }:
           agentPercent: job.agentPercent,
           rate: job.rate,
           lineItems: job.lineItems || [],
+          expenses: selectedExpenses.map(e => ({
+            id: e.id,
+            date: e.date,
+            description: e.description,
+            amount: e.amount,
+            currency: e.currency,
+          })),
         },
       });
+      // Mark reimbursable expenses as reimbursed so they wash in bookkeeping
+      await Promise.all(
+        selectedExpenses
+          .filter(e => e.reimbursable && !e.reimbursed)
+          .map(e => updateExpense(e.id, { reimbursed: true }).catch(() => {}))
+      );
       toast.success('Invoice created');
       onCreated(invoice);
       onOpenChange(false);
       // Reset
       setJobId(''); setNumber(''); setType('detailed'); setNotes('');
       setBillToName(''); setBillToEmail(''); setBillToAddress('');
+      setSelectedExpenseIds(new Set());
     } catch (e: any) {
       toast.error(e.message || 'Failed to create invoice');
     } finally {
@@ -139,6 +184,38 @@ export function NewInvoiceDialog({ open, onOpenChange, presetJobId, onCreated }:
               <p className="text-muted-foreground text-xs">
                 {agency ? `${agency.name} · ` : ''}Subtotal {fmtMoney(subtotal)} · Agent {job.agentPercent}% ({fmtMoney(agentFee)}) · Net {fmtMoney(netPay)}
               </p>
+            </div>
+          )}
+
+          {job && jobExpenses.length > 0 && (
+            <div className="rounded-md border border-border p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm">Bill expenses from this job</Label>
+                <span className="text-xs text-muted-foreground">{selectedExpenses.length} selected · {fmtMoney(expensesTotal)}</span>
+              </div>
+              <div className="space-y-1.5 max-h-44 overflow-y-auto">
+                {jobExpenses.map(e => {
+                  const checked = selectedExpenseIds.has(e.id);
+                  const sym = CURRENCIES[e.currency]?.symbol || '';
+                  return (
+                    <label key={e.id} className="flex items-start gap-2 text-sm cursor-pointer hover:bg-secondary/40 rounded px-2 py-1.5">
+                      <Checkbox checked={checked} onCheckedChange={() => toggleExpense(e.id)} className="mt-0.5" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-foreground truncate">{e.description || 'Expense'}</span>
+                          <span className="text-foreground tabular-nums">{sym}{e.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground flex items-center gap-2">
+                          <span>{parseLocalDate(e.date).toLocaleDateString()}</span>
+                          {e.reimbursable && <span className="text-primary">Reimbursable</span>}
+                          {e.reimbursed && <span className="text-success">Already reimbursed</span>}
+                        </div>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">Selected reimbursable expenses will be marked as reimbursed once the invoice is created.</p>
             </div>
           )}
 

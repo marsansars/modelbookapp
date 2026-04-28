@@ -17,11 +17,14 @@ export function generateInvoicePdf(invoice: Invoice, sender: SenderInfo): jsPDF 
   const M = 50;
   const snap = invoice.snapshot;
   const showAgent = invoice.type === 'detailed';
-  const subtotal = snap.lineItems.length > 0
+  const lineItemsSubtotal = snap.lineItems.length > 0
     ? snap.lineItems.reduce((s, li) => s + (li.amount || 0), 0)
     : snap.rate;
+  const expenses = snap.expenses || [];
+  const expensesTotal = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+  const subtotal = lineItemsSubtotal;
   const { agentFee, netPay } = calculateJobBreakdown(subtotal, snap.agentPercent);
-  const total = showAgent ? netPay : subtotal;
+  const total = (showAgent ? netPay : subtotal) + expensesTotal;
 
   // Header
   doc.setFont('helvetica', 'bold');
@@ -65,12 +68,32 @@ export function generateInvoicePdf(invoice: Invoice, sender: SenderInfo): jsPDF 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   doc.setTextColor(...MUTED);
-  const fromLines = [sender.address, sender.email, sender.phone, sender.taxId ? `Tax ID: ${sender.taxId}` : null].filter(Boolean) as string[];
-  const billLines = [invoice.billToAddress, invoice.billToEmail].filter(Boolean) as string[];
-  fromLines.forEach((l, i) => doc.text(l, M, y + 32 + i * 13));
-  billLines.forEach((l, i) => doc.text(l, W / 2, y + 32 + i * 13));
+  const colW = (W / 2) - M - 10;
+  const splitMulti = (val?: string | null): string[] => {
+    if (!val) return [];
+    const raw = String(val).split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    const out: string[] = [];
+    raw.forEach(line => {
+      const wrapped = doc.splitTextToSize(line, colW) as string[];
+      out.push(...wrapped);
+    });
+    return out;
+  };
+  const fromLines: string[] = [
+    ...splitMulti(sender.address),
+    ...(sender.email ? [sender.email] : []),
+    ...(sender.phone ? [sender.phone] : []),
+    ...(sender.taxId ? [`Tax ID: ${sender.taxId}`] : []),
+  ];
+  const billLines: string[] = [
+    ...splitMulti(invoice.billToAddress),
+    ...(invoice.billToEmail ? [invoice.billToEmail] : []),
+  ];
+  const LH = 13;
+  fromLines.forEach((l, i) => doc.text(l, M, y + 32 + i * LH));
+  billLines.forEach((l, i) => doc.text(l, W / 2, y + 32 + i * LH));
 
-  const blockBottom = y + 32 + Math.max(fromLines.length, billLines.length) * 13;
+  const blockBottom = y + 32 + Math.max(fromLines.length, billLines.length, 1) * LH;
 
   // Job summary line
   doc.setDrawColor(...RULE);
@@ -91,16 +114,23 @@ export function generateInvoicePdf(invoice: Invoice, sender: SenderInfo): jsPDF 
     doc.text(snap.description, M, blockBottom + 60);
   }
 
-  // Line items table
-  const rows = (snap.lineItems.length > 0
+  // Line items + reimbursable expenses table
+  const baseRows: (string[] | { content: string; colSpan?: number; styles?: any }[])[] = (snap.lineItems.length > 0
     ? snap.lineItems.map(li => [li.description || 'Item', money(li.amount, snap.currency)])
     : [[`${snap.client} — ${snap.description || 'Services'}`, money(snap.rate, snap.currency)]]);
+
+  const expenseRows: any[] = expenses.length > 0
+    ? [
+        [{ content: 'REIMBURSABLE EXPENSES', colSpan: 2, styles: { fontStyle: 'bold', fontSize: 9, textColor: MUTED, cellPadding: { top: 14, bottom: 6, left: 0, right: 0 } } }],
+        ...expenses.map(e => [`${fmtDate(e.date)} — ${e.description || 'Expense'}`, money(e.amount, snap.currency)]),
+      ]
+    : [];
 
   autoTable(doc, {
     startY: blockBottom + 78,
     margin: { left: M, right: M },
     head: [['DESCRIPTION', 'AMOUNT']],
-    body: rows,
+    body: [...baseRows, ...expenseRows],
     theme: 'plain',
     styles: { font: 'helvetica', fontSize: 10, cellPadding: { top: 10, bottom: 10, left: 0, right: 0 }, textColor: INK },
     headStyles: { fontStyle: 'bold', fontSize: 9, textColor: MUTED, lineWidth: { bottom: 0.75 }, lineColor: RULE },
@@ -131,6 +161,9 @@ export function generateInvoicePdf(invoice: Invoice, sender: SenderInfo): jsPDF 
   drawRow('Subtotal', money(subtotal, snap.currency));
   if (showAgent && snap.agentPercent > 0) {
     drawRow(`Agent commission (${snap.agentPercent}%)`, `−${money(agentFee, snap.currency)}`);
+  }
+  if (expensesTotal > 0) {
+    drawRow('Reimbursable expenses', money(expensesTotal, snap.currency));
   }
 
   // Gold total bar
