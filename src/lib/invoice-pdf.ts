@@ -17,11 +17,14 @@ export function generateInvoicePdf(invoice: Invoice, sender: SenderInfo): jsPDF 
   const M = 50;
   const snap = invoice.snapshot;
   const showAgent = invoice.type === 'detailed';
-  const subtotal = snap.lineItems.length > 0
+  const lineItemsSubtotal = snap.lineItems.length > 0
     ? snap.lineItems.reduce((s, li) => s + (li.amount || 0), 0)
     : snap.rate;
+  const expenses = snap.expenses || [];
+  const expensesTotal = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+  const subtotal = lineItemsSubtotal;
   const { agentFee, netPay } = calculateJobBreakdown(subtotal, snap.agentPercent);
-  const total = showAgent ? netPay : subtotal;
+  const total = (showAgent ? netPay : subtotal) + expensesTotal;
 
   // Header
   doc.setFont('helvetica', 'bold');
