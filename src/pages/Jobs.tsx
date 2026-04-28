@@ -335,6 +335,15 @@ export default function Jobs() {
         agencies={agencies}
         onRecorded={reload}
       />
+
+      <SendExpensesDialog
+        open={!!sendExpensesJobId}
+        onOpenChange={(open) => !open && setSendExpensesJobId(null)}
+        job={jobs.find(j => j.id === sendExpensesJobId)}
+        agencies={agencies}
+        expenses={expenses}
+        cats={cats}
+      />
     </div>
   );
 }
