@@ -13,7 +13,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Users, Briefcase, FileText, MessageSquare, Receipt, Trash2 } from 'lucide-react';
+import { Users, Briefcase, FileText, MessageSquare, Receipt, Trash2, Download } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface UserRow {
@@ -49,6 +49,35 @@ export default function Admin() {
   const [feedback, setFeedback] = useState<FeedbackRow[]>([]);
   const [signupSeries, setSignupSeries] = useState<{ date: string; count: number }[]>([]);
   const [screenshotUrls, setScreenshotUrls] = useState<Record<string, string>>({});
+  const [exporting, setExporting] = useState(false);
+
+  const exportEmailsCsv = async () => {
+    setExporting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-export-emails');
+      if (error) throw error;
+      const list = (data as { users: { email?: string; created_at: string; id: string }[] }).users || [];
+      const rows = list
+        .filter(u => u.email)
+        .sort((a, b) => a.created_at.localeCompare(b.created_at));
+      const csv = ['email,signed_up_at,user_id']
+        .concat(rows.map(u => `${u.email},${u.created_at},${u.id}`))
+        .join('\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `modelbook-emails-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(`Exported ${rows.length} email${rows.length === 1 ? '' : 's'}`);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Export failed';
+      toast.error(msg);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useEffect(() => {
     if (!isAdmin) return;
@@ -215,7 +244,13 @@ export default function Admin() {
           <h1 className="text-3xl font-heading font-semibold">Admin · Back Office</h1>
           <p className="text-muted-foreground mt-1">Beta usage, activity, and feedback.</p>
         </div>
-        <Button variant="outline" size="sm" onClick={loadAll} disabled={loading}>Refresh</Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={exportEmailsCsv} disabled={exporting}>
+            <Download className="h-4 w-4 mr-2" />
+            {exporting ? 'Exporting…' : 'Download emails CSV'}
+          </Button>
+          <Button variant="outline" size="sm" onClick={loadAll} disabled={loading}>Refresh</Button>
+        </div>
       </div>
 
       {/* KPIs */}
