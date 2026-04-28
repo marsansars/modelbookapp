@@ -16,6 +16,7 @@ export default function Invoices() {
   const [sender, setSender] = useState<SenderInfo>({});
   const [newOpen, setNewOpen] = useState(false);
   const [senderOpen, setSenderOpen] = useState(false);
+  const [editing, setEditing] = useState<Invoice | null>(null);
   const [loading, setLoading] = useState(true);
 
   const reload = async () => {
