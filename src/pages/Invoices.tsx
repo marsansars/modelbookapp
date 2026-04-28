@@ -177,6 +177,7 @@ export default function Invoices() {
       )}
 
       <NewInvoiceDialog open={newOpen} onOpenChange={setNewOpen} onCreated={() => reload()} />
+      <EditInvoiceDialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)} invoice={editing} onSaved={() => reload()} />
       <SenderInfoDialog open={senderOpen} onOpenChange={setSenderOpen} onSaved={(s) => setSender(s)} />
     </div>
   );
