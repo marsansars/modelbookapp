@@ -68,12 +68,32 @@ export function generateInvoicePdf(invoice: Invoice, sender: SenderInfo): jsPDF 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   doc.setTextColor(...MUTED);
-  const fromLines = [sender.address, sender.email, sender.phone, sender.taxId ? `Tax ID: ${sender.taxId}` : null].filter(Boolean) as string[];
-  const billLines = [invoice.billToAddress, invoice.billToEmail].filter(Boolean) as string[];
-  fromLines.forEach((l, i) => doc.text(l, M, y + 32 + i * 13));
-  billLines.forEach((l, i) => doc.text(l, W / 2, y + 32 + i * 13));
+  const colW = (W / 2) - M - 10;
+  const splitMulti = (val?: string | null): string[] => {
+    if (!val) return [];
+    const raw = String(val).split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    const out: string[] = [];
+    raw.forEach(line => {
+      const wrapped = doc.splitTextToSize(line, colW) as string[];
+      out.push(...wrapped);
+    });
+    return out;
+  };
+  const fromLines: string[] = [
+    ...splitMulti(sender.address),
+    ...(sender.email ? [sender.email] : []),
+    ...(sender.phone ? [sender.phone] : []),
+    ...(sender.taxId ? [`Tax ID: ${sender.taxId}`] : []),
+  ];
+  const billLines: string[] = [
+    ...splitMulti(invoice.billToAddress),
+    ...(invoice.billToEmail ? [invoice.billToEmail] : []),
+  ];
+  const LH = 13;
+  fromLines.forEach((l, i) => doc.text(l, M, y + 32 + i * LH));
+  billLines.forEach((l, i) => doc.text(l, W / 2, y + 32 + i * LH));
 
-  const blockBottom = y + 32 + Math.max(fromLines.length, billLines.length) * 13;
+  const blockBottom = y + 32 + Math.max(fromLines.length, billLines.length, 1) * LH;
 
   // Job summary line
   doc.setDrawColor(...RULE);
