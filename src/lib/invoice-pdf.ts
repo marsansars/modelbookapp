@@ -114,16 +114,23 @@ export function generateInvoicePdf(invoice: Invoice, sender: SenderInfo): jsPDF 
     doc.text(snap.description, M, blockBottom + 60);
   }
 
-  // Line items table
-  const rows = (snap.lineItems.length > 0
+  // Line items + reimbursable expenses table
+  const baseRows: (string[] | { content: string; colSpan?: number; styles?: any }[])[] = (snap.lineItems.length > 0
     ? snap.lineItems.map(li => [li.description || 'Item', money(li.amount, snap.currency)])
     : [[`${snap.client} — ${snap.description || 'Services'}`, money(snap.rate, snap.currency)]]);
+
+  const expenseRows: any[] = expenses.length > 0
+    ? [
+        [{ content: 'REIMBURSABLE EXPENSES', colSpan: 2, styles: { fontStyle: 'bold', fontSize: 9, textColor: MUTED, cellPadding: { top: 14, bottom: 6, left: 0, right: 0 } } }],
+        ...expenses.map(e => [`${fmtDate(e.date)} — ${e.description || 'Expense'}`, money(e.amount, snap.currency)]),
+      ]
+    : [];
 
   autoTable(doc, {
     startY: blockBottom + 78,
     margin: { left: M, right: M },
     head: [['DESCRIPTION', 'AMOUNT']],
-    body: rows,
+    body: [...baseRows, ...expenseRows],
     theme: 'plain',
     styles: { font: 'helvetica', fontSize: 10, cellPadding: { top: 10, bottom: 10, left: 0, right: 0 }, textColor: INK },
     headStyles: { fontStyle: 'bold', fontSize: 9, textColor: MUTED, lineWidth: { bottom: 0.75 }, lineColor: RULE },
