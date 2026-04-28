@@ -313,17 +313,6 @@ export default function Jobs() {
                             ))}
                           </div>
                         )}
-                        {jobExpenses.length > 0 && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="mt-3 w-full sm:w-auto gap-1.5 text-xs"
-                            onClick={() => setSendExpensesJobId(job.id)}
-                          >
-                            <Send className="h-3.5 w-3.5" />
-                            Send Expenses to Agent
-                          </Button>
-                        )}
                       </div>
 
                       <div>
