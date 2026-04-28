@@ -13,8 +13,9 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Users, Briefcase, FileText, MessageSquare, Receipt, Trash2, Download } from 'lucide-react';
+import { Users, Briefcase, FileText, MessageSquare, Receipt, Trash2, Download, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
+import { ChangelogTab } from '@/components/ChangelogTab';
 
 interface UserRow {
   id: string;
@@ -279,6 +280,7 @@ export default function Admin() {
           <TabsTrigger value="users">Users ({users.length})</TabsTrigger>
           <TabsTrigger value="feedback">Feedback ({feedback.length})</TabsTrigger>
           <TabsTrigger value="signups">Signups (30d)</TabsTrigger>
+          <TabsTrigger value="changelog"><Sparkles className="h-3.5 w-3.5 mr-1" />Changelog</TabsTrigger>
         </TabsList>
 
         <TabsContent value="users">
@@ -379,6 +381,10 @@ export default function Admin() {
               </ResponsiveContainer>
             </div>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="changelog">
+          <ChangelogTab />
         </TabsContent>
       </Tabs>
 
