@@ -142,6 +142,7 @@ export function NewInvoiceDialog({ open, onOpenChange, presetJobId, onCreated }:
       // Reset
       setJobId(''); setNumber(''); setType('detailed'); setNotes('');
       setBillToName(''); setBillToEmail(''); setBillToAddress('');
+      setSelectedExpenseIds(new Set());
     } catch (e: any) {
       toast.error(e.message || 'Failed to create invoice');
     } finally {
