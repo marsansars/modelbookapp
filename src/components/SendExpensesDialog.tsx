@@ -306,11 +306,18 @@ export function SendExpensesDialog({ open, onOpenChange, job, agencies, expenses
               {copied === 'all' ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
               Copy All
             </Button>
+            <Button onClick={openInGmail} variant="outline" className="flex-1">
+              <Mail className="h-4 w-4 mr-2" />
+              Gmail
+            </Button>
             <Button onClick={openInMail} className="flex-1">
               <Mail className="h-4 w-4 mr-2" />
               Open in Email
             </Button>
           </div>
+          <p className="text-[11px] text-muted-foreground -mt-1 leading-snug">
+            If <strong>Open in Email</strong> opens your inbox instead of a new draft, use <strong>Gmail</strong> (opens a pre-filled compose window in a new tab).
+          </p>
         </div>
       </DialogContent>
     </Dialog>
