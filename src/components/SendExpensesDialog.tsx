@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
-import { Copy, Check, Mail, Loader2, FileText } from "lucide-react";
+import { Copy, Check, Mail, Loader2, FileText, Share2, Download } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +32,9 @@ export function SendExpensesDialog({ open, onOpenChange, job, agencies, expenses
   const [body, setBody] = useState("");
   const [generating, setGenerating] = useState(false);
   const [pdfLink, setPdfLink] = useState<string | null>(null);
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
+  const [pdfFilename, setPdfFilename] = useState<string>("");
+  const [sharing, setSharing] = useState(false);
   const [copied, setCopied] = useState<"subject" | "body" | "all" | "link" | null>(null);
 
   const jobExpenses = useMemo(
@@ -52,6 +55,8 @@ export function SendExpensesDialog({ open, onOpenChange, job, agencies, expenses
   useEffect(() => {
     if (!open || !job) return;
     setPdfLink(null);
+    setPdfBlob(null);
+    setPdfFilename("");
     setCopied(null);
     getDisplayName().then((n) => { if (n) setYourName(n); });
     if (agencyName && !recipientName) setRecipientName(agencyName);
@@ -75,19 +80,15 @@ export function SendExpensesDialog({ open, onOpenChange, job, agencies, expenses
       }
       lines.push('');
     }
-    if (pdfLink) {
-      lines.push('Full report (summary + receipts):');
-      lines.push(pdfLink);
-      lines.push('');
-    } else {
-      lines.push('[Generate the report to insert the receipts link here]');
+    if (pdfBlob || pdfLink) {
+      lines.push('Receipts are attached as a PDF (summary + every receipt).');
       lines.push('');
     }
     lines.push('Thanks,');
     lines.push(yourName || '[Your Name]');
     setBody(lines.join('\n'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [job?.id, recipientName, yourName, pdfLink, groups.length]);
+  }, [job?.id, recipientName, yourName, pdfLink, pdfBlob, groups.length]);
 
   const handleGenerate = async () => {
     if (!job) return;
@@ -97,16 +98,64 @@ export function SendExpensesDialog({ open, onOpenChange, job, agencies, expenses
       const blob = await generateExpenseReportPdf({ job, agency, expenses: jobExpenses, cats, receipts, yourName });
       const safeClient = job.client.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 40);
       const filename = `expenses-${safeClient}-${job.jobDate}.pdf`;
-      const { storagePath } = await uploadBlob(blob, filename, 'application/pdf');
-      // Long-lived signed URL (30 days)
-      const url = await getAttachmentUrl(storagePath, 60 * 60 * 24 * 30);
-      setPdfLink(url);
-      toast({ title: 'Report generated', description: 'Link added to the email body.' });
+      setPdfBlob(blob);
+      setPdfFilename(filename);
+      // Also upload for a backup link (useful if share/attach isn't available)
+      try {
+        const { storagePath } = await uploadBlob(blob, filename, 'application/pdf');
+        const url = await getAttachmentUrl(storagePath, 60 * 60 * 24 * 30);
+        setPdfLink(url);
+      } catch {
+        // Non-fatal — share/download still work from the in-memory blob
+      }
+      toast({ title: 'Report ready', description: 'Use Share or Download to attach it to your email.' });
     } catch (err: any) {
       toast({ title: 'Could not generate report', description: err?.message || String(err), variant: 'destructive' });
     } finally {
       setGenerating(false);
     }
+  };
+
+  const handleShare = async () => {
+    if (!pdfBlob) return;
+    setSharing(true);
+    try {
+      const file = new File([pdfBlob], pdfFilename, { type: 'application/pdf' });
+      const nav = navigator as any;
+      const canShareFiles = typeof nav.canShare === 'function' && nav.canShare({ files: [file] });
+      if (canShareFiles && typeof nav.share === 'function') {
+        await nav.share({ files: [file], title: subject, text: body });
+      } else {
+        // Desktop fallback — download the file so the user can attach it manually
+        const url = URL.createObjectURL(pdfBlob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = pdfFilename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        toast({ title: 'PDF downloaded', description: 'Attach it to your email manually.' });
+      }
+    } catch (err: any) {
+      if (err?.name !== 'AbortError') {
+        toast({ title: 'Share failed', description: err?.message || String(err), variant: 'destructive' });
+      }
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  const handleDownload = () => {
+    if (!pdfBlob) return;
+    const url = URL.createObjectURL(pdfBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = pdfFilename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   const copy = async (text: string, key: typeof copied) => {
@@ -182,16 +231,31 @@ export function SendExpensesDialog({ open, onOpenChange, job, agencies, expenses
 
           <div className="space-y-2">
             <Label>Receipts PDF</Label>
-            {pdfLink ? (
-              <div className="flex items-center gap-2">
-                <div className="flex-1 truncate rounded-md border border-border/50 bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
+            {pdfBlob ? (
+              <div className="space-y-2">
+                <div className="rounded-md border border-border/50 bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
                   <FileText className="inline h-3.5 w-3.5 mr-1.5 -mt-0.5" />
-                  Report ready · link valid 30 days
+                  {pdfFilename} · {(pdfBlob.size / 1024 / 1024).toFixed(2)} MB
                 </div>
-                <Button size="sm" variant="ghost" onClick={() => copy(pdfLink, 'link')} className="h-9 text-xs">
-                  {copied === 'link' ? <Check className="h-3.5 w-3.5 mr-1" /> : <Copy className="h-3.5 w-3.5 mr-1" />}
-                  Copy link
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <Button onClick={handleShare} disabled={sharing} variant="outline" className="flex-1">
+                    {sharing ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Share2 className="h-4 w-4 mr-2" />}
+                    Share / Attach
+                  </Button>
+                  <Button onClick={handleDownload} variant="outline" className="flex-1">
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </Button>
+                  {pdfLink && (
+                    <Button size="default" variant="ghost" onClick={() => copy(pdfLink, 'link')} className="flex-1">
+                      {copied === 'link' ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
+                      Copy link
+                    </Button>
+                  )}
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  On phone: tap <strong>Share / Attach</strong> and pick Mail/Gmail to send the PDF as an attachment. On desktop: <strong>Download</strong> the PDF and attach it manually.
+                </p>
               </div>
             ) : (
               <Button onClick={handleGenerate} disabled={generating || jobExpenses.length === 0} variant="outline" className="w-full">
