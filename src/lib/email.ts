@@ -8,6 +8,22 @@ export const buildMailtoUrl = ({
   body: string;
 }) => `mailto:${to?.trim() || ""}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
+export type OpenMailtoResult = "opened" | "blocked_in_preview" | "clipboard_fallback" | "failed";
+
+const isLovablePreviewEnv = (): boolean => {
+  if (typeof window === "undefined") return false;
+  const host = window.location.hostname;
+  const onPreviewHost =
+    host.includes("id-preview--") || host.includes("lovableproject.com");
+  let inIframe = false;
+  try {
+    inIframe = window.self !== window.top;
+  } catch {
+    inIframe = true;
+  }
+  return onPreviewHost || inIframe;
+};
+
 export const openMailtoDraft = ({
   to,
   subject,
@@ -16,23 +32,35 @@ export const openMailtoDraft = ({
   to?: string;
   subject: string;
   body: string;
-}) => {
+}): OpenMailtoResult => {
   const mailtoUrl = buildMailtoUrl({ to, subject, body });
 
-  try {
-    // Navigate the current window to the mailto: URL.
-    // Browsers intercept the mailto: protocol BEFORE any actual navigation
-    // happens — the OS hands the URL to the default mail client and the
-    // page itself never unloads. Works in both the preview iframe and the
-    // published standalone app, and never loads mail.google.com into a frame.
-    window.location.href = mailtoUrl;
-  } catch {
-    // Extremely rare fallback: if a browser extension blocks the assignment,
-    // copy the email contents to the clipboard so the user can paste them.
+  // In Lovable preview / iframe, the browser may resolve the mailto: handler
+  // to a webmail provider (e.g. Gmail), which then refuses to load inside the
+  // preview iframe ("mail.google.com refused to connect"). Skip the protocol
+  // handoff and fall back to clipboard so the user gets a clear, working path.
+  if (isLovablePreviewEnv()) {
     try {
-      void navigator.clipboard.writeText(`Subject: ${subject}\n\n${body}`);
+      void navigator.clipboard.writeText(`To: ${to || ""}\nSubject: ${subject}\n\n${body}`);
+      return "blocked_in_preview";
     } catch {
-      // Nothing else we can do — caller can show their own error UI.
+      return "blocked_in_preview";
+    }
+  }
+
+  try {
+    // Standalone / published app: hand the standard mailto: URL to the OS
+    // mail handler. Browsers intercept the protocol before any navigation.
+    window.location.href = mailtoUrl;
+    return "opened";
+  } catch {
+    try {
+      void navigator.clipboard.writeText(`To: ${to || ""}\nSubject: ${subject}\n\n${body}`);
+      return "clipboard_fallback";
+    } catch {
+      return "failed";
     }
   }
 };
+
+export const isEmailPreviewBlocked = (): boolean => isLovablePreviewEnv();
