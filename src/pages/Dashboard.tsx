@@ -257,7 +257,14 @@ export default function Dashboard() {
       {/* Secondary KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard label="Payments Received" value={fmt(paymentsReceived)} sublabel={`${paidJobsCount} paid job${paidJobsCount !== 1 ? 's' : ''}`} accent />
-        <StatCard label="Estimated Tax Planning" value={fmt(totalRecommendedTax)} sublabel="Set aside from net earnings" />
+        <StatCard
+          label="Estimated Tax Planning"
+          value={fmt(Math.max(0, totalRecommendedTax - taxPaymentsTotal))}
+          sublabel={taxPaymentsTotal > 0
+            ? `${fmt(taxPaymentsTotal)} paid · tap to manage`
+            : 'Tap to log quarterly payments'}
+          onClick={() => navigate('/bookkeeping#quarterly-taxes')}
+        />
         <StatCard label="Total Earnings" value={fmt(totalNet)} sublabel={`${jobs.length} jobs`} accent />
       </div>
 
