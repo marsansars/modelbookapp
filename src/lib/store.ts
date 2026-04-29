@@ -468,3 +468,62 @@ export async function updateInvoice(id: string, updates: Partial<Invoice>): Prom
 export async function deleteInvoice(id: string): Promise<void> {
   await supabase.from('invoices' as any).delete().eq('id', id);
 }
+
+// ---- Tax Payments (Quarterly) ----
+
+export interface TaxPayment {
+  id: string;
+  year: number;
+  quarter: 1 | 2 | 3 | 4;
+  amount: number;
+  currency: CurrencyCode;
+  paymentDate: string;
+  notes?: string | null;
+}
+
+export async function getTaxPayments(): Promise<TaxPayment[]> {
+  const userId = await getUserId();
+  const { data, error } = await supabase
+    .from('tax_payments' as any)
+    .select('*')
+    .eq('user_id', userId)
+    .order('payment_date', { ascending: false });
+  if (error) throw error;
+  return ((data as any[]) || []).map(r => ({
+    id: r.id,
+    year: r.year,
+    quarter: r.quarter,
+    amount: Number(r.amount),
+    currency: r.currency as CurrencyCode,
+    paymentDate: r.payment_date,
+    notes: r.notes,
+  }));
+}
+
+export async function addTaxPayment(p: Omit<TaxPayment, 'id'>): Promise<TaxPayment> {
+  const userId = await getUserId();
+  const { data, error } = await supabase
+    .from('tax_payments' as any)
+    .insert({
+      user_id: userId,
+      year: p.year,
+      quarter: p.quarter,
+      amount: p.amount,
+      currency: p.currency,
+      payment_date: p.paymentDate,
+      notes: p.notes || null,
+    } as any)
+    .select()
+    .single();
+  if (error) throw error;
+  const r: any = data;
+  return {
+    id: r.id, year: r.year, quarter: r.quarter,
+    amount: Number(r.amount), currency: r.currency,
+    paymentDate: r.payment_date, notes: r.notes,
+  };
+}
+
+export async function deleteTaxPayment(id: string): Promise<void> {
+  await supabase.from('tax_payments' as any).delete().eq('id', id);
+}
