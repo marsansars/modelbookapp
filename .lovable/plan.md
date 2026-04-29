@@ -1,43 +1,48 @@
-## Problem
+I investigated the current email flow and found the core issue:
 
-The "Open in Email" button does nothing in the Lovable preview, and earlier produced "mail.google.com refused to connect" errors. The URL we build is already the standard form you described:
+- The app already builds a standard `mailto:to?subject=...&body=...` URL in `src/lib/email.ts`.
+- The helper currently uses `window.location.href = mailtoUrl`, so the code is no longer explicitly routing through Gmail.
+- However, in Lovable preview the app runs inside an iframe. If the browser’s default mail handler is Gmail, the `mailto:` handoff can still resolve to `mail.google.com`, and Gmail refuses to render inside that iframe. That matches the error you’re still seeing.
+- So this is not really a malformed mailto-link problem anymore; it is a preview-environment handoff problem.
 
-```
-mailto:example@example.com?subject=Subject&body=Message
-```
+Plan:
 
-The bug is in *how* we hand that URL to the browser. The current `openMailtoDraft` calls `window.open(mailtoUrl, "_blank", ...)` and falls back to a hidden `<a target="_blank">`. Both attempt to open a **new browsing context**, which:
+1. Make the email helper environment-aware
+- Update `src/lib/email.ts` to detect Lovable preview / iframe usage using the same host + iframe pattern already used elsewhere in the app.
+- Keep the normal `mailto:` navigation for standalone/published usage.
+- In preview/iframe mode, do not attempt to launch the mail handler directly.
 
-- Is silently blocked by the preview iframe's sandbox for the `mailto:` protocol (no error, no popup — exactly what we just reproduced in the browser test).
-- When it does open, hands off to the user's registered web mail handler (Gmail), which the OS launches as `https://mail.google.com/...`. If that ever gets loaded inside our iframe, Gmail's `X-Frame-Options: DENY` triggers the "refused to connect" error.
+2. Return a structured result from the helper
+- Refactor `openMailtoDraft` so it reports what happened, for example:
+  - `opened`
+  - `blocked_in_preview`
+  - `clipboard_fallback`
+- This lets the UI explain the situation instead of failing with the Gmail iframe error.
 
-## Fix
+3. Improve the dialogs that use the helper
+- Update:
+  - `src/components/SendExpensesDialog.tsx`
+  - `src/components/FollowUpDialog.tsx`
+  - `src/pages/Invoices.tsx`
+- When the helper reports preview blocking, show a clear toast/message like:
+  - “Email apps can’t open from the preview. Use Copy All, or open the published app to launch your mail client.”
+- Keep the existing Copy / Copy All workflow as the primary fallback.
 
-Stop opening a new tab. Just navigate the current window's location to the `mailto:` URL. Browsers intercept the `mailto:` protocol **before** any actual navigation happens — the OS/browser hands the URL to the default mail client (Apple Mail, Outlook, Gmail web handler, etc.), and the page itself does not unload. This works identically in the preview iframe and the published standalone app, and it never loads `mail.google.com` into a frame.
+4. Add preview-specific UX guidance near the button
+- In the email dialogs, add a small note under or near “Open in Email” explaining that preview may block mail apps, while the published app should work normally.
+- This prevents the same confusion from recurring.
 
-### Changes to `src/lib/email.ts`
+5. Verify both environments
+- Test in preview to confirm the Gmail iframe error is no longer triggered by the app flow and that the user sees a helpful fallback instead.
+- Test the published app to confirm `mailto:` still launches the mail client normally there.
 
-Keep `buildMailtoUrl` unchanged (already produces the exact standard URL).
+Technical details
+- Files to update:
+  - `src/lib/email.ts`
+  - `src/components/SendExpensesDialog.tsx`
+  - `src/components/FollowUpDialog.tsx`
+  - `src/pages/Invoices.tsx`
+- Reuse existing preview detection conventions from `src/main.tsx` / `src/lib/analytics.ts`.
+- Preserve the standard mailto structure exactly; the change is about when to trigger it, not how to encode it.
 
-Rewrite `openMailtoDraft` to:
-
-1. Build the standard mailto URL via `buildMailtoUrl`.
-2. Set `window.location.href = mailtoUrl`. This is the simplest, most universally compatible way to trigger the OS mail handler.
-3. Wrap in a try/catch. If the assignment throws (extremely rare — only if a browser extension blocks it), copy `Subject: ...\n\n<body>` to the clipboard and show a toast: "Couldn't open your mail app — email content copied to clipboard."
-
-No other files need to change. The three call sites (`FollowUpDialog.tsx`, `SendExpensesDialog.tsx`, `Invoices.tsx`) keep their existing `onClick={() => openMailtoDraft({ ... })}` calls and inherit the fix automatically.
-
-## Why this works where prior attempts failed
-
-| Prior attempt | Why it failed |
-|---|---|
-| `window.open(mailto, "_blank")` | Sandboxed iframe blocks popups for non-http schemes — returns null, silently does nothing. |
-| Hidden `<a target="_blank">` + click | Same sandbox restriction — new browsing context refused for `mailto:`. |
-| `<a target="_top" href="mailto:">` | Worked for handoff, but if Gmail is the default web handler, the top frame navigated to `mail.google.com` and got blocked by `X-Frame-Options: DENY`. |
-| **`window.location.href = mailto`** (new) | Browser intercepts `mailto:` before navigation — OS launches mail handler, page never unloads, no new context, no Gmail iframe load. |
-
-## Out of scope
-
-- No changes to the email body/subject templating in any dialog.
-- No changes to PDF generation, Share/Attach, or Copy buttons.
-- No new dependencies.
+If you approve, I’ll implement the preview-safe behavior so the button stops surfacing the Gmail iframe error and gives a clear fallback path.
