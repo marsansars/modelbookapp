@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings2, Plus, Trash2 } from "lucide-react";
+import { FolderCog, Plus, Trash2 } from "lucide-react";
 import { getAllExpenseCategories, addCustomCategory, deleteCustomCategory, getCustomCategories } from "@/lib/store";
 import { ExpenseCategoryInfo } from "@/lib/types";
 
@@ -48,8 +48,9 @@ export function ManageCategoriesDialog({ onUpdated }: Props) {
   return (
     <Dialog open={open} onOpenChange={handleOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon" title="Manage categories">
-          <Settings2 className="h-4 w-4" />
+        <Button variant="default" className="gap-2">
+          <FolderCog className="h-4 w-4" />
+          Manage Categories
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
