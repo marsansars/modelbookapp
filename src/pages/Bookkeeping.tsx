@@ -143,7 +143,11 @@ export default function Bookkeeping() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Gross Earnings" value={fmt(totalGross)} />
         <StatCard label="Agent Commissions" value={fmt(totalAgent)} />
-        <StatCard label="Estimated Tax Planning" value={fmt(totalRecommendedTax)} />
+        <StatCard
+          label="Estimated Tax Planning"
+          value={fmt(remainingTaxPlanning)}
+          sublabel={taxPaidThisYear > 0 ? `${fmt(taxPaidThisYear)} paid this year` : `${fmt(totalRecommendedTax)} recommended`}
+        />
         <StatCard label="Net Expenses" value={fmt(netExpenses)} sublabel={reimbursedTotal > 0 ? `${fmt(reimbursedTotal)} reimbursed` : undefined} />
       </div>
 
