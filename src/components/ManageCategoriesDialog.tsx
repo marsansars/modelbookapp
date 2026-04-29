@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Settings2, Plus, Trash2 } from "lucide-react";
+import { FolderCog, Plus, Trash2 } from "lucide-react";
 import { getAllExpenseCategories, addCustomCategory, deleteCustomCategory, getCustomCategories } from "@/lib/store";
 import { ExpenseCategoryInfo } from "@/lib/types";
 
