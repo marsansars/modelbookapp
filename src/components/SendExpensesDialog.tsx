@@ -10,7 +10,7 @@ import { Job, Agency, Expense, ExpenseCategoryInfo, JobAttachment, parseLocalDat
 import { generateExpenseReportPdf, groupExpensesByCategory } from "@/lib/expense-pdf";
 import { uploadBlob, getAttachmentUrl } from "@/lib/storage";
 import { getDisplayName } from "@/lib/store";
-import { openMailtoDraft } from "@/lib/email";
+import { openMailtoDraft, isEmailPreviewBlocked } from "@/lib/email";
 import { toast } from "@/hooks/use-toast";
 
 interface Props {
@@ -286,11 +286,31 @@ export function SendExpensesDialog({ open, onOpenChange, job, agencies, expenses
               {copied === 'all' ? <Check className="h-4 w-4 mr-2" /> : <Copy className="h-4 w-4 mr-2" />}
               Copy All
             </Button>
-            <Button onClick={() => openMailtoDraft({ to: recipientEmail, subject, body })} className="flex-1">
+            <Button
+              onClick={() => {
+                const result = openMailtoDraft({ to: recipientEmail, subject, body });
+                if (result === "blocked_in_preview") {
+                  toast({
+                    title: "Email apps are blocked in preview",
+                    description: "We copied the draft to your clipboard. Open the published app to launch your mail client directly.",
+                  });
+                } else if (result === "clipboard_fallback") {
+                  toast({ title: "Couldn't open mail app", description: "Draft copied to your clipboard." });
+                } else if (result === "failed") {
+                  toast({ title: "Couldn't open mail app", description: "Try Copy All and paste it into a new email.", variant: "destructive" });
+                }
+              }}
+              className="flex-1"
+            >
               <Mail className="h-4 w-4 mr-2" />
               Open in Email
             </Button>
           </div>
+          {isEmailPreviewBlocked() && (
+            <p className="text-[11px] text-muted-foreground leading-snug -mt-1">
+              Heads up: mail apps can't open from the Lovable preview. Use Copy All here, or open your published app to launch your mail client directly.
+            </p>
+          )}
         </div>
       </DialogContent>
     </Dialog>

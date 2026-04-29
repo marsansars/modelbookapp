@@ -45,7 +45,14 @@ export default function Invoices() {
     }
     const subject = `Invoice ${inv.number} from ${sender.legalName || 'me'}`;
     const body = `Hi,\n\nPlease find invoice ${inv.number} for ${inv.snapshot.client} attached.\n\nTotal due by ${parseLocalDate(inv.dueDate).toLocaleDateString()}.\n\nThank you!\n${sender.legalName || ''}`;
-    openMailtoDraft({ to: inv.billToEmail, subject, body });
+    const result = openMailtoDraft({ to: inv.billToEmail, subject, body });
+    if (result === "blocked_in_preview") {
+      toast.info("Email apps are blocked in preview. Draft copied to your clipboard — open the published app to launch your mail client.");
+    } else if (result === "clipboard_fallback") {
+      toast.info("Couldn't open your mail app. Draft copied to your clipboard.");
+    } else if (result === "failed") {
+      toast.error("Couldn't open your mail app. Please copy the details manually.");
+    }
     handleDownload(inv);
   };
 
