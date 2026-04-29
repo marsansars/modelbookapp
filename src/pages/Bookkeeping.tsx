@@ -165,8 +165,14 @@ export default function Bookkeeping() {
             </div>
             <div className="flex justify-between py-2 border-b border-border">
               <span className="text-muted-foreground">− Estimated Tax Planning</span>
-              <span className="font-medium">-{fmt(totalRecommendedTax)}</span>
+              <span className="font-medium">-{fmt(remainingTaxPlanning)}</span>
             </div>
+            {taxPaidThisYear > 0 && (
+              <div className="flex justify-between py-2 border-b border-border text-xs">
+                <span className="text-muted-foreground pl-3">↳ Already paid this year</span>
+                <span className="text-success">{fmt(taxPaidThisYear)}</span>
+              </div>
+            )}
             <div className="flex justify-between py-2 border-b border-border">
               <span className="text-muted-foreground">− Out-of-Pocket Expenses</span>
               <span className="font-medium">-{fmt(outOfPocketExpenses)}</span>
