@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { getJobs, getExpenses, getDisplayCurrency, setDisplayCurrency, getAllExpenseCategories } from "@/lib/store";
-import { Job, Expense, CurrencyCode, calculateJobBreakdown, ExpenseCategoryInfo } from "@/lib/types";
+import { Job, Expense, CurrencyCode, calculateJobBreakdown, ExpenseCategoryInfo, parseLocalDate } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { exportJobsCSV, exportExpensesCSV, exportSummaryCSV } from "@/lib/csv-export";
 import { exportJobsXLSX, exportExpensesXLSX, exportSummaryXLSX } from "@/lib/xlsx-export";
 import { StatCard } from "@/components/StatCard";
 import { CurrencySelector } from "@/components/CurrencySelector";
+import { QuarterlyTaxPayments } from "@/components/QuarterlyTaxPayments";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Download, FileSpreadsheet, FileText, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
+import { useLocation } from "react-router-dom";
 
 export default function Bookkeeping() {
   const [jobs, setJobs] = useState<Job[]>([]);
