@@ -48,8 +48,9 @@ export function ManageCategoriesDialog({ onUpdated }: Props) {
   return (
     <Dialog open={open} onOpenChange={handleOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon" title="Manage categories">
-          <Settings2 className="h-4 w-4" />
+        <Button variant="default" className="gap-2">
+          <FolderCog className="h-4 w-4" />
+          Manage Categories
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
