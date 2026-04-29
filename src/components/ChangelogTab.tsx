@@ -263,7 +263,10 @@ export function ChangelogTab() {
             placeholder="Optional intro line for the email"
           />
         </div>
-        <div className="flex gap-2 justify-end">
+        <div className="flex gap-2 justify-end flex-wrap">
+          <Button variant="outline" onClick={() => setPreviewOpen(true)}>
+            <Eye className="h-4 w-4 mr-1" /> Preview email
+          </Button>
           <AlertDialog onOpenChange={(open) => { if (open) void fetchPreviewCount(); else setPreviewCount(null); }}>
             <AlertDialogTrigger asChild>
               <Button disabled={unsent.length === 0 || sending}>
