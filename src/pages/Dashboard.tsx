@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, subYears } from "date-fns";
 import { StatCard } from "@/components/StatCard";
+import { TaxDisclaimerInfo } from "@/components/TaxDisclaimerInfo";
 import { DueDateBadge } from "@/components/DueDateBadge";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { EarningsChart } from "@/components/EarningsChart";
