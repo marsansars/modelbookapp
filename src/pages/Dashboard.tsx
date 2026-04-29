@@ -208,7 +208,7 @@ export default function Dashboard() {
           <div className="pointer-events-none absolute -top-8 -right-8 w-32 h-32 rounded-full blur-3xl opacity-30" style={{ background: 'hsl(42 78% 55%)' }} />
           <div className="relative">
             <p className="text-xs uppercase tracking-widest text-primary/80 font-body font-medium">Current Owed</p>
-            <p className="text-4xl md:text-5xl font-heading font-semibold text-gradient-gold mt-2 leading-tight pb-1 whitespace-nowrap">{fmt(currentEarnings)}</p>
+            <p className="font-heading font-semibold text-gradient-gold mt-2 leading-tight pb-1 whitespace-nowrap" style={{ fontSize: 'clamp(1.75rem, 6vw, 3rem)' }}>{fmt(currentEarnings)}</p>
             <p className="text-sm text-muted-foreground mt-3">{currentCount} pending job{currentCount !== 1 ? 's' : ''} · on track</p>
           </div>
         </motion.div>
@@ -225,7 +225,7 @@ export default function Dashboard() {
           <div className="pointer-events-none absolute -top-8 -right-8 w-32 h-32 rounded-full blur-3xl opacity-30" style={{ background: 'hsl(0 65% 55%)' }} />
           <div className="relative">
             <p className="text-xs uppercase tracking-widest text-destructive font-body font-medium">Overdue</p>
-            <p className="text-4xl md:text-5xl font-heading font-semibold text-destructive mt-2 leading-tight pb-1 whitespace-nowrap">{fmt(overdueEarnings)}</p>
+            <p className="font-heading font-semibold text-destructive mt-2 leading-tight pb-1 whitespace-nowrap" style={{ fontSize: 'clamp(1.75rem, 6vw, 3rem)' }}>{fmt(overdueEarnings)}</p>
             <p className="text-sm text-muted-foreground mt-3">{overdueCount} overdue job{overdueCount !== 1 ? 's' : ''}</p>
             {overdueCount > 0 && (
               <Button
