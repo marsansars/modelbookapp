@@ -240,6 +240,23 @@ export async function updateJob(id: string, updates: Partial<Job>): Promise<void
   if (updates.lineItems !== undefined) dbUpdates.line_items = validateLineItems(updates.lineItems);
 
   await supabase.from('jobs').update(dbUpdates as any).eq('id', id);
+
+  // Cascade payment status to linked invoices.
+  if (updates.status === 'paid') {
+    const paidDate = updates.paidDate || new Date().toISOString().slice(0, 10);
+    await supabase
+      .from('invoices' as any)
+      .update({ status: 'paid', paid_date: paidDate } as any)
+      .eq('job_id', id)
+      .neq('status', 'paid');
+  } else if (updates.status !== undefined && updates.status !== 'paid') {
+    // Job moved away from paid — revert previously-paid invoices back to 'sent'.
+    await supabase
+      .from('invoices' as any)
+      .update({ status: 'sent', paid_date: null } as any)
+      .eq('job_id', id)
+      .eq('status', 'paid');
+  }
 }
 
 export async function deleteJob(id: string): Promise<void> {
