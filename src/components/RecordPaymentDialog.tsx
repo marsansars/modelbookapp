@@ -72,6 +72,8 @@ export function RecordPaymentDialog({
   const [date, setDate] = useState<string>(format(new Date(), "yyyy-MM-dd"));
   const [submitting, setSubmitting] = useState(false);
   const [celebrate, setCelebrate] = useState<{ amount: number; currency: CurrencyCode; client: string } | null>(null);
+  const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
+  const [reimbursedIds, setReimbursedIds] = useState<Set<string>>(new Set());
 
   // Sort unpaid jobs: overdue first, then by closest due date.
   const sortedJobs = useMemo(() => {
@@ -87,6 +89,7 @@ export function RecordPaymentDialog({
       setSelectedId(jobId ?? sortedJobs[0]?.id ?? "");
       setDate(format(new Date(), "yyyy-MM-dd"));
       setCelebrate(null);
+      getExpenses().then(setAllExpenses).catch(() => setAllExpenses([]));
     }
   }, [open, jobId, sortedJobs]);
 
@@ -94,11 +97,46 @@ export function RecordPaymentDialog({
   const breakdown = selectedJob ? calculateJobBreakdown(selectedJob.rate, selectedJob.agentPercent) : null;
   const agencyName = selectedJob?.agencyId ? agencies.find((a) => a.id === selectedJob.agencyId)?.name : undefined;
 
+  // Reimbursable, not-yet-reimbursed expenses tied to the selected job.
+  const pendingExpenses = useMemo(() => {
+    if (!selectedJob) return [];
+    return allExpenses.filter(
+      (e) => e.jobId === selectedJob.id && e.reimbursable && !e.reimbursed
+    );
+  }, [allExpenses, selectedJob]);
+
+  // Default to all selected when the job (or list) changes.
+  useEffect(() => {
+    setReimbursedIds(new Set(pendingExpenses.map((e) => e.id)));
+  }, [selectedId, pendingExpenses.length]);
+
+  const toggleReimbursed = (id: string) => {
+    setReimbursedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const allChecked = pendingExpenses.length > 0 && pendingExpenses.every((e) => reimbursedIds.has(e.id));
+  const toggleAll = () => {
+    if (allChecked) setReimbursedIds(new Set());
+    else setReimbursedIds(new Set(pendingExpenses.map((e) => e.id)));
+  };
+
   const handleConfirm = async () => {
     if (!selectedJob || !date) return;
     setSubmitting(true);
     try {
       await updateJob(selectedJob.id, { status: "paid", paidDate: date });
+      // Mark selected expenses as reimbursed.
+      const toReimburse = pendingExpenses.filter((e) => reimbursedIds.has(e.id));
+      if (toReimburse.length > 0) {
+        await Promise.all(
+          toReimburse.map((e) => updateExpense(e.id, { reimbursed: true }).catch(() => {}))
+        );
+      }
       // Show celebration overlay
       setCelebrate({
         amount: breakdown?.netPay ?? 0,
