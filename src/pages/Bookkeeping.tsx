@@ -57,6 +57,14 @@ export default function Bookkeeping() {
     const netAfterAgent = calculateJobBreakdown(j.rate, j.agentPercent).netPay;
     return s + conv(netAfterAgent * (j.taxPercent / 100), j.currency);
   }, 0);
+  const currentYear = new Date().getFullYear();
+  const recommendedTaxThisYear = jobs.reduce((s, j) => {
+    const y = parseLocalDate(j.jobDate).getFullYear();
+    if (y !== currentYear) return s;
+    const netAfterAgent = calculateJobBreakdown(j.rate, j.agentPercent).netPay;
+    return s + conv(netAfterAgent * (j.taxPercent / 100), j.currency);
+  }, 0);
+  const remainingTaxPlanning = Math.max(0, totalRecommendedTax - taxPaidThisYear);
   const reimbursedTotal = expenses.filter(e => e.reimbursable && e.reimbursed).reduce((s, e) => s + conv(e.amount, e.currency), 0);
   const pendingReimbursement = expenses.filter(e => e.reimbursable && !e.reimbursed).reduce((s, e) => s + conv(e.amount, e.currency), 0);
   const outOfPocketExpenses = expenses.filter(e => !e.reimbursable).reduce((s, e) => s + conv(e.amount, e.currency), 0);
