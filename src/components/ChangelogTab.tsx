@@ -16,8 +16,9 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Plus, Send, Trash2, Pencil, Check, X, Mail } from 'lucide-react';
+import { Plus, Send, Trash2, Pencil, Check, X, Mail, Eye } from 'lucide-react';
 import { toast } from 'sonner';
+import { EmailPreviewDialog } from './EmailPreviewDialog';
 
 type Category = 'new' | 'improved' | 'fixed';
 
@@ -58,6 +59,7 @@ export function ChangelogTab() {
   const [intro, setIntro] = useState('');
   const [sending, setSending] = useState(false);
   const [previewCount, setPreviewCount] = useState<number | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -261,7 +263,10 @@ export function ChangelogTab() {
             placeholder="Optional intro line for the email"
           />
         </div>
-        <div className="flex gap-2 justify-end">
+        <div className="flex gap-2 justify-end flex-wrap">
+          <Button variant="outline" onClick={() => setPreviewOpen(true)}>
+            <Eye className="h-4 w-4 mr-1" /> Preview email
+          </Button>
           <AlertDialog onOpenChange={(open) => { if (open) void fetchPreviewCount(); else setPreviewCount(null); }}>
             <AlertDialogTrigger asChild>
               <Button disabled={unsent.length === 0 || sending}>
@@ -327,6 +332,14 @@ export function ChangelogTab() {
           )}
         </>
       )}
+
+      <EmailPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        items={unsent.map(e => ({ category: e.category, title: e.title, body: e.body }))}
+        periodLabel={periodLabel}
+        intro={intro}
+      />
     </div>
   );
 }
