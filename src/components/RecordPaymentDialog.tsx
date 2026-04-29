@@ -308,6 +308,54 @@ export function RecordPaymentDialog({
                   </p>
                 </div>
 
+                {pendingExpenses.length > 0 && (
+                  <div className="rounded-md border border-border p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <Label className="text-sm">Were these expenses reimbursed?</Label>
+                      <button
+                        type="button"
+                        onClick={toggleAll}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        {allChecked ? "Clear all" : "Select all"}
+                      </button>
+                    </div>
+                    <div className="space-y-1.5 max-h-44 overflow-y-auto">
+                      {pendingExpenses.map((e) => {
+                        const checked = reimbursedIds.has(e.id);
+                        const sym = CURRENCIES[e.currency]?.symbol || "";
+                        return (
+                          <label
+                            key={e.id}
+                            className="flex items-start gap-2 text-sm cursor-pointer hover:bg-secondary/40 rounded px-2 py-1.5"
+                          >
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={() => toggleReimbursed(e.id)}
+                              className="mt-0.5"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-foreground truncate">{e.description || "Expense"}</span>
+                                <span className="text-foreground tabular-nums">
+                                  {sym}
+                                  {e.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {parseLocalDate(e.date).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Checked expenses will be marked as reimbursed.
+                    </p>
+                  </div>
+                )}
+
                 <Button
                   className="w-full h-11 text-base font-medium gold-glow"
                   onClick={handleConfirm}
