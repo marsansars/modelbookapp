@@ -59,6 +59,7 @@ export function ChangelogTab() {
   const [intro, setIntro] = useState('');
   const [sending, setSending] = useState(false);
   const [previewCount, setPreviewCount] = useState<number | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const load = async () => {
     setLoading(true);
