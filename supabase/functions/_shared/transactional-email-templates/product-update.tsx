@@ -66,7 +66,24 @@ const ProductUpdateEmail = ({
                   {meta.emoji} {meta.label}
                 </Text>
                 <Text style={itemTitle}>{item.title}</Text>
-                {item.body ? <Text style={itemBody}>{item.body}</Text> : null}
+                {item.body
+                  ? item.body
+                      .replace(/\r\n/g, '\n')
+                      .split(/\n{2,}/)
+                      .map((para, pIdx) => {
+                        const lines = para.split('\n')
+                        return (
+                          <Text key={pIdx} style={itemBody}>
+                            {lines.map((line, lIdx) => (
+                              <React.Fragment key={lIdx}>
+                                {line}
+                                {lIdx < lines.length - 1 ? <br /> : null}
+                              </React.Fragment>
+                            ))}
+                          </Text>
+                        )
+                      })
+                  : null}
               </Section>
             )
           })
