@@ -410,6 +410,7 @@ function mapInvoiceFromDb(row: any): Invoice {
     issueDate: row.issue_date,
     dueDate: row.due_date,
     status: row.status as InvoiceStatus,
+    paidDate: row.paid_date || undefined,
     billToName: row.bill_to_name || '',
     billToEmail: row.bill_to_email || undefined,
     billToAddress: row.bill_to_address || undefined,
