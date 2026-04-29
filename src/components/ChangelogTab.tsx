@@ -332,6 +332,14 @@ export function ChangelogTab() {
           )}
         </>
       )}
+
+      <EmailPreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        items={unsent.map(e => ({ category: e.category, title: e.title, body: e.body }))}
+        periodLabel={periodLabel}
+        intro={intro}
+      />
     </div>
   );
 }
