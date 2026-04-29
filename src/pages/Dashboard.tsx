@@ -134,6 +134,7 @@ export default function Dashboard() {
 
   const totalPendingReimbursement = pendingReimbursement.reduce((s, e) => s + conv(e.amount, e.currency), 0);
   const totalWriteOffs = writeOffExpenses.reduce((s, e) => s + conv(e.amount, e.currency), 0) + totalAgentFees;
+  const heroAmountStyle = { fontSize: 'clamp(1.5rem, 12cqw, 3rem)' } as const;
 
   // Group pending reimbursements by agency
   const reimbursableByAgency = pendingReimbursement.reduce((acc, e) => {
@@ -201,6 +202,7 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           className="relative overflow-hidden rounded-xl p-6 border border-primary/30"
           style={{
+            containerType: 'inline-size',
             background: 'linear-gradient(135deg, hsl(42 78% 55% / 0.18), hsl(42 78% 55% / 0.04))',
             boxShadow: '0 0 40px -10px hsl(42 78% 55% / 0.25)',
           }}
@@ -208,7 +210,7 @@ export default function Dashboard() {
           <div className="pointer-events-none absolute -top-8 -right-8 w-32 h-32 rounded-full blur-3xl opacity-30" style={{ background: 'hsl(42 78% 55%)' }} />
           <div className="relative">
             <p className="text-xs uppercase tracking-widest text-primary/80 font-body font-medium">Current Owed</p>
-            <p className="font-heading font-semibold text-gradient-gold mt-2 leading-tight pb-1 whitespace-nowrap" style={{ fontSize: 'clamp(1.75rem, 6vw, 3rem)' }}>{fmt(currentEarnings)}</p>
+            <p className="font-heading font-semibold text-gradient-gold mt-2 leading-tight pb-1 whitespace-nowrap" style={heroAmountStyle}>{fmt(currentEarnings)}</p>
             <p className="text-sm text-muted-foreground mt-3">{currentCount} pending job{currentCount !== 1 ? 's' : ''} · on track</p>
           </div>
         </motion.div>
@@ -218,6 +220,7 @@ export default function Dashboard() {
           animate={{ opacity: 1, y: 0 }}
           className="relative overflow-hidden rounded-xl p-6 border border-destructive/40"
           style={{
+            containerType: 'inline-size',
             background: 'linear-gradient(135deg, hsl(0 65% 55% / 0.18), hsl(0 65% 55% / 0.04))',
             boxShadow: '0 0 40px -10px hsl(0 65% 55% / 0.3)',
           }}
@@ -225,7 +228,7 @@ export default function Dashboard() {
           <div className="pointer-events-none absolute -top-8 -right-8 w-32 h-32 rounded-full blur-3xl opacity-30" style={{ background: 'hsl(0 65% 55%)' }} />
           <div className="relative">
             <p className="text-xs uppercase tracking-widest text-destructive font-body font-medium">Overdue</p>
-            <p className="font-heading font-semibold text-destructive mt-2 leading-tight pb-1 whitespace-nowrap" style={{ fontSize: 'clamp(1.75rem, 6vw, 3rem)' }}>{fmt(overdueEarnings)}</p>
+            <p className="font-heading font-semibold text-destructive mt-2 leading-tight pb-1 whitespace-nowrap" style={heroAmountStyle}>{fmt(overdueEarnings)}</p>
             <p className="text-sm text-muted-foreground mt-3">{overdueCount} overdue job{overdueCount !== 1 ? 's' : ''}</p>
             {overdueCount > 0 && (
               <Button
