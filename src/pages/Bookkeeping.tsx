@@ -24,6 +24,8 @@ export default function Bookkeeping() {
   const [displayCur, setDisplayCur] = useState<CurrencyCode>('USD');
   const [rates, setRates] = useState<Record<string, number>>({});
   const [cats, setCats] = useState<Record<string, ExpenseCategoryInfo>>({});
+  const [taxPaidThisYear, setTaxPaidThisYear] = useState(0);
+  const location = useLocation();
 
   useEffect(() => {
     const load = async () => {
@@ -35,6 +37,15 @@ export default function Bookkeeping() {
     };
     load();
   }, []);
+
+  // Scroll to quarterly taxes section if hash is present
+  useEffect(() => {
+    if (location.hash === '#quarterly-taxes') {
+      setTimeout(() => {
+        document.getElementById('quarterly-taxes')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [location.hash]);
 
   const conv = (amount: number, from: CurrencyCode) => convertAmount(amount, from, displayCur, rates);
   const fmt = (n: number) => formatCurrency(n, displayCur);
