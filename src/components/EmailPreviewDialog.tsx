@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
@@ -29,7 +30,7 @@ const SITE_NAME = 'ModelBook';
 
 // Mirrors the React Email template's multi-line rendering:
 // blank line → new <p>; single newline → <br>
-function renderMultiline(text: string, style: React.CSSProperties) {
+function renderMultiline(text: string, style: CSSProperties) {
   return text
     .replace(/\r\n/g, '\n')
     .split(/\n{2,}/)
@@ -48,10 +49,10 @@ function renderMultiline(text: string, style: React.CSSProperties) {
     });
 }
 
-const textStyle: React.CSSProperties = {
+const textStyle: CSSProperties = {
   fontSize: 15, color: '#4a4a4a', lineHeight: 1.6, margin: '0 0 16px',
 };
-const itemBodyStyle: React.CSSProperties = {
+const itemBodyStyle: CSSProperties = {
   fontSize: 14, color: '#55575d', lineHeight: 1.6, margin: 0,
 };
 
