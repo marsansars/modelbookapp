@@ -30,7 +30,7 @@ const SITE_NAME = 'ModelBook';
 
 // Mirrors the React Email template's multi-line rendering:
 // blank line → new <p>; single newline → <br>
-function renderMultiline(text: string, style: React.CSSProperties) {
+function renderMultiline(text: string, style: CSSProperties) {
   return text
     .replace(/\r\n/g, '\n')
     .split(/\n{2,}/)
