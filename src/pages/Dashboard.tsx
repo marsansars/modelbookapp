@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { format, startOfMonth, endOfMonth, startOfYear, endOfYear, subYears } from "date-fns";
 import { StatCard } from "@/components/StatCard";
+import { TaxDisclaimerInfo } from "@/components/TaxDisclaimerInfo";
 import { DueDateBadge } from "@/components/DueDateBadge";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { EarningsChart } from "@/components/EarningsChart";
@@ -264,6 +265,7 @@ export default function Dashboard() {
             ? `${fmt(taxPaymentsTotal)} paid · tap to manage`
             : 'Tap to log quarterly payments'}
           onClick={() => navigate('/bookkeeping#quarterly-taxes')}
+          labelAdornment={<TaxDisclaimerInfo stopPropagation />}
         />
         <StatCard label="Total Earnings" value={fmt(totalNet)} sublabel={`${jobs.length} jobs`} accent />
       </div>

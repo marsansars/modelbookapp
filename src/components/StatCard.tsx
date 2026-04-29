@@ -7,9 +7,10 @@ interface StatCardProps {
   sublabel?: string;
   accent?: boolean;
   onClick?: () => void;
+  labelAdornment?: React.ReactNode;
 }
 
-export function StatCard({ label, value, sublabel, accent, onClick }: StatCardProps) {
+export function StatCard({ label, value, sublabel, accent, onClick, labelAdornment }: StatCardProps) {
   const interactive = !!onClick;
   return (
     <motion.div
@@ -25,7 +26,10 @@ export function StatCard({ label, value, sublabel, accent, onClick }: StatCardPr
       className={`glass-card p-5 relative ${accent ? 'gold-glow' : ''} ${interactive ? 'cursor-pointer hover:border-primary/40 transition-colors' : ''}`}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm text-muted-foreground font-body">{label}</p>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <p className="text-sm text-muted-foreground font-body">{label}</p>
+          {labelAdornment}
+        </div>
         {interactive && (
           <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0" />
         )}

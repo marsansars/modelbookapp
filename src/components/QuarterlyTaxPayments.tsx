@@ -16,6 +16,7 @@ import {
 import { CurrencyCode, parseLocalDate } from "@/lib/types";
 import { convertAmount, formatCurrency } from "@/lib/currency";
 import { CurrencySelector } from "@/components/CurrencySelector";
+import { TaxDisclaimerInfo } from "@/components/TaxDisclaimerInfo";
 
 interface Props {
   recommendedTaxThisYear: number; // already converted to displayCur
@@ -132,7 +133,10 @@ export function QuarterlyTaxPayments({
     >
       <div className="flex items-start justify-between flex-wrap gap-3 mb-4">
         <div>
-          <h2 className="font-heading text-lg font-semibold">Quarterly Tax Payments</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="font-heading text-lg font-semibold">Quarterly Tax Payments</h2>
+            <TaxDisclaimerInfo />
+          </div>
           <p className="text-xs text-muted-foreground mt-1">
             Track estimated tax payments by quarter. Payments reduce your remaining tax planning.
           </p>
