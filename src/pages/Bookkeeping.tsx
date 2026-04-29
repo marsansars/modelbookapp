@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { getJobs, getExpenses, getDisplayCurrency, setDisplayCurrency, getAllExpenseCategories } from "@/lib/store";
-import { Job, Expense, CurrencyCode, calculateJobBreakdown, ExpenseCategoryInfo } from "@/lib/types";
+import { Job, Expense, CurrencyCode, calculateJobBreakdown, ExpenseCategoryInfo, parseLocalDate } from "@/lib/types";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { exportJobsCSV, exportExpensesCSV, exportSummaryCSV } from "@/lib/csv-export";
 import { exportJobsXLSX, exportExpensesXLSX, exportSummaryXLSX } from "@/lib/xlsx-export";
 import { StatCard } from "@/components/StatCard";
 import { CurrencySelector } from "@/components/CurrencySelector";
+import { QuarterlyTaxPayments } from "@/components/QuarterlyTaxPayments";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Download, FileSpreadsheet, FileText, ChevronDown } from "lucide-react";
 import { motion } from "framer-motion";
+import { useLocation } from "react-router-dom";
 
 export default function Bookkeeping() {
   const [jobs, setJobs] = useState<Job[]>([]);
@@ -22,6 +24,8 @@ export default function Bookkeeping() {
   const [displayCur, setDisplayCur] = useState<CurrencyCode>('USD');
   const [rates, setRates] = useState<Record<string, number>>({});
   const [cats, setCats] = useState<Record<string, ExpenseCategoryInfo>>({});
+  const [taxPaidThisYear, setTaxPaidThisYear] = useState(0);
+  const location = useLocation();
 
   useEffect(() => {
     const load = async () => {
@@ -34,6 +38,15 @@ export default function Bookkeeping() {
     load();
   }, []);
 
+  // Scroll to quarterly taxes section if hash is present
+  useEffect(() => {
+    if (location.hash === '#quarterly-taxes') {
+      setTimeout(() => {
+        document.getElementById('quarterly-taxes')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [location.hash]);
+
   const conv = (amount: number, from: CurrencyCode) => convertAmount(amount, from, displayCur, rates);
   const fmt = (n: number) => formatCurrency(n, displayCur);
 
@@ -44,6 +57,14 @@ export default function Bookkeeping() {
     const netAfterAgent = calculateJobBreakdown(j.rate, j.agentPercent).netPay;
     return s + conv(netAfterAgent * (j.taxPercent / 100), j.currency);
   }, 0);
+  const currentYear = new Date().getFullYear();
+  const recommendedTaxThisYear = jobs.reduce((s, j) => {
+    const y = parseLocalDate(j.jobDate).getFullYear();
+    if (y !== currentYear) return s;
+    const netAfterAgent = calculateJobBreakdown(j.rate, j.agentPercent).netPay;
+    return s + conv(netAfterAgent * (j.taxPercent / 100), j.currency);
+  }, 0);
+  const remainingTaxPlanning = Math.max(0, totalRecommendedTax - taxPaidThisYear);
   const reimbursedTotal = expenses.filter(e => e.reimbursable && e.reimbursed).reduce((s, e) => s + conv(e.amount, e.currency), 0);
   const pendingReimbursement = expenses.filter(e => e.reimbursable && !e.reimbursed).reduce((s, e) => s + conv(e.amount, e.currency), 0);
   const outOfPocketExpenses = expenses.filter(e => !e.reimbursable).reduce((s, e) => s + conv(e.amount, e.currency), 0);
@@ -122,7 +143,11 @@ export default function Bookkeeping() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Gross Earnings" value={fmt(totalGross)} />
         <StatCard label="Agent Commissions" value={fmt(totalAgent)} />
-        <StatCard label="Estimated Tax Planning" value={fmt(totalRecommendedTax)} />
+        <StatCard
+          label="Estimated Tax Planning"
+          value={fmt(remainingTaxPlanning)}
+          sublabel={taxPaidThisYear > 0 ? `${fmt(taxPaidThisYear)} paid this year` : `${fmt(totalRecommendedTax)} recommended`}
+        />
         <StatCard label="Net Expenses" value={fmt(netExpenses)} sublabel={reimbursedTotal > 0 ? `${fmt(reimbursedTotal)} reimbursed` : undefined} />
       </div>
 
@@ -140,8 +165,14 @@ export default function Bookkeeping() {
             </div>
             <div className="flex justify-between py-2 border-b border-border">
               <span className="text-muted-foreground">− Estimated Tax Planning</span>
-              <span className="font-medium">-{fmt(totalRecommendedTax)}</span>
+              <span className="font-medium">-{fmt(remainingTaxPlanning)}</span>
             </div>
+            {taxPaidThisYear > 0 && (
+              <div className="flex justify-between py-2 border-b border-border text-xs">
+                <span className="text-muted-foreground pl-3">↳ Already paid this year</span>
+                <span className="text-success">{fmt(taxPaidThisYear)}</span>
+              </div>
+            )}
             <div className="flex justify-between py-2 border-b border-border">
               <span className="text-muted-foreground">− Out-of-Pocket Expenses</span>
               <span className="font-medium">-{fmt(outOfPocketExpenses)}</span>
@@ -160,7 +191,7 @@ export default function Bookkeeping() {
             )}
             <div className="flex justify-between py-2">
               <span className="font-heading font-semibold text-foreground">Net After Everything</span>
-              <span className="font-heading font-semibold text-primary">{fmt(totalNet - totalRecommendedTax - netExpenses)}</span>
+              <span className="font-heading font-semibold text-primary">{fmt(totalNet - remainingTaxPlanning - netExpenses)}</span>
             </div>
           </div>
         </motion.div>
@@ -199,6 +230,13 @@ export default function Bookkeeping() {
           )}
         </motion.div>
       </div>
+
+      <QuarterlyTaxPayments
+        recommendedTaxThisYear={recommendedTaxThisYear}
+        displayCur={displayCur}
+        rates={rates}
+        onChange={setTaxPaidThisYear}
+      />
     </div>
   );
 }

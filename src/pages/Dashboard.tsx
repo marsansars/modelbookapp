@@ -7,8 +7,9 @@ import { EarningsChart } from "@/components/EarningsChart";
 import { PaymentsReceivedChart } from "@/components/PaymentsReceivedChart";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 
-import { getJobs, getExpenses, getDisplayCurrency, setDisplayCurrency, getAgencies } from "@/lib/store";
+import { getJobs, getExpenses, getDisplayCurrency, setDisplayCurrency, getAgencies, getTaxPayments } from "@/lib/store";
 import { Job, Expense, Agency, CurrencyCode, calculateJobBreakdown, getDueDate, getDaysUntilDue, parseLocalDate } from "@/lib/types";
+import { useNavigate } from "react-router-dom";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { motion } from "framer-motion";
 import { Receipt, FileText, Building2, Send, CalendarCheck } from "lucide-react";
@@ -51,6 +52,8 @@ export default function Dashboard() {
   const [recordPaymentOpen, setRecordPaymentOpen] = useState(false);
   const [chartApi, setChartApi] = useState<CarouselApi | null>(null);
   const [chartIndex, setChartIndex] = useState(0);
+  const [taxPaymentsTotal, setTaxPaymentsTotal] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!chartApi) return;
@@ -59,12 +62,18 @@ export default function Dashboard() {
   }, [chartApi]);
 
   const load = async () => {
-    const [j, e, a, cur, r] = await Promise.all([
+    const [j, e, a, cur, r, taxP] = await Promise.all([
       getJobs(), getExpenses(), getAgencies(), getDisplayCurrency(),
-      fetchExchangeRates(),
+      fetchExchangeRates(), getTaxPayments(),
     ]);
     setAllJobs(j); setAllExpenses(e); setAgencies(a); setDisplayCur(cur);
     setRates(r.rates);
+    // Sum tax payments for the current calendar year, converted to display currency
+    const cy = new Date().getFullYear();
+    const total = taxP
+      .filter(p => p.year === cy)
+      .reduce((s, p) => s + convertAmount(p.amount, p.currency, cur, r.rates), 0);
+    setTaxPaymentsTotal(total);
   };
 
   useEffect(() => {
@@ -248,7 +257,14 @@ export default function Dashboard() {
       {/* Secondary KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard label="Payments Received" value={fmt(paymentsReceived)} sublabel={`${paidJobsCount} paid job${paidJobsCount !== 1 ? 's' : ''}`} accent />
-        <StatCard label="Estimated Tax Planning" value={fmt(totalRecommendedTax)} sublabel="Set aside from net earnings" />
+        <StatCard
+          label="Estimated Tax Planning"
+          value={fmt(Math.max(0, totalRecommendedTax - taxPaymentsTotal))}
+          sublabel={taxPaymentsTotal > 0
+            ? `${fmt(taxPaymentsTotal)} paid · tap to manage`
+            : 'Tap to log quarterly payments'}
+          onClick={() => navigate('/bookkeeping#quarterly-taxes')}
+        />
         <StatCard label="Total Earnings" value={fmt(totalNet)} sublabel={`${jobs.length} jobs`} accent />
       </div>
 
