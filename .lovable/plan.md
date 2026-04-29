@@ -1,48 +1,22 @@
-I investigated the current email flow and found the core issue:
+## Preview "What's New" emails before sending
 
-- The app already builds a standard `mailto:to?subject=...&body=...` URL in `src/lib/email.ts`.
-- The helper currently uses `window.location.href = mailtoUrl`, so the code is no longer explicitly routing through Gmail.
-- However, in Lovable preview the app runs inside an iframe. If the browser’s default mail handler is Gmail, the `mailto:` handoff can still resolve to `mail.google.com`, and Gmail refuses to render inside that iframe. That matches the error you’re still seeing.
-- So this is not really a malformed mailto-link problem anymore; it is a preview-environment handoff problem.
+Right now you can only see the changelog entries as a list — there's no way to see what the actual email will look like in someone's inbox until it's been sent. I'll add a **Preview email** button to the Changelog tab so you can review the rendered email at any time using your current unsent entries (and the period label / intro you've typed in).
 
-Plan:
+### What you'll see
 
-1. Make the email helper environment-aware
-- Update `src/lib/email.ts` to detect Lovable preview / iframe usage using the same host + iframe pattern already used elsewhere in the app.
-- Keep the normal `mailto:` navigation for standalone/published usage.
-- In preview/iframe mode, do not attempt to launch the mail handler directly.
+A new **Preview email** button next to **Send to all users**. Clicking it opens a dialog showing:
 
-2. Return a structured result from the helper
-- Refactor `openMailtoDraft` so it reports what happened, for example:
-  - `opened`
-  - `blocked_in_preview`
-  - `clipboard_fallback`
-- This lets the UI explain the situation instead of failing with the Gmail iframe error.
+- The email **From** address and **Subject** line (auto-built from the period label)
+- The full email body, rendered to look exactly like what recipients will get — same charcoal/gold ModelBook header, Playfair display font, "✨ NEW / 🛠 IMPROVED / 🐛 FIXED" tags, and the line-break/paragraph spacing fix from earlier
+- A note at the bottom that the unsubscribe footer will be appended automatically when sent
 
-3. Improve the dialogs that use the helper
-- Update:
-  - `src/components/SendExpensesDialog.tsx`
-  - `src/components/FollowUpDialog.tsx`
-  - `src/pages/Invoices.tsx`
-- When the helper reports preview blocking, show a clear toast/message like:
-  - “Email apps can’t open from the preview. Use Copy All, or open the published app to launch your mail client.”
-- Keep the existing Copy / Copy All workflow as the primary fallback.
+The preview always reflects the **current** unsent entries in the order they'll be sent, plus whatever you've typed into the **Period label** and **Optional intro** fields above. If you tweak any of those, just click Preview again to refresh.
 
-4. Add preview-specific UX guidance near the button
-- In the email dialogs, add a small note under or near “Open in Email” explaining that preview may block mail apps, while the published app should work normally.
-- This prevents the same confusion from recurring.
+### Implementation notes (technical)
 
-5. Verify both environments
-- Test in preview to confirm the Gmail iframe error is no longer triggered by the app flow and that the user sees a helpful fallback instead.
-- Test the published app to confirm `mailto:` still launches the mail client normally there.
-
-Technical details
-- Files to update:
-  - `src/lib/email.ts`
-  - `src/components/SendExpensesDialog.tsx`
-  - `src/components/FollowUpDialog.tsx`
-  - `src/pages/Invoices.tsx`
-- Reuse existing preview detection conventions from `src/main.tsx` / `src/lib/analytics.ts`.
-- Preserve the standard mailto structure exactly; the change is about when to trigger it, not how to encode it.
-
-If you approve, I’ll implement the preview-safe behavior so the button stops surfacing the Gmail iframe error and gives a clear fallback path.
+- New component `src/components/EmailPreviewDialog.tsx` that visually mirrors `supabase/functions/_shared/transactional-email-templates/product-update.tsx` — same inline styles, fonts, colors, category emojis, and the same multi-line `body` rendering (single newline → `<br>`, blank line → new paragraph).
+- Edit `src/components/ChangelogTab.tsx`:
+  - Add `previewOpen` state.
+  - Add a **Preview email** button (eye icon, outline variant) next to the existing Send button. Always enabled — even with zero unsent entries it shows the empty-state body.
+  - Render `<EmailPreviewDialog open={previewOpen} ... items={unsent} periodLabel={periodLabel} intro={intro} />`.
+- Pure client-side render; no edge function or database call needed.
