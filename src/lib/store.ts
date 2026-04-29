@@ -240,6 +240,23 @@ export async function updateJob(id: string, updates: Partial<Job>): Promise<void
   if (updates.lineItems !== undefined) dbUpdates.line_items = validateLineItems(updates.lineItems);
 
   await supabase.from('jobs').update(dbUpdates as any).eq('id', id);
+
+  // Cascade payment status to linked invoices.
+  if (updates.status === 'paid') {
+    const paidDate = updates.paidDate || new Date().toISOString().slice(0, 10);
+    await supabase
+      .from('invoices' as any)
+      .update({ status: 'paid', paid_date: paidDate } as any)
+      .eq('job_id', id)
+      .neq('status', 'paid');
+  } else if (updates.status !== undefined) {
+    // Job moved away from paid — revert previously-paid invoices back to 'sent'.
+    await supabase
+      .from('invoices' as any)
+      .update({ status: 'sent', paid_date: null } as any)
+      .eq('job_id', id)
+      .eq('status', 'paid');
+  }
 }
 
 export async function deleteJob(id: string): Promise<void> {
@@ -410,6 +427,7 @@ function mapInvoiceFromDb(row: any): Invoice {
     issueDate: row.issue_date,
     dueDate: row.due_date,
     status: row.status as InvoiceStatus,
+    paidDate: row.paid_date || undefined,
     billToName: row.bill_to_name || '',
     billToEmail: row.bill_to_email || undefined,
     billToAddress: row.bill_to_address || undefined,
@@ -440,6 +458,7 @@ export async function addInvoice(invoice: Omit<Invoice, 'id' | 'createdAt'>): Pr
     issue_date: invoice.issueDate,
     due_date: invoice.dueDate,
     status: invoice.status,
+    paid_date: invoice.paidDate || null,
     bill_to_name: invoice.billToName,
     bill_to_email: invoice.billToEmail || null,
     bill_to_address: invoice.billToAddress || null,
@@ -457,12 +476,41 @@ export async function updateInvoice(id: string, updates: Partial<Invoice>): Prom
   if (updates.issueDate !== undefined) dbUpdates.issue_date = updates.issueDate;
   if (updates.dueDate !== undefined) dbUpdates.due_date = updates.dueDate;
   if (updates.status !== undefined) dbUpdates.status = updates.status;
+  if (updates.paidDate !== undefined) dbUpdates.paid_date = updates.paidDate || null;
   if (updates.billToName !== undefined) dbUpdates.bill_to_name = updates.billToName;
   if (updates.billToEmail !== undefined) dbUpdates.bill_to_email = updates.billToEmail || null;
   if (updates.billToAddress !== undefined) dbUpdates.bill_to_address = updates.billToAddress || null;
   if (updates.notes !== undefined) dbUpdates.notes = updates.notes || null;
   if (updates.snapshot !== undefined) dbUpdates.snapshot = updates.snapshot;
+
+  // If marking paid and no explicit paidDate provided, default to today.
+  if (updates.status === 'paid' && updates.paidDate === undefined) {
+    dbUpdates.paid_date = new Date().toISOString().slice(0, 10);
+  }
+  // If moving away from paid, clear the paid date unless caller set one explicitly.
+  if (updates.status !== undefined && updates.status !== 'paid' && updates.paidDate === undefined) {
+    dbUpdates.paid_date = null;
+  }
+
   await supabase.from('invoices' as any).update(dbUpdates).eq('id', id);
+
+  // Cascade payment status to the linked job (forward direction only — going paid).
+  if (updates.status === 'paid') {
+    const { data: inv } = await supabase
+      .from('invoices' as any)
+      .select('job_id, paid_date')
+      .eq('id', id)
+      .maybeSingle();
+    const jobId = (inv as any)?.job_id;
+    const paidDate = (inv as any)?.paid_date || new Date().toISOString().slice(0, 10);
+    if (jobId) {
+      await supabase
+        .from('jobs')
+        .update({ status: 'paid', paid_date: paidDate } as any)
+        .eq('id', jobId)
+        .neq('status', 'paid');
+    }
+  }
 }
 
 export async function deleteInvoice(id: string): Promise<void> {

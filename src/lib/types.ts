@@ -78,6 +78,7 @@ export interface Invoice {
   issueDate: string;
   dueDate: string;
   status: InvoiceStatus;
+  paidDate?: string;
   billToName: string;
   billToEmail?: string;
   billToAddress?: string;

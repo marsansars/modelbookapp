@@ -264,6 +264,9 @@ export function RecordPaymentDialog({
                     onChange={(e) => setDate(e.target.value)}
                     className="mt-1.5"
                   />
+                  <p className="text-xs text-muted-foreground mt-1.5">
+                    Any invoice linked to this job will also be marked as paid.
+                  </p>
                 </div>
 
                 <Button
