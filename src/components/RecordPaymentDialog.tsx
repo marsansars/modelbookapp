@@ -7,9 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { updateJob } from "@/lib/store";
-import { Job, Agency, CurrencyCode, calculateJobBreakdown, getDaysUntilDue } from "@/lib/types";
+import { updateJob, getExpenses, updateExpense } from "@/lib/store";
+import { Job, Agency, CurrencyCode, Expense, calculateJobBreakdown, getDaysUntilDue, parseLocalDate, CURRENCIES } from "@/lib/types";
 import { formatCurrency } from "@/lib/currency";
 import { toast } from "sonner";
 
@@ -71,6 +72,8 @@ export function RecordPaymentDialog({
   const [date, setDate] = useState<string>(format(new Date(), "yyyy-MM-dd"));
   const [submitting, setSubmitting] = useState(false);
   const [celebrate, setCelebrate] = useState<{ amount: number; currency: CurrencyCode; client: string } | null>(null);
+  const [allExpenses, setAllExpenses] = useState<Expense[]>([]);
+  const [reimbursedIds, setReimbursedIds] = useState<Set<string>>(new Set());
 
   // Sort unpaid jobs: overdue first, then by closest due date.
   const sortedJobs = useMemo(() => {
@@ -86,6 +89,7 @@ export function RecordPaymentDialog({
       setSelectedId(jobId ?? sortedJobs[0]?.id ?? "");
       setDate(format(new Date(), "yyyy-MM-dd"));
       setCelebrate(null);
+      getExpenses().then(setAllExpenses).catch(() => setAllExpenses([]));
     }
   }, [open, jobId, sortedJobs]);
 
@@ -93,11 +97,46 @@ export function RecordPaymentDialog({
   const breakdown = selectedJob ? calculateJobBreakdown(selectedJob.rate, selectedJob.agentPercent) : null;
   const agencyName = selectedJob?.agencyId ? agencies.find((a) => a.id === selectedJob.agencyId)?.name : undefined;
 
+  // Reimbursable, not-yet-reimbursed expenses tied to the selected job.
+  const pendingExpenses = useMemo(() => {
+    if (!selectedJob) return [];
+    return allExpenses.filter(
+      (e) => e.jobId === selectedJob.id && e.reimbursable && !e.reimbursed
+    );
+  }, [allExpenses, selectedJob]);
+
+  // Default to all selected when the job (or list) changes.
+  useEffect(() => {
+    setReimbursedIds(new Set(pendingExpenses.map((e) => e.id)));
+  }, [selectedId, pendingExpenses.length]);
+
+  const toggleReimbursed = (id: string) => {
+    setReimbursedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const allChecked = pendingExpenses.length > 0 && pendingExpenses.every((e) => reimbursedIds.has(e.id));
+  const toggleAll = () => {
+    if (allChecked) setReimbursedIds(new Set());
+    else setReimbursedIds(new Set(pendingExpenses.map((e) => e.id)));
+  };
+
   const handleConfirm = async () => {
     if (!selectedJob || !date) return;
     setSubmitting(true);
     try {
       await updateJob(selectedJob.id, { status: "paid", paidDate: date });
+      // Mark selected expenses as reimbursed.
+      const toReimburse = pendingExpenses.filter((e) => reimbursedIds.has(e.id));
+      if (toReimburse.length > 0) {
+        await Promise.all(
+          toReimburse.map((e) => updateExpense(e.id, { reimbursed: true }).catch(() => {}))
+        );
+      }
       // Show celebration overlay
       setCelebrate({
         amount: breakdown?.netPay ?? 0,
@@ -268,6 +307,54 @@ export function RecordPaymentDialog({
                     Any invoice linked to this job will also be marked as paid.
                   </p>
                 </div>
+
+                {pendingExpenses.length > 0 && (
+                  <div className="rounded-md border border-border p-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <Label className="text-sm">Were these expenses reimbursed?</Label>
+                      <button
+                        type="button"
+                        onClick={toggleAll}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        {allChecked ? "Clear all" : "Select all"}
+                      </button>
+                    </div>
+                    <div className="space-y-1.5 max-h-44 overflow-y-auto">
+                      {pendingExpenses.map((e) => {
+                        const checked = reimbursedIds.has(e.id);
+                        const sym = CURRENCIES[e.currency]?.symbol || "";
+                        return (
+                          <label
+                            key={e.id}
+                            className="flex items-start gap-2 text-sm cursor-pointer hover:bg-secondary/40 rounded px-2 py-1.5"
+                          >
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={() => toggleReimbursed(e.id)}
+                              className="mt-0.5"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="text-foreground truncate">{e.description || "Expense"}</span>
+                                <span className="text-foreground tabular-nums">
+                                  {sym}
+                                  {e.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {parseLocalDate(e.date).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Checked expenses will be marked as reimbursed.
+                    </p>
+                  </div>
+                )}
 
                 <Button
                   className="w-full h-11 text-base font-medium gold-glow"
