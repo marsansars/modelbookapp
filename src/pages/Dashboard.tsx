@@ -264,6 +264,7 @@ export default function Dashboard() {
             ? `${fmt(taxPaymentsTotal)} paid · tap to manage`
             : 'Tap to log quarterly payments'}
           onClick={() => navigate('/bookkeeping#quarterly-taxes')}
+          labelAdornment={<TaxDisclaimerInfo stopPropagation />}
         />
         <StatCard label="Total Earnings" value={fmt(totalNet)} sublabel={`${jobs.length} jobs`} accent />
       </div>
