@@ -7,9 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { updateJob } from "@/lib/store";
-import { Job, Agency, CurrencyCode, calculateJobBreakdown, getDaysUntilDue } from "@/lib/types";
+import { updateJob, getExpenses, updateExpense } from "@/lib/store";
+import { Job, Agency, CurrencyCode, Expense, calculateJobBreakdown, getDaysUntilDue, parseLocalDate, CURRENCIES } from "@/lib/types";
 import { formatCurrency } from "@/lib/currency";
 import { toast } from "sonner";
 
