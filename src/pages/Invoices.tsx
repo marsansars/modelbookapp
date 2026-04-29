@@ -155,6 +155,9 @@ export default function Invoices() {
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         Issued {parseLocalDate(inv.issueDate).toLocaleDateString()} · Due {parseLocalDate(inv.dueDate).toLocaleDateString()}
+                        {inv.status === 'paid' && inv.paidDate && (
+                          <span className="text-success"> · Paid {parseLocalDate(inv.paidDate).toLocaleDateString()}</span>
+                        )}
                       </p>
                     </div>
                     <div className="text-right">
