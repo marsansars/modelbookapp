@@ -277,6 +277,7 @@ export type Database = {
           job_id: string
           notes: string | null
           number: string
+          paid_date: string | null
           snapshot: Json
           status: string
           type: string
@@ -294,6 +295,7 @@ export type Database = {
           job_id: string
           notes?: string | null
           number: string
+          paid_date?: string | null
           snapshot?: Json
           status?: string
           type?: string
@@ -311,6 +313,7 @@ export type Database = {
           job_id?: string
           notes?: string | null
           number?: string
+          paid_date?: string | null
           snapshot?: Json
           status?: string
           type?: string
