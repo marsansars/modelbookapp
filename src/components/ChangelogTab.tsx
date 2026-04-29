@@ -16,8 +16,9 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Plus, Send, Trash2, Pencil, Check, X, Mail } from 'lucide-react';
+import { Plus, Send, Trash2, Pencil, Check, X, Mail, Eye } from 'lucide-react';
 import { toast } from 'sonner';
+import { EmailPreviewDialog } from './EmailPreviewDialog';
 
 type Category = 'new' | 'improved' | 'fixed';
 
