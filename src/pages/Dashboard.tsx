@@ -52,6 +52,8 @@ export default function Dashboard() {
   const [recordPaymentOpen, setRecordPaymentOpen] = useState(false);
   const [chartApi, setChartApi] = useState<CarouselApi | null>(null);
   const [chartIndex, setChartIndex] = useState(0);
+  const [taxPaymentsTotal, setTaxPaymentsTotal] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!chartApi) return;
