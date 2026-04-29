@@ -16,6 +16,7 @@ import {
 import { CurrencyCode, parseLocalDate } from "@/lib/types";
 import { convertAmount, formatCurrency } from "@/lib/currency";
 import { CurrencySelector } from "@/components/CurrencySelector";
+import { TaxDisclaimerInfo } from "@/components/TaxDisclaimerInfo";
 
 interface Props {
   recommendedTaxThisYear: number; // already converted to displayCur
