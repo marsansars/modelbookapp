@@ -47,7 +47,24 @@ const ProductUpdateEmail = ({
         <Heading style={brand}>ModelBook</Heading>
         <Heading style={h1}>What's new{periodLabel ? ` · ${periodLabel}` : ''}</Heading>
 
-        {intro ? <Text style={text}>{intro}</Text> : (
+        {intro ? (
+          intro
+            .replace(/\r\n/g, '\n')
+            .split(/\n{2,}/)
+            .map((para, pIdx) => {
+              const lines = para.split('\n')
+              return (
+                <Text key={pIdx} style={text}>
+                  {lines.map((line, lIdx) => (
+                    <React.Fragment key={lIdx}>
+                      {line}
+                      {lIdx < lines.length - 1 ? <br /> : null}
+                    </React.Fragment>
+                  ))}
+                </Text>
+              )
+            })
+        ) : (
           <Text style={text}>
             A quick recap of the latest updates we've shipped in {SITE_NAME}.
           </Text>
