@@ -49,10 +49,10 @@ function renderMultiline(text: string, style: CSSProperties) {
     });
 }
 
-const textStyle: React.CSSProperties = {
+const textStyle: CSSProperties = {
   fontSize: 15, color: '#4a4a4a', lineHeight: 1.6, margin: '0 0 16px',
 };
-const itemBodyStyle: React.CSSProperties = {
+const itemBodyStyle: CSSProperties = {
   fontSize: 14, color: '#55575d', lineHeight: 1.6, margin: 0,
 };
 
