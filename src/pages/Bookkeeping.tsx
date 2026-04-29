@@ -230,6 +230,13 @@ export default function Bookkeeping() {
           )}
         </motion.div>
       </div>
+
+      <QuarterlyTaxPayments
+        recommendedTaxThisYear={recommendedTaxThisYear}
+        displayCur={displayCur}
+        rates={rates}
+        onChange={setTaxPaidThisYear}
+      />
     </div>
   );
 }
