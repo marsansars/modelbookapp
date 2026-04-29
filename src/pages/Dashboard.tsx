@@ -7,8 +7,9 @@ import { EarningsChart } from "@/components/EarningsChart";
 import { PaymentsReceivedChart } from "@/components/PaymentsReceivedChart";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
 
-import { getJobs, getExpenses, getDisplayCurrency, setDisplayCurrency, getAgencies } from "@/lib/store";
+import { getJobs, getExpenses, getDisplayCurrency, setDisplayCurrency, getAgencies, getTaxPayments } from "@/lib/store";
 import { Job, Expense, Agency, CurrencyCode, calculateJobBreakdown, getDueDate, getDaysUntilDue, parseLocalDate } from "@/lib/types";
+import { useNavigate } from "react-router-dom";
 import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currency";
 import { motion } from "framer-motion";
 import { Receipt, FileText, Building2, Send, CalendarCheck } from "lucide-react";
