@@ -13,7 +13,7 @@ import {
 import {
   TaxPayment, getTaxPayments, addTaxPayment, deleteTaxPayment,
 } from "@/lib/store";
-import { CurrencyCode, CURRENCIES, parseLocalDate } from "@/lib/types";
+import { CurrencyCode, parseLocalDate } from "@/lib/types";
 import { convertAmount, formatCurrency } from "@/lib/currency";
 import { CurrencySelector } from "@/components/CurrencySelector";
 
