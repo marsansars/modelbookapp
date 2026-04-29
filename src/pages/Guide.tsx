@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { startTour } from "@/lib/tour-controller";
 import {
   Briefcase, Receipt, LayoutDashboard, Building2, BookOpen,
-  Sparkles, FileCheck,
+  Sparkles, FileCheck, Calendar,
 } from "lucide-react";
 
 const sections = [
@@ -35,6 +35,11 @@ const sections = [
     icon: BookOpen,
     title: "Bookkeeping",
     blurb: "CSV and Excel exports for your accountant.",
+  },
+  {
+    icon: Calendar,
+    title: "Quarterly Taxes",
+    blurb: "Log Q1–Q4 estimated payments. Reduces remaining tax planning.",
   },
 ];
 
