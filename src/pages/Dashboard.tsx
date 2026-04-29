@@ -62,12 +62,18 @@ export default function Dashboard() {
   }, [chartApi]);
 
   const load = async () => {
-    const [j, e, a, cur, r] = await Promise.all([
+    const [j, e, a, cur, r, taxP] = await Promise.all([
       getJobs(), getExpenses(), getAgencies(), getDisplayCurrency(),
-      fetchExchangeRates(),
+      fetchExchangeRates(), getTaxPayments(),
     ]);
     setAllJobs(j); setAllExpenses(e); setAgencies(a); setDisplayCur(cur);
     setRates(r.rates);
+    // Sum tax payments for the current calendar year, converted to display currency
+    const cy = new Date().getFullYear();
+    const total = taxP
+      .filter(p => p.year === cy)
+      .reduce((s, p) => s + convertAmount(p.amount, p.currency, cur, r.rates), 0);
+    setTaxPaymentsTotal(total);
   };
 
   useEffect(() => {
