@@ -191,7 +191,7 @@ export default function Bookkeeping() {
             )}
             <div className="flex justify-between py-2">
               <span className="font-heading font-semibold text-foreground">Net After Everything</span>
-              <span className="font-heading font-semibold text-primary">{fmt(totalNet - totalRecommendedTax - netExpenses)}</span>
+              <span className="font-heading font-semibold text-primary">{fmt(totalNet - remainingTaxPlanning - netExpenses)}</span>
             </div>
           </div>
         </motion.div>
