@@ -154,8 +154,14 @@ export default function Bookkeeping() {
         <StatCard label="Agent Commissions" value={fmt(totalAgent)} />
         <StatCard
           label="Estimated Tax Planning"
-          value={fmt(remainingTaxPlanning)}
-          sublabel={taxPaidThisYear > 0 ? `${fmt(taxPaidThisYear)} paid this year` : `${fmt(totalRecommendedTax)} recommended`}
+          value={fmt(Math.max(0, totalRecommendedTax - taxPaidThisYear))}
+          sublabel={taxPaidThisYear > 0
+            ? `${fmt(taxPaidThisYear)} paid · tap to manage`
+            : 'Tap to log quarterly payments'}
+          onClick={() => {
+            document.getElementById('quarterly-taxes')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }}
+          labelAdornment={<TaxDisclaimerInfo stopPropagation />}
         />
         <StatCard label="Net Expenses" value={fmt(netExpenses)} sublabel={reimbursedTotal > 0 ? `${fmt(reimbursedTotal)} reimbursed` : undefined} />
       </div>
