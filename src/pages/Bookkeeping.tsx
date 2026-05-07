@@ -5,6 +5,7 @@ import { fetchExchangeRates, convertAmount, formatCurrency } from "@/lib/currenc
 import { exportJobsCSV, exportExpensesCSV, exportSummaryCSV } from "@/lib/csv-export";
 import { exportJobsXLSX, exportExpensesXLSX, exportSummaryXLSX } from "@/lib/xlsx-export";
 import { StatCard } from "@/components/StatCard";
+import { TaxDisclaimerInfo } from "@/components/TaxDisclaimerInfo";
 import { CurrencySelector } from "@/components/CurrencySelector";
 import { QuarterlyTaxPayments } from "@/components/QuarterlyTaxPayments";
 import { Button } from "@/components/ui/button";
