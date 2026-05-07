@@ -55,17 +55,24 @@ export default function Bookkeeping() {
   const totalGross = jobs.reduce((s, j) => s + conv(j.rate, j.currency), 0);
   const totalAgent = jobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent).agentFee, j.currency), 0);
   const totalNet = jobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent).netPay, j.currency), 0);
-  const totalRecommendedTax = jobs.reduce((s, j) => {
-    const netAfterAgent = calculateJobBreakdown(j.rate, j.agentPercent).netPay;
-    return s + conv(netAfterAgent * (j.taxPercent / 100), j.currency);
-  }, 0);
+  // Tax planning is based on payments actually received — taxes are owed on
+  // realized income, not on outstanding invoices.
+  const totalRecommendedTax = jobs
+    .filter(j => j.status === 'paid')
+    .reduce((s, j) => {
+      const netAfterAgent = calculateJobBreakdown(j.rate, j.agentPercent).netPay;
+      return s + conv(netAfterAgent * (j.taxPercent / 100), j.currency);
+    }, 0);
   const currentYear = new Date().getFullYear();
-  const recommendedTaxThisYear = jobs.reduce((s, j) => {
-    const y = parseLocalDate(j.jobDate).getFullYear();
-    if (y !== currentYear) return s;
-    const netAfterAgent = calculateJobBreakdown(j.rate, j.agentPercent).netPay;
-    return s + conv(netAfterAgent * (j.taxPercent / 100), j.currency);
-  }, 0);
+  const recommendedTaxThisYear = jobs
+    .filter(j => j.status === 'paid')
+    .reduce((s, j) => {
+      const dateStr = j.paidDate || j.jobDate;
+      const y = parseLocalDate(dateStr).getFullYear();
+      if (y !== currentYear) return s;
+      const netAfterAgent = calculateJobBreakdown(j.rate, j.agentPercent).netPay;
+      return s + conv(netAfterAgent * (j.taxPercent / 100), j.currency);
+    }, 0);
   const remainingTaxPlanning = Math.max(0, totalRecommendedTax - taxPaidThisYear);
   const reimbursedTotal = expenses.filter(e => e.reimbursable && e.reimbursed).reduce((s, e) => s + conv(e.amount, e.currency), 0);
   const pendingReimbursement = expenses.filter(e => e.reimbursable && !e.reimbursed).reduce((s, e) => s + conv(e.amount, e.currency), 0);
