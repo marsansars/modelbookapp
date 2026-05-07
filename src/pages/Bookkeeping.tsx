@@ -27,6 +27,7 @@ export default function Bookkeeping() {
   const [cats, setCats] = useState<Record<string, ExpenseCategoryInfo>>({});
   const [taxPaidThisYear, setTaxPaidThisYear] = useState(0);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const load = async () => {
