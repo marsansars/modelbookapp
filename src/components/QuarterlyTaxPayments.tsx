@@ -156,7 +156,7 @@ export function QuarterlyTaxPayments({
       {/* Summary strip */}
       <div className="grid grid-cols-3 gap-3 mb-5 p-3 rounded-md bg-muted/30 border border-border">
         <div>
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Recommended ({year})</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Yearly Tax Savings ({year})</p>
           <p className="font-heading font-semibold mt-0.5">{fmt(recommendedTaxThisYear)}</p>
         </div>
         <div>
