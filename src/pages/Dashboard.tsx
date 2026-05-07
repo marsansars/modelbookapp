@@ -105,10 +105,14 @@ export default function Dashboard() {
 
   const totalAgentFees = jobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent).agentFee, j.currency), 0);
   const totalNet = jobs.reduce((s, j) => s + conv(calculateJobBreakdown(j.rate, j.agentPercent).netPay, j.currency), 0);
-  const totalRecommendedTax = jobs.reduce((s, j) => {
-    const netAfterAgent = calculateJobBreakdown(j.rate, j.agentPercent).netPay;
-    return s + conv(netAfterAgent * (j.taxPercent / 100), j.currency);
-  }, 0);
+  // Tax planning is based on payments actually received (within selected period),
+  // since taxes are owed on income realized — not on outstanding invoices.
+  const totalRecommendedTax = jobs
+    .filter(j => j.status === 'paid')
+    .reduce((s, j) => {
+      const netAfterAgent = calculateJobBreakdown(j.rate, j.agentPercent).netPay;
+      return s + conv(netAfterAgent * (j.taxPercent / 100), j.currency);
+    }, 0);
   const totalExpenses = expenses.reduce((s, e) => s + conv(e.amount, e.currency), 0);
 
   const paidJobs = allJobs.filter(j => {
