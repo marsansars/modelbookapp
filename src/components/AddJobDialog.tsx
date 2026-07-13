@@ -36,11 +36,84 @@ export function AddJobDialog({ onAdded }: Props) {
     netDays: String(DEFAULT_NET_DAYS), agencyId: '', notes: '',
   });
 
+  const [scanning, setScanning] = useState(false);
+  const [scanPreview, setScanPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (open) {
       getAgencies().then(setAgencies);
     }
   }, [open]);
+
+  const handleScreenshot = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file.');
+      return;
+    }
+    setScanning(true);
+    try {
+      const compressed = await maybeCompressImage(file);
+      const dataUrl = await fileToDataUrl(compressed);
+      setScanPreview(dataUrl);
+      const { data, error } = await supabase.functions.invoke('scan-job-screenshot', {
+        body: { imageDataUrl: dataUrl },
+      });
+      if (error) throw error;
+      const extracted = data?.data;
+      if (!extracted) throw new Error('No data returned');
+
+      // Merge extracted values into form
+      setForm(f => {
+        const next = { ...f };
+        if (extracted.client) next.client = extracted.client;
+        if (extracted.description) next.description = extracted.description;
+        if (extracted.jobDate) next.jobDate = extracted.jobDate;
+        if (extracted.currency && CURRENCIES[extracted.currency as CurrencyCode]) {
+          next.currency = extracted.currency as CurrencyCode;
+        }
+        if (typeof extracted.agentPercent === 'number') next.agentPercent = String(extracted.agentPercent);
+        if (typeof extracted.taxPercent === 'number') next.taxPercent = String(extracted.taxPercent);
+        if (typeof extracted.netDays === 'number') next.netDays = String(extracted.netDays);
+        if (extracted.notes) next.notes = extracted.notes;
+
+        // Fuzzy agency match
+        if (extracted.agencyName && !next.agencyId) {
+          const needle = String(extracted.agencyName).toLowerCase();
+          const match = agencies.find(a =>
+            a.name.toLowerCase() === needle ||
+            a.name.toLowerCase().includes(needle) ||
+            needle.includes(a.name.toLowerCase())
+          );
+          if (match) {
+            next.agencyId = match.id;
+            // Fill agency defaults only where the scan didn't provide values
+            if (typeof extracted.agentPercent !== 'number') next.agentPercent = String(match.defaultAgentPercent);
+            if (!extracted.currency) next.currency = match.defaultCurrency;
+            if (typeof extracted.netDays !== 'number') next.netDays = String(match.defaultNetDays);
+          }
+        }
+        return next;
+      });
+
+      if (Array.isArray(extracted.lineItems) && extracted.lineItems.length > 0) {
+        setLineItems(extracted.lineItems.map((li: { description: string; amount: number }) => ({
+          id: crypto.randomUUID(),
+          description: li.description || '',
+          amount: li.amount || 0,
+        })));
+      }
+
+      toast.success('Filled from screenshot — please review before saving.');
+    } catch (err) {
+      const msg = (err as { message?: string })?.message || 'Could not read screenshot';
+      toast.error(msg);
+      setScanPreview(null);
+    } finally {
+      setScanning(false);
+    }
+  };
+
 
   const handleAgencyChange = (agencyId: string) => {
     if (agencyId === '_none') {
