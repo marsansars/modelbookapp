@@ -185,6 +185,56 @@ export function AddJobDialog({ onAdded }: Props) {
           <DialogTitle className="font-heading">New Job</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Screenshot scanner */}
+          <div className="rounded-md border border-dashed border-border/70 bg-muted/30 p-3 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-sm">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="font-medium">Scan from screenshot</span>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleScreenshot(f);
+                  e.target.value = '';
+                }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs gap-1"
+                disabled={scanning}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {scanning ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                {scanning ? 'Reading…' : scanPreview ? 'Replace' : 'Upload image'}
+              </Button>
+            </div>
+            {scanPreview ? (
+              <div className="relative w-fit">
+                <img src={scanPreview} alt="Screenshot preview" className="max-h-28 rounded border border-border/60" />
+                <button
+                  type="button"
+                  onClick={() => setScanPreview(null)}
+                  className="absolute -top-2 -right-2 rounded-full bg-background border border-border p-0.5 text-muted-foreground hover:text-foreground"
+                  aria-label="Remove preview"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Upload a booking email, call sheet, or confirmation — we'll auto-fill the fields below. Review before saving.
+              </p>
+            )}
+          </div>
+
+
           <div>
             <Label>Agency</Label>
             <Select value={form.agencyId || '_none'} onValueChange={handleAgencyChange}>
