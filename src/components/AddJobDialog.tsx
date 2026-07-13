@@ -167,6 +167,7 @@ export function AddJobDialog({ onAdded }: Props) {
     });
     setForm({ client: '', description: '', jobDate: '', agentPercent: '20', taxPercent: '30', currency: 'USD', netDays: String(DEFAULT_NET_DAYS), agencyId: '', notes: '' });
     setLineItems([{ id: crypto.randomUUID(), description: '', amount: 0 }]);
+    setScanPreview(null);
     setOpen(false);
     onAdded();
   };
