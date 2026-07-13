@@ -19,50 +19,80 @@ interface FollowUpDialogProps {
   agencies: Agency[];
 }
 
+const UNASSIGNED_KEY = "__unassigned__";
+
 export function FollowUpDialog({ open, onOpenChange, overdueJobs, agencies }: FollowUpDialogProps) {
-  const [selectedJobId, setSelectedJobId] = useState<string>("");
+  const [selectedGroupKey, setSelectedGroupKey] = useState<string>("");
   const [recipientName, setRecipientName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [yourName, setYourName] = useState("");
   const [copied, setCopied] = useState<"subject" | "body" | "all" | null>(null);
 
+  // Group overdue jobs by agencyId (or "unassigned")
+  const groups = useMemo(() => {
+    const map = new Map<string, { key: string; label: string; agency?: Agency; jobs: Job[] }>();
+    for (const j of overdueJobs) {
+      const key = j.agencyId || UNASSIGNED_KEY;
+      if (!map.has(key)) {
+        const agency = j.agencyId ? agencies.find(a => a.id === j.agencyId) : undefined;
+        map.set(key, {
+          key,
+          label: agency?.name || "No agency",
+          agency,
+          jobs: [],
+        });
+      }
+      map.get(key)!.jobs.push(j);
+    }
+    return Array.from(map.values()).sort((a, b) => b.jobs.length - a.jobs.length);
+  }, [overdueJobs, agencies]);
+
   useEffect(() => {
     if (open) {
       getDisplayName().then(name => { if (name) setYourName(name); });
-      if (overdueJobs.length > 0 && !selectedJobId) {
-        setSelectedJobId(overdueJobs[0].id);
+      if (groups.length > 0 && !groups.find(g => g.key === selectedGroupKey)) {
+        setSelectedGroupKey(groups[0].key);
       }
     }
-  }, [open, overdueJobs]);
+  }, [open, groups]);
 
-  const selectedJob = useMemo(
-    () => overdueJobs.find(j => j.id === selectedJobId) || overdueJobs[0],
-    [selectedJobId, overdueJobs]
+  const selectedGroup = useMemo(
+    () => groups.find(g => g.key === selectedGroupKey) || groups[0],
+    [selectedGroupKey, groups]
   );
 
-  const agencyName = useMemo(() => {
-    if (!selectedJob?.agencyId) return "";
-    return agencies.find(a => a.id === selectedJob.agencyId)?.name || "";
-  }, [selectedJob, agencies]);
-
-  // Auto-fill recipient from agency name when job changes
+  // Auto-fill recipient from agency name when group changes
   useEffect(() => {
-    if (agencyName && !recipientName) setRecipientName(agencyName);
-  }, [agencyName]);
+    if (selectedGroup?.agency?.name) {
+      setRecipientName(selectedGroup.agency.name);
+    } else if (selectedGroup && !selectedGroup.agency) {
+      setRecipientName("");
+    }
+  }, [selectedGroup?.key]);
 
-  const subject = "Quick Payment Check-In";
+  const jobCount = selectedGroup?.jobs.length || 0;
+  const subject = jobCount > 1 ? "Quick Payment Check-In – Multiple Jobs" : "Quick Payment Check-In";
 
   const body = useMemo(() => {
-    if (!selectedJob) return "";
-    const jobDate = format(parseLocalDate(selectedJob.jobDate), "MMM d, yyyy");
-    const jobLine = `${selectedJob.client}${selectedJob.description ? ` – ${selectedJob.description}` : ""} – ${jobDate}`;
-    const daysOverdue = Math.abs(getDaysUntilDue(selectedJob.jobDate, selectedJob.netDays));
+    if (!selectedGroup) return "";
+    const sortedJobs = [...selectedGroup.jobs].sort((a, b) => a.jobDate.localeCompare(b.jobDate));
+    const lines = sortedJobs.map(j => {
+      const jobDate = format(parseLocalDate(j.jobDate), "MMM d, yyyy");
+      const daysOverdue = Math.abs(getDaysUntilDue(j.jobDate, j.netDays));
+      const desc = j.description ? ` – ${j.description}` : "";
+      const overdueTag = daysOverdue > 0 ? ` (${daysOverdue} day${daysOverdue !== 1 ? "s" : ""} past due)` : "";
+      return `• ${j.client}${desc} – ${jobDate}${overdueTag}`;
+    }).join("\n");
+
+    const intro = sortedJobs.length > 1
+      ? `Hope you're doing well! I just wanted to check in on the status of payment for the below jobs:`
+      : `Hope you're doing well! I just wanted to check in on the status of payment for the below job:`;
 
     return `Hi ${recipientName || "[Name]"},
 
-Hope you're doing well! I just wanted to check in on the status of payment for the below job:
+${intro}
 
-${jobLine}${daysOverdue > 0 ? ` (${daysOverdue} day${daysOverdue !== 1 ? "s" : ""} past due)` : ""}
+${lines}
 
 Please let me know if there are any updates or if anything is needed from my end.
 
@@ -70,7 +100,7 @@ Thank you so much!
 
 Best,
 ${yourName || "[Your Name]"}`;
-  }, [selectedJob, recipientName, yourName]);
+  }, [selectedGroup, recipientName, yourName]);
 
   const copy = async (text: string, key: "subject" | "body" | "all") => {
     try {
@@ -89,32 +119,34 @@ ${yourName || "[Your Name]"}`;
         <DialogHeader>
           <DialogTitle className="font-heading">Follow Up on Payment</DialogTitle>
           <DialogDescription>
-            Generate a friendly check-in email to send to your agent or accounting.
+            One check-in email per agency, covering all their overdue jobs.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          {overdueJobs.length === 0 ? (
+          {groups.length === 0 ? (
             <p className="text-sm text-muted-foreground">No overdue jobs to follow up on.</p>
           ) : (
             <>
               <div className="space-y-2">
-                <Label>Job</Label>
-                <Select value={selectedJobId} onValueChange={setSelectedJobId}>
+                <Label>Agency</Label>
+                <Select value={selectedGroupKey} onValueChange={setSelectedGroupKey}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {overdueJobs.map(j => {
-                      const days = Math.abs(getDaysUntilDue(j.jobDate, j.netDays));
-                      return (
-                        <SelectItem key={j.id} value={j.id}>
-                          {j.client} — {format(parseLocalDate(j.jobDate), "MMM d")} ({days}d overdue)
-                        </SelectItem>
-                      );
-                    })}
+                    {groups.map(g => (
+                      <SelectItem key={g.key} value={g.key}>
+                        {g.label} — {g.jobs.length} overdue job{g.jobs.length !== 1 ? "s" : ""}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
+                {selectedGroup && selectedGroup.jobs.length > 1 && (
+                  <p className="text-[11px] text-muted-foreground">
+                    All {selectedGroup.jobs.length} overdue jobs for this agency will be listed in one email.
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -168,7 +200,7 @@ ${yourName || "[Your Name]"}`;
                     Copy
                   </Button>
                 </div>
-                <Textarea value={body} readOnly rows={11} className="bg-secondary/40 font-body text-sm leading-relaxed" />
+                <Textarea value={body} readOnly rows={Math.min(16, 8 + jobCount)} className="bg-secondary/40 font-body text-sm leading-relaxed" />
               </div>
 
               <div className="flex flex-col sm:flex-row gap-2 pt-2">
