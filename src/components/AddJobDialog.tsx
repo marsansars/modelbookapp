@@ -1,17 +1,28 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Sparkles, Loader2, X } from "lucide-react";
 import { addJob, getAgencies } from "@/lib/store";
 import { Agency, CurrencyCode, CURRENCIES, DEFAULT_NET_DAYS, LineItem } from "@/lib/types";
+import { maybeCompressImage } from "@/lib/storage";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Props {
   onAdded: () => void;
 }
+
+const fileToDataUrl = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result as string);
+    r.onerror = () => reject(r.error);
+    r.readAsDataURL(file);
+  });
 
 export function AddJobDialog({ onAdded }: Props) {
   const [open, setOpen] = useState(false);
@@ -25,11 +36,84 @@ export function AddJobDialog({ onAdded }: Props) {
     netDays: String(DEFAULT_NET_DAYS), agencyId: '', notes: '',
   });
 
+  const [scanning, setScanning] = useState(false);
+  const [scanPreview, setScanPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     if (open) {
       getAgencies().then(setAgencies);
     }
   }, [open]);
+
+  const handleScreenshot = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file.');
+      return;
+    }
+    setScanning(true);
+    try {
+      const compressed = await maybeCompressImage(file);
+      const dataUrl = await fileToDataUrl(compressed);
+      setScanPreview(dataUrl);
+      const { data, error } = await supabase.functions.invoke('scan-job-screenshot', {
+        body: { imageDataUrl: dataUrl },
+      });
+      if (error) throw error;
+      const extracted = data?.data;
+      if (!extracted) throw new Error('No data returned');
+
+      // Merge extracted values into form
+      setForm(f => {
+        const next = { ...f };
+        if (extracted.client) next.client = extracted.client;
+        if (extracted.description) next.description = extracted.description;
+        if (extracted.jobDate) next.jobDate = extracted.jobDate;
+        if (extracted.currency && CURRENCIES[extracted.currency as CurrencyCode]) {
+          next.currency = extracted.currency as CurrencyCode;
+        }
+        if (typeof extracted.agentPercent === 'number') next.agentPercent = String(extracted.agentPercent);
+        if (typeof extracted.taxPercent === 'number') next.taxPercent = String(extracted.taxPercent);
+        if (typeof extracted.netDays === 'number') next.netDays = String(extracted.netDays);
+        if (extracted.notes) next.notes = extracted.notes;
+
+        // Fuzzy agency match
+        if (extracted.agencyName && !next.agencyId) {
+          const needle = String(extracted.agencyName).toLowerCase();
+          const match = agencies.find(a =>
+            a.name.toLowerCase() === needle ||
+            a.name.toLowerCase().includes(needle) ||
+            needle.includes(a.name.toLowerCase())
+          );
+          if (match) {
+            next.agencyId = match.id;
+            // Fill agency defaults only where the scan didn't provide values
+            if (typeof extracted.agentPercent !== 'number') next.agentPercent = String(match.defaultAgentPercent);
+            if (!extracted.currency) next.currency = match.defaultCurrency;
+            if (typeof extracted.netDays !== 'number') next.netDays = String(match.defaultNetDays);
+          }
+        }
+        return next;
+      });
+
+      if (Array.isArray(extracted.lineItems) && extracted.lineItems.length > 0) {
+        setLineItems(extracted.lineItems.map((li: { description: string; amount: number }) => ({
+          id: crypto.randomUUID(),
+          description: li.description || '',
+          amount: li.amount || 0,
+        })));
+      }
+
+      toast.success('Filled from screenshot — please review before saving.');
+    } catch (err) {
+      const msg = (err as { message?: string })?.message || 'Could not read screenshot';
+      toast.error(msg);
+      setScanPreview(null);
+    } finally {
+      setScanning(false);
+    }
+  };
+
 
   const handleAgencyChange = (agencyId: string) => {
     if (agencyId === '_none') {
@@ -83,6 +167,7 @@ export function AddJobDialog({ onAdded }: Props) {
     });
     setForm({ client: '', description: '', jobDate: '', agentPercent: '20', taxPercent: '30', currency: 'USD', netDays: String(DEFAULT_NET_DAYS), agencyId: '', notes: '' });
     setLineItems([{ id: crypto.randomUUID(), description: '', amount: 0 }]);
+    setScanPreview(null);
     setOpen(false);
     onAdded();
   };
@@ -100,6 +185,56 @@ export function AddJobDialog({ onAdded }: Props) {
           <DialogTitle className="font-heading">New Job</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Screenshot scanner */}
+          <div className="rounded-md border border-dashed border-border/70 bg-muted/30 p-3 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-sm">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="font-medium">Scan from screenshot</span>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleScreenshot(f);
+                  e.target.value = '';
+                }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs gap-1"
+                disabled={scanning}
+                onClick={() => fileInputRef.current?.click()}
+              >
+                {scanning ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                {scanning ? 'Reading…' : scanPreview ? 'Replace' : 'Upload image'}
+              </Button>
+            </div>
+            {scanPreview ? (
+              <div className="relative w-fit">
+                <img src={scanPreview} alt="Screenshot preview" className="max-h-28 rounded border border-border/60" />
+                <button
+                  type="button"
+                  onClick={() => setScanPreview(null)}
+                  className="absolute -top-2 -right-2 rounded-full bg-background border border-border p-0.5 text-muted-foreground hover:text-foreground"
+                  aria-label="Remove preview"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Upload a booking email, call sheet, or confirmation — we'll auto-fill the fields below. Review before saving.
+              </p>
+            )}
+          </div>
+
+
           <div>
             <Label>Agency</Label>
             <Select value={form.agencyId || '_none'} onValueChange={handleAgencyChange}>
