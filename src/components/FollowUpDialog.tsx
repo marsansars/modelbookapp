@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Job, Agency, parseLocalDate, getDaysUntilDue } from "@/lib/types";
+import { Job, Agency, parseLocalDate } from "@/lib/types";
 import { getDisplayName } from "@/lib/store";
 import { openMailtoDraft, isEmailPreviewBlocked } from "@/lib/email";
 import { toast } from "@/hooks/use-toast";
@@ -78,10 +78,8 @@ export function FollowUpDialog({ open, onOpenChange, overdueJobs, agencies }: Fo
     const sortedJobs = [...selectedGroup.jobs].sort((a, b) => a.jobDate.localeCompare(b.jobDate));
     const lines = sortedJobs.map(j => {
       const jobDate = format(parseLocalDate(j.jobDate), "MMM d, yyyy");
-      const daysOverdue = Math.abs(getDaysUntilDue(j.jobDate, j.netDays));
       const desc = j.description ? ` – ${j.description}` : "";
-      const overdueTag = daysOverdue > 0 ? ` (${daysOverdue} day${daysOverdue !== 1 ? "s" : ""} past due)` : "";
-      return `• ${j.client}${desc} – ${jobDate}${overdueTag}`;
+      return `• ${j.client}${desc} – ${jobDate}`;
     }).join("\n");
 
     const intro = sortedJobs.length > 1
