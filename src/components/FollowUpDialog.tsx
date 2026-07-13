@@ -78,10 +78,8 @@ export function FollowUpDialog({ open, onOpenChange, overdueJobs, agencies }: Fo
     const sortedJobs = [...selectedGroup.jobs].sort((a, b) => a.jobDate.localeCompare(b.jobDate));
     const lines = sortedJobs.map(j => {
       const jobDate = format(parseLocalDate(j.jobDate), "MMM d, yyyy");
-      const daysOverdue = Math.abs(getDaysUntilDue(j.jobDate, j.netDays));
       const desc = j.description ? ` – ${j.description}` : "";
-      const overdueTag = daysOverdue > 0 ? ` (${daysOverdue} day${daysOverdue !== 1 ? "s" : ""} past due)` : "";
-      return `• ${j.client}${desc} – ${jobDate}${overdueTag}`;
+      return `• ${j.client}${desc} – ${jobDate}`;
     }).join("\n");
 
     const intro = sortedJobs.length > 1
