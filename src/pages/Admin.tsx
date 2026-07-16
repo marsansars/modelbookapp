@@ -325,6 +325,10 @@ export default function Admin() {
             <Download className="h-4 w-4 mr-2" />
             {exporting ? 'Exporting…' : 'Download emails CSV'}
           </Button>
+          <Button variant="outline" size="sm" onClick={exportAllDataCsv} disabled={exporting}>
+            <Download className="h-4 w-4 mr-2" />
+            {exporting ? 'Exporting…' : 'Download all data CSV'}
+          </Button>
           <Button variant="outline" size="sm" onClick={loadAll} disabled={loading}>Refresh</Button>
         </div>
       </div>
