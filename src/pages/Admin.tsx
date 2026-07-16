@@ -483,7 +483,93 @@ export default function Admin() {
       <Dialog open={!!viewingUser} onOpenChange={(o) => { if (!o) { setViewingUser(null); setUserData(null); } }}>
         <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{viewingUser?.email} · Data</DialogTitle>
+            <DialogTitle className="flex items-center justify-between gap-3 flex-wrap">
+              <span>{viewingUser?.email} · Data</span>
+              {userData && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (!viewingUser || !userData) return;
+                    const stamp = format(new Date(), 'yyyy-MM-dd');
+                    const slug = (viewingUser.email || viewingUser.id).replace(/[^a-z0-9]+/gi, '-').toLowerCase();
+                    const agencyById = new Map<string, any>();
+                    (userData.agencies || []).forEach((a: any) => agencyById.set(a.id, a));
+                    const jobById = new Map<string, any>();
+                    (userData.jobs || []).forEach((j: any) => jobById.set(j.id, j));
+
+                    const enrichedJobs = (userData.jobs || []).map((j: any) => ({
+                      agency_name: j.agency_id ? agencyById.get(j.agency_id)?.name || '' : '',
+                      ...j,
+                    }));
+                    const enrichedExpenses = (userData.expenses || []).map((e: any) => {
+                      const job = e.job_id ? jobById.get(e.job_id) : null;
+                      const agency = job?.agency_id ? agencyById.get(job.agency_id) : null;
+                      return {
+                        linked_job_client: job?.client || '',
+                        linked_job_description: job?.description || '',
+                        linked_job_date: job?.job_date || '',
+                        linked_agency_name: agency?.name || '',
+                        ...e,
+                      };
+                    });
+                    const enrichedInvoices = (userData.invoices || []).map((i: any) => {
+                      const job = i.job_id ? jobById.get(i.job_id) : null;
+                      const agency = job?.agency_id ? agencyById.get(job.agency_id) : null;
+                      return {
+                        linked_job_client: job?.client || '',
+                        linked_job_description: job?.description || '',
+                        linked_job_date: job?.job_date || '',
+                        linked_agency_name: agency?.name || '',
+                        ...i,
+                      };
+                    });
+
+                    const toCsv = (rows: any[]): string => {
+                      if (!rows.length) return '';
+                      const cols: string[] = Array.from(rows.reduce((s: Set<string>, r) => {
+                        Object.keys(r).forEach(k => s.add(k));
+                        return s;
+                      }, new Set<string>()));
+                      const esc = (v: any) => {
+                        if (v === null || v === undefined) return '';
+                        const s = typeof v === 'object' ? JSON.stringify(v) : String(v);
+                        return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+                      };
+                      return [cols.join(','), ...rows.map(r => cols.map(c => esc(r[c])).join(','))].join('\n');
+                    };
+                    const dl = (name: string, csv: string) => {
+                      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = name;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    };
+
+                    const files: [string, any[]][] = [
+                      ['agencies', userData.agencies || []],
+                      ['jobs', enrichedJobs],
+                      ['expenses', enrichedExpenses],
+                      ['invoices', enrichedInvoices],
+                    ];
+                    let count = 0;
+                    (async () => {
+                      for (const [name, rows] of files) {
+                        if (!rows.length) continue;
+                        dl(`modelbook-${slug}-${name}-${stamp}.csv`, toCsv(rows));
+                        count += rows.length;
+                        await new Promise(r => setTimeout(r, 250));
+                      }
+                      toast.success(`Exported ${count} row${count === 1 ? '' : 's'} for ${viewingUser.email}`);
+                    })();
+                  }}
+                >
+                  <Download className="h-4 w-4 mr-2" /> Download CSV
+                </Button>
+              )}
+            </DialogTitle>
           </DialogHeader>
           {userDataLoading && <Skeleton className="h-40 w-full" />}
           {userData && (
