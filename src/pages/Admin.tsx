@@ -112,7 +112,7 @@ export default function Admin() {
 
       const toCsv = (rows: any[]): string => {
         if (!rows.length) return '';
-        const cols = Array.from(rows.reduce((s: Set<string>, r) => {
+        const cols: string[] = Array.from(rows.reduce((s: Set<string>, r) => {
           Object.keys(r).forEach(k => s.add(k));
           return s;
         }, new Set<string>()));
