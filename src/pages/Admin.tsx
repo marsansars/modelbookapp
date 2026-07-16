@@ -419,6 +419,122 @@ export default function Admin() {
       <p className="text-xs text-muted-foreground">
         Admin route is hidden from the sidebar. Bookmark <Link className="underline" to="/admin">/admin</Link>.
       </p>
+
+      <Dialog open={!!viewingUser} onOpenChange={(o) => { if (!o) { setViewingUser(null); setUserData(null); } }}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{viewingUser?.email} · Data</DialogTitle>
+          </DialogHeader>
+          {userDataLoading && <Skeleton className="h-40 w-full" />}
+          {userData && (
+            <Tabs defaultValue="agencies" className="mt-2">
+              <TabsList>
+                <TabsTrigger value="agencies">Agencies ({userData.agencies.length})</TabsTrigger>
+                <TabsTrigger value="jobs">Jobs ({userData.jobs.length})</TabsTrigger>
+                <TabsTrigger value="expenses">Expenses ({userData.expenses.length})</TabsTrigger>
+                <TabsTrigger value="invoices">Invoices ({userData.invoices.length})</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="agencies">
+                {userData.agencies.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-6 text-center">No agencies</p>
+                ) : (
+                  <Table>
+                    <TableHeader><TableRow>
+                      <TableHead>Name</TableHead><TableHead>Commission</TableHead>
+                      <TableHead>Tax %</TableHead><TableHead>Net days</TableHead><TableHead>Created</TableHead>
+                    </TableRow></TableHeader>
+                    <TableBody>
+                      {userData.agencies.map((a: any) => (
+                        <TableRow key={a.id}>
+                          <TableCell className="font-medium">{a.name}</TableCell>
+                          <TableCell>{a.commission_percent ?? '—'}%</TableCell>
+                          <TableCell>{a.tax_percent ?? '—'}%</TableCell>
+                          <TableCell>{a.net_days ?? '—'}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{format(parseISO(a.created_at), 'MMM d, yyyy')}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </TabsContent>
+
+              <TabsContent value="jobs">
+                {userData.jobs.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-6 text-center">No jobs</p>
+                ) : (
+                  <Table>
+                    <TableHeader><TableRow>
+                      <TableHead>Client</TableHead><TableHead>Date</TableHead>
+                      <TableHead className="text-right">Rate</TableHead><TableHead>Currency</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow></TableHeader>
+                    <TableBody>
+                      {userData.jobs.map((j: any) => (
+                        <TableRow key={j.id}>
+                          <TableCell className="font-medium">{j.client}</TableCell>
+                          <TableCell className="text-xs">{j.job_date}</TableCell>
+                          <TableCell className="text-right">{Number(j.rate || 0).toLocaleString()}</TableCell>
+                          <TableCell>{j.currency}</TableCell>
+                          <TableCell className="text-xs">{j.payment_status || '—'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </TabsContent>
+
+              <TabsContent value="expenses">
+                {userData.expenses.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-6 text-center">No expenses</p>
+                ) : (
+                  <Table>
+                    <TableHeader><TableRow>
+                      <TableHead>Description</TableHead><TableHead>Date</TableHead>
+                      <TableHead className="text-right">Amount</TableHead><TableHead>Category</TableHead>
+                    </TableRow></TableHeader>
+                    <TableBody>
+                      {userData.expenses.map((e: any) => (
+                        <TableRow key={e.id}>
+                          <TableCell className="font-medium">{e.description || e.merchant || '—'}</TableCell>
+                          <TableCell className="text-xs">{e.expense_date}</TableCell>
+                          <TableCell className="text-right">{Number(e.amount || 0).toLocaleString()} {e.currency}</TableCell>
+                          <TableCell className="text-xs">{e.category || '—'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </TabsContent>
+
+              <TabsContent value="invoices">
+                {userData.invoices.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-6 text-center">No invoices</p>
+                ) : (
+                  <Table>
+                    <TableHeader><TableRow>
+                      <TableHead>Number</TableHead><TableHead>Client</TableHead>
+                      <TableHead>Issued</TableHead><TableHead className="text-right">Total</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow></TableHeader>
+                    <TableBody>
+                      {userData.invoices.map((i: any) => (
+                        <TableRow key={i.id}>
+                          <TableCell className="font-medium">{i.invoice_number}</TableCell>
+                          <TableCell>{i.client_name || '—'}</TableCell>
+                          <TableCell className="text-xs">{i.issue_date}</TableCell>
+                          <TableCell className="text-right">{Number(i.total || 0).toLocaleString()} {i.currency}</TableCell>
+                          <TableCell className="text-xs">{i.status || '—'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </TabsContent>
+            </Tabs>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
