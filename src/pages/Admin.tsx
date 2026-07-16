@@ -52,6 +52,27 @@ export default function Admin() {
   const [signupSeries, setSignupSeries] = useState<{ date: string; count: number }[]>([]);
   const [screenshotUrls, setScreenshotUrls] = useState<Record<string, string>>({});
   const [exporting, setExporting] = useState(false);
+  const [viewingUser, setViewingUser] = useState<UserRow | null>(null);
+  const [userData, setUserData] = useState<{ agencies: any[]; jobs: any[]; expenses: any[]; invoices: any[] } | null>(null);
+  const [userDataLoading, setUserDataLoading] = useState(false);
+
+  const openUserData = async (u: UserRow) => {
+    setViewingUser(u);
+    setUserData(null);
+    setUserDataLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-get-user-data', {
+        body: { targetUserId: u.id },
+      });
+      if (error) throw error;
+      setUserData(data as any);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to load user data');
+      setViewingUser(null);
+    } finally {
+      setUserDataLoading(false);
+    }
+  };
 
   const exportEmailsCsv = async () => {
     setExporting(true);
