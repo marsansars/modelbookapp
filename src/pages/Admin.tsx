@@ -587,16 +587,19 @@ export default function Admin() {
                 ) : (
                   <Table>
                     <TableHeader><TableRow>
-                      <TableHead>Name</TableHead><TableHead>Commission</TableHead>
-                      <TableHead>Tax %</TableHead><TableHead>Net days</TableHead><TableHead>Created</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Commission %</TableHead>
+                      <TableHead>Default currency</TableHead>
+                      <TableHead>Net days</TableHead>
+                      <TableHead>Created</TableHead>
                     </TableRow></TableHeader>
                     <TableBody>
                       {userData.agencies.map((a: any) => (
                         <TableRow key={a.id}>
                           <TableCell className="font-medium">{a.name}</TableCell>
-                          <TableCell>{a.commission_percent ?? '—'}%</TableCell>
-                          <TableCell>{a.tax_percent ?? '—'}%</TableCell>
-                          <TableCell>{a.net_days ?? '—'}</TableCell>
+                          <TableCell>{a.default_agent_percent ?? '—'}%</TableCell>
+                          <TableCell>{a.default_currency ?? '—'}</TableCell>
+                          <TableCell>{a.default_net_days ?? '—'}</TableCell>
                           <TableCell className="text-xs text-muted-foreground">{format(parseISO(a.created_at), 'MMM d, yyyy')}</TableCell>
                         </TableRow>
                       ))}
@@ -616,15 +619,23 @@ export default function Admin() {
                       <TableHead>Status</TableHead>
                     </TableRow></TableHeader>
                     <TableBody>
-                      {userData.jobs.map((j: any) => (
-                        <TableRow key={j.id}>
-                          <TableCell className="font-medium">{j.client}</TableCell>
-                          <TableCell className="text-xs">{j.job_date}</TableCell>
-                          <TableCell className="text-right">{Number(j.rate || 0).toLocaleString()}</TableCell>
-                          <TableCell>{j.currency}</TableCell>
-                          <TableCell className="text-xs">{j.payment_status || '—'}</TableCell>
-                        </TableRow>
-                      ))}
+                      {userData.jobs.map((j: any) => {
+                        const s = String(j.status || '').toLowerCase();
+                        const paid = s === 'paid';
+                        return (
+                          <TableRow key={j.id}>
+                            <TableCell className="font-medium">{j.client}</TableCell>
+                            <TableCell className="text-xs">{j.job_date}</TableCell>
+                            <TableCell className="text-right">{Number(j.rate || 0).toLocaleString()}</TableCell>
+                            <TableCell>{j.currency}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className={paid ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'}>
+                                {paid ? 'Paid' : (j.status ? `${j.status[0].toUpperCase()}${j.status.slice(1)}` : 'Unpaid')}
+                              </Badge>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 )}
@@ -636,18 +647,31 @@ export default function Admin() {
                 ) : (
                   <Table>
                     <TableHeader><TableRow>
-                      <TableHead>Description</TableHead><TableHead>Date</TableHead>
-                      <TableHead className="text-right">Amount</TableHead><TableHead>Category</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Linked job</TableHead>
                     </TableRow></TableHeader>
                     <TableBody>
-                      {userData.expenses.map((e: any) => (
-                        <TableRow key={e.id}>
-                          <TableCell className="font-medium">{e.description || e.merchant || '—'}</TableCell>
-                          <TableCell className="text-xs">{e.expense_date}</TableCell>
-                          <TableCell className="text-right">{Number(e.amount || 0).toLocaleString()} {e.currency}</TableCell>
-                          <TableCell className="text-xs">{e.category || '—'}</TableCell>
-                        </TableRow>
-                      ))}
+                      {(() => {
+                        const jobById = new Map<string, any>();
+                        (userData.jobs || []).forEach((j: any) => jobById.set(j.id, j));
+                        return userData.expenses.map((e: any) => {
+                          const job = e.job_id ? jobById.get(e.job_id) : null;
+                          return (
+                            <TableRow key={e.id}>
+                              <TableCell className="font-medium">{e.description || '—'}</TableCell>
+                              <TableCell className="text-xs">{e.date}</TableCell>
+                              <TableCell className="text-right">{Number(e.amount || 0).toLocaleString()} {e.currency}</TableCell>
+                              <TableCell className="text-xs">{e.category || '—'}</TableCell>
+                              <TableCell className="text-xs">
+                                {job ? `${job.client}${job.job_date ? ` · ${job.job_date}` : ''}` : <span className="text-muted-foreground">—</span>}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        });
+                      })()}
                     </TableBody>
                   </Table>
                 )}
