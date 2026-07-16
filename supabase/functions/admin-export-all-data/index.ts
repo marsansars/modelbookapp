@@ -61,22 +61,77 @@ Deno.serve(async (req) => {
       page++;
     }
 
-    const [agenciesRes, jobsRes, expensesRes, invoicesRes] = await Promise.all([
+    const [agenciesRes, jobsRes, expensesRes, invoicesRes, taxRes, settingsRes, feedbackRes] = await Promise.all([
       admin.from('agencies').select('*').order('created_at', { ascending: false }),
       admin.from('jobs').select('*').order('job_date', { ascending: false }),
       admin.from('expenses').select('*').order('date', { ascending: false }),
       admin.from('invoices').select('*').order('created_at', { ascending: false }),
+      admin.from('tax_payments').select('*').order('payment_date', { ascending: false }),
+      admin.from('user_settings').select('*'),
+      admin.from('feedback').select('*').order('created_at', { ascending: false }),
     ]);
 
-    const attachEmail = (rows: any[] | null) =>
-      (rows || []).map(r => ({ user_email: emailById.get(r.user_id) || '', ...r }));
+    // Build lookup maps for correlation
+    const agencyById = new Map<string, any>();
+    (agenciesRes.data || []).forEach(a => agencyById.set(a.id, a));
+    const jobById = new Map<string, any>();
+    (jobsRes.data || []).forEach(j => jobById.set(j.id, j));
+
+    const withUser = (r: any) => ({
+      user_email: emailById.get(r.user_id) || '',
+      ...r,
+    });
+
+    const agencies = (agenciesRes.data || []).map(withUser);
+
+    const jobs = (jobsRes.data || []).map(j => {
+      const agency = j.agency_id ? agencyById.get(j.agency_id) : null;
+      return {
+        user_email: emailById.get(j.user_id) || '',
+        agency_name: agency?.name || '',
+        ...j,
+      };
+    });
+
+    const expenses = (expensesRes.data || []).map(e => {
+      const job = e.job_id ? jobById.get(e.job_id) : null;
+      const agency = job?.agency_id ? agencyById.get(job.agency_id) : null;
+      return {
+        user_email: emailById.get(e.user_id) || '',
+        linked_job_client: job?.client || '',
+        linked_job_description: job?.description || '',
+        linked_job_date: job?.job_date || '',
+        linked_agency_name: agency?.name || '',
+        ...e,
+      };
+    });
+
+    const invoices = (invoicesRes.data || []).map(i => {
+      const job = i.job_id ? jobById.get(i.job_id) : null;
+      const agency = job?.agency_id ? agencyById.get(job.agency_id) : null;
+      return {
+        user_email: emailById.get(i.user_id) || '',
+        linked_job_client: job?.client || '',
+        linked_job_description: job?.description || '',
+        linked_job_date: job?.job_date || '',
+        linked_agency_name: agency?.name || '',
+        ...i,
+      };
+    });
+
+    const tax_payments = (taxRes.data || []).map(withUser);
+    const user_settings = (settingsRes.data || []).map(withUser);
+    const feedback = (feedbackRes.data || []).map(withUser);
 
     return new Response(
       JSON.stringify({
-        agencies: attachEmail(agenciesRes.data),
-        jobs: attachEmail(jobsRes.data),
-        expenses: attachEmail(expensesRes.data),
-        invoices: attachEmail(invoicesRes.data),
+        agencies,
+        jobs,
+        expenses,
+        invoices,
+        tax_payments,
+        user_settings,
+        feedback,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
