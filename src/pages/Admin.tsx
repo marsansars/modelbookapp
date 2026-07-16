@@ -13,8 +13,9 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Users, Briefcase, FileText, MessageSquare, Receipt, Trash2, Download, Sparkles } from 'lucide-react';
+import { Users, Briefcase, FileText, MessageSquare, Receipt, Trash2, Download, Sparkles, Eye } from 'lucide-react';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ChangelogTab } from '@/components/ChangelogTab';
 
 interface UserRow {
