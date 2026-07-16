@@ -102,6 +102,59 @@ export default function Admin() {
     }
   };
 
+  const exportAllDataCsv = async () => {
+    setExporting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-export-all-data');
+      if (error) throw error;
+      const payload = data as { agencies: any[]; jobs: any[]; expenses: any[]; invoices: any[] };
+      const stamp = format(new Date(), 'yyyy-MM-dd');
+
+      const toCsv = (rows: any[]): string => {
+        if (!rows.length) return '';
+        const cols: string[] = Array.from(rows.reduce((s: Set<string>, r) => {
+          Object.keys(r).forEach(k => s.add(k));
+          return s;
+        }, new Set<string>()));
+        const esc = (v: any) => {
+          if (v === null || v === undefined) return '';
+          const s = typeof v === 'object' ? JSON.stringify(v) : String(v);
+          return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+        };
+        return [cols.join(','), ...rows.map(r => cols.map(c => esc(r[c])).join(','))].join('\n');
+      };
+
+      const download = (name: string, csv: string) => {
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = name;
+        a.click();
+        URL.revokeObjectURL(url);
+      };
+
+      const files: [string, any[]][] = [
+        ['agencies', payload.agencies],
+        ['jobs', payload.jobs],
+        ['expenses', payload.expenses],
+        ['invoices', payload.invoices],
+      ];
+      let count = 0;
+      for (const [name, rows] of files) {
+        if (!rows.length) continue;
+        download(`modelbook-${name}-${stamp}.csv`, toCsv(rows));
+        count += rows.length;
+        await new Promise(r => setTimeout(r, 250));
+      }
+      toast.success(`Exported ${count} rows across ${files.filter(([, r]) => r.length).length} file(s)`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Export failed');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   useEffect(() => {
     if (!isAdmin) return;
     void loadAll();
@@ -271,6 +324,10 @@ export default function Admin() {
           <Button variant="outline" size="sm" onClick={exportEmailsCsv} disabled={exporting}>
             <Download className="h-4 w-4 mr-2" />
             {exporting ? 'Exporting…' : 'Download emails CSV'}
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportAllDataCsv} disabled={exporting}>
+            <Download className="h-4 w-4 mr-2" />
+            {exporting ? 'Exporting…' : 'Download all data CSV'}
           </Button>
           <Button variant="outline" size="sm" onClick={loadAll} disabled={loading}>Refresh</Button>
         </div>
