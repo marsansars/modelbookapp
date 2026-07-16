@@ -107,7 +107,7 @@ export default function Admin() {
     try {
       const { data, error } = await supabase.functions.invoke('admin-export-all-data');
       if (error) throw error;
-      const payload = data as { agencies: any[]; jobs: any[]; expenses: any[]; invoices: any[] };
+      const payload = data as Record<string, any[]>;
       const stamp = format(new Date(), 'yyyy-MM-dd');
 
       const toCsv = (rows: any[]): string => {
@@ -135,10 +135,13 @@ export default function Admin() {
       };
 
       const files: [string, any[]][] = [
-        ['agencies', payload.agencies],
-        ['jobs', payload.jobs],
-        ['expenses', payload.expenses],
-        ['invoices', payload.invoices],
+        ['agencies', payload.agencies || []],
+        ['jobs', payload.jobs || []],
+        ['expenses', payload.expenses || []],
+        ['invoices', payload.invoices || []],
+        ['tax-payments', payload.tax_payments || []],
+        ['user-settings', payload.user_settings || []],
+        ['feedback', payload.feedback || []],
       ];
       let count = 0;
       for (const [name, rows] of files) {
