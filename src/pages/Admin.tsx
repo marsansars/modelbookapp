@@ -616,26 +616,33 @@ export default function Admin() {
                     <TableHeader><TableRow>
                       <TableHead>Client</TableHead><TableHead>Date</TableHead>
                       <TableHead className="text-right">Rate</TableHead><TableHead>Currency</TableHead>
+                      <TableHead>Agency</TableHead>
                       <TableHead>Status</TableHead>
                     </TableRow></TableHeader>
                     <TableBody>
-                      {userData.jobs.map((j: any) => {
-                        const s = String(j.status || '').toLowerCase();
-                        const paid = s === 'paid';
-                        return (
-                          <TableRow key={j.id}>
-                            <TableCell className="font-medium">{j.client}</TableCell>
-                            <TableCell className="text-xs">{j.job_date}</TableCell>
-                            <TableCell className="text-right">{Number(j.rate || 0).toLocaleString()}</TableCell>
-                            <TableCell>{j.currency}</TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className={paid ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'}>
-                                {paid ? 'Paid' : (j.status ? `${j.status[0].toUpperCase()}${j.status.slice(1)}` : 'Unpaid')}
-                              </Badge>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
+                      {(() => {
+                        const agencyById = new Map<string, any>();
+                        (userData.agencies || []).forEach((a: any) => agencyById.set(a.id, a));
+                        return userData.jobs.map((j: any) => {
+                          const s = String(j.status || '').toLowerCase();
+                          const paid = s === 'paid';
+                          const agency = j.agency_id ? agencyById.get(j.agency_id) : null;
+                          return (
+                            <TableRow key={j.id}>
+                              <TableCell className="font-medium">{j.client}</TableCell>
+                              <TableCell className="text-xs">{j.job_date}</TableCell>
+                              <TableCell className="text-right">{Number(j.rate || 0).toLocaleString()}</TableCell>
+                              <TableCell>{j.currency}</TableCell>
+                              <TableCell className="text-xs">{agency?.name || <span className="text-muted-foreground">—</span>}</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className={paid ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'}>
+                                  {paid ? 'Paid' : (j.status ? `${j.status[0].toUpperCase()}${j.status.slice(1)}` : 'Unpaid')}
+                                </Badge>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        });
+                      })()}
                     </TableBody>
                   </Table>
                 )}
