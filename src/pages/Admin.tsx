@@ -318,14 +318,15 @@ export default function Admin() {
                   <TableHead className="text-right">Agencies</TableHead>
                   <TableHead className="text-right">Total billed</TableHead>
                   <TableHead>Last active</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading && Array.from({ length: 3 }).map((_, i) => (
-                  <TableRow key={i}><TableCell colSpan={8}><Skeleton className="h-6 w-full" /></TableCell></TableRow>
+                  <TableRow key={i}><TableCell colSpan={9}><Skeleton className="h-6 w-full" /></TableCell></TableRow>
                 ))}
                 {!loading && users.length === 0 && (
-                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No users yet</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No users yet</TableCell></TableRow>
                 )}
                 {users.map(u => (
                   <TableRow key={u.id}>
@@ -338,6 +339,11 @@ export default function Admin() {
                     <TableCell className="text-right">${u.totalBilled.toLocaleString(undefined, { maximumFractionDigits: 0 })}</TableCell>
                     <TableCell className="text-muted-foreground text-xs">
                       {u.lastActive ? format(parseISO(u.lastActive), 'MMM d, HH:mm') : '—'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="sm" onClick={() => openUserData(u)}>
+                        <Eye className="h-3.5 w-3.5 mr-1" /> View
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
