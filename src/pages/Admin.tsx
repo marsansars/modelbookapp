@@ -13,8 +13,9 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { Users, Briefcase, FileText, MessageSquare, Receipt, Trash2, Download, Sparkles } from 'lucide-react';
+import { Users, Briefcase, FileText, MessageSquare, Receipt, Trash2, Download, Sparkles, Eye } from 'lucide-react';
 import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ChangelogTab } from '@/components/ChangelogTab';
 
 interface UserRow {
@@ -51,6 +52,27 @@ export default function Admin() {
   const [signupSeries, setSignupSeries] = useState<{ date: string; count: number }[]>([]);
   const [screenshotUrls, setScreenshotUrls] = useState<Record<string, string>>({});
   const [exporting, setExporting] = useState(false);
+  const [viewingUser, setViewingUser] = useState<UserRow | null>(null);
+  const [userData, setUserData] = useState<{ agencies: any[]; jobs: any[]; expenses: any[]; invoices: any[] } | null>(null);
+  const [userDataLoading, setUserDataLoading] = useState(false);
+
+  const openUserData = async (u: UserRow) => {
+    setViewingUser(u);
+    setUserData(null);
+    setUserDataLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-get-user-data', {
+        body: { targetUserId: u.id },
+      });
+      if (error) throw error;
+      setUserData(data as any);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to load user data');
+      setViewingUser(null);
+    } finally {
+      setUserDataLoading(false);
+    }
+  };
 
   const exportEmailsCsv = async () => {
     setExporting(true);
@@ -296,14 +318,15 @@ export default function Admin() {
                   <TableHead className="text-right">Agencies</TableHead>
                   <TableHead className="text-right">Total billed</TableHead>
                   <TableHead>Last active</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {loading && Array.from({ length: 3 }).map((_, i) => (
-                  <TableRow key={i}><TableCell colSpan={8}><Skeleton className="h-6 w-full" /></TableCell></TableRow>
+                  <TableRow key={i}><TableCell colSpan={9}><Skeleton className="h-6 w-full" /></TableCell></TableRow>
                 ))}
                 {!loading && users.length === 0 && (
-                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No users yet</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No users yet</TableCell></TableRow>
                 )}
                 {users.map(u => (
                   <TableRow key={u.id}>
@@ -316,6 +339,11 @@ export default function Admin() {
                     <TableCell className="text-right">${u.totalBilled.toLocaleString(undefined, { maximumFractionDigits: 0 })}</TableCell>
                     <TableCell className="text-muted-foreground text-xs">
                       {u.lastActive ? format(parseISO(u.lastActive), 'MMM d, HH:mm') : '—'}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="ghost" size="sm" onClick={() => openUserData(u)}>
+                        <Eye className="h-3.5 w-3.5 mr-1" /> View
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -391,6 +419,122 @@ export default function Admin() {
       <p className="text-xs text-muted-foreground">
         Admin route is hidden from the sidebar. Bookmark <Link className="underline" to="/admin">/admin</Link>.
       </p>
+
+      <Dialog open={!!viewingUser} onOpenChange={(o) => { if (!o) { setViewingUser(null); setUserData(null); } }}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{viewingUser?.email} · Data</DialogTitle>
+          </DialogHeader>
+          {userDataLoading && <Skeleton className="h-40 w-full" />}
+          {userData && (
+            <Tabs defaultValue="agencies" className="mt-2">
+              <TabsList>
+                <TabsTrigger value="agencies">Agencies ({userData.agencies.length})</TabsTrigger>
+                <TabsTrigger value="jobs">Jobs ({userData.jobs.length})</TabsTrigger>
+                <TabsTrigger value="expenses">Expenses ({userData.expenses.length})</TabsTrigger>
+                <TabsTrigger value="invoices">Invoices ({userData.invoices.length})</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="agencies">
+                {userData.agencies.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-6 text-center">No agencies</p>
+                ) : (
+                  <Table>
+                    <TableHeader><TableRow>
+                      <TableHead>Name</TableHead><TableHead>Commission</TableHead>
+                      <TableHead>Tax %</TableHead><TableHead>Net days</TableHead><TableHead>Created</TableHead>
+                    </TableRow></TableHeader>
+                    <TableBody>
+                      {userData.agencies.map((a: any) => (
+                        <TableRow key={a.id}>
+                          <TableCell className="font-medium">{a.name}</TableCell>
+                          <TableCell>{a.commission_percent ?? '—'}%</TableCell>
+                          <TableCell>{a.tax_percent ?? '—'}%</TableCell>
+                          <TableCell>{a.net_days ?? '—'}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground">{format(parseISO(a.created_at), 'MMM d, yyyy')}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </TabsContent>
+
+              <TabsContent value="jobs">
+                {userData.jobs.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-6 text-center">No jobs</p>
+                ) : (
+                  <Table>
+                    <TableHeader><TableRow>
+                      <TableHead>Client</TableHead><TableHead>Date</TableHead>
+                      <TableHead className="text-right">Rate</TableHead><TableHead>Currency</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow></TableHeader>
+                    <TableBody>
+                      {userData.jobs.map((j: any) => (
+                        <TableRow key={j.id}>
+                          <TableCell className="font-medium">{j.client}</TableCell>
+                          <TableCell className="text-xs">{j.job_date}</TableCell>
+                          <TableCell className="text-right">{Number(j.rate || 0).toLocaleString()}</TableCell>
+                          <TableCell>{j.currency}</TableCell>
+                          <TableCell className="text-xs">{j.payment_status || '—'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </TabsContent>
+
+              <TabsContent value="expenses">
+                {userData.expenses.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-6 text-center">No expenses</p>
+                ) : (
+                  <Table>
+                    <TableHeader><TableRow>
+                      <TableHead>Description</TableHead><TableHead>Date</TableHead>
+                      <TableHead className="text-right">Amount</TableHead><TableHead>Category</TableHead>
+                    </TableRow></TableHeader>
+                    <TableBody>
+                      {userData.expenses.map((e: any) => (
+                        <TableRow key={e.id}>
+                          <TableCell className="font-medium">{e.description || e.merchant || '—'}</TableCell>
+                          <TableCell className="text-xs">{e.expense_date}</TableCell>
+                          <TableCell className="text-right">{Number(e.amount || 0).toLocaleString()} {e.currency}</TableCell>
+                          <TableCell className="text-xs">{e.category || '—'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </TabsContent>
+
+              <TabsContent value="invoices">
+                {userData.invoices.length === 0 ? (
+                  <p className="text-sm text-muted-foreground py-6 text-center">No invoices</p>
+                ) : (
+                  <Table>
+                    <TableHeader><TableRow>
+                      <TableHead>Number</TableHead><TableHead>Client</TableHead>
+                      <TableHead>Issued</TableHead><TableHead className="text-right">Total</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow></TableHeader>
+                    <TableBody>
+                      {userData.invoices.map((i: any) => (
+                        <TableRow key={i.id}>
+                          <TableCell className="font-medium">{i.invoice_number}</TableCell>
+                          <TableCell>{i.client_name || '—'}</TableCell>
+                          <TableCell className="text-xs">{i.issue_date}</TableCell>
+                          <TableCell className="text-right">{Number(i.total || 0).toLocaleString()} {i.currency}</TableCell>
+                          <TableCell className="text-xs">{i.status || '—'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </TabsContent>
+            </Tabs>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
