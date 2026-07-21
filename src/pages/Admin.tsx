@@ -366,7 +366,7 @@ export default function Admin() {
         </TabsList>
 
         <TabsContent value="users">
-          <Card className="glass-card overflow-hidden">
+          <Card className="glass-card overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -389,7 +389,7 @@ export default function Admin() {
                   <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No users yet</TableCell></TableRow>
                 )}
                 {users.map(u => (
-                  <TableRow key={u.id}>
+                  <TableRow key={u.id} className="cursor-pointer hover:bg-muted/40" onClick={() => openUserData(u)}>
                     <TableCell className="font-medium">{u.email}</TableCell>
                     <TableCell className="text-muted-foreground">{format(parseISO(u.created_at), 'MMM d, yyyy')}</TableCell>
                     <TableCell className="text-right">{u.jobCount}</TableCell>
@@ -401,12 +401,13 @@ export default function Admin() {
                       {u.lastActive ? format(parseISO(u.lastActive), 'MMM d, HH:mm') : '—'}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" onClick={() => openUserData(u)}>
-                        <Eye className="h-3.5 w-3.5 mr-1" /> View
+                      <Button variant="default" size="sm" onClick={(e) => { e.stopPropagation(); openUserData(u); }}>
+                        <Eye className="h-3.5 w-3.5 mr-1" /> View data
                       </Button>
                     </TableCell>
                   </TableRow>
                 ))}
+
               </TableBody>
             </Table>
           </Card>
