@@ -366,7 +366,7 @@ export default function Admin() {
         </TabsList>
 
         <TabsContent value="users">
-          <Card className="glass-card overflow-hidden">
+          <Card className="glass-card overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
