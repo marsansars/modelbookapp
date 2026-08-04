@@ -83,8 +83,8 @@ export default function Admin() {
       const rows = list
         .filter(u => u.email)
         .sort((a, b) => a.created_at.localeCompare(b.created_at));
-      const csv = ['email,status,signed_up_at']
-        .concat(rows.map(u => `${u.email},waitlist,${u.created_at}`))
+      const csv = ['email,status']
+        .concat(rows.map(u => `${u.email},waitlist`))
         .join('\n');
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
       const url = URL.createObjectURL(blob);
