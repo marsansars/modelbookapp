@@ -65,8 +65,22 @@ Deno.serve(async (req) => {
       page++;
     }
 
+    // Fetch display names from user_settings
+    const nameById = new Map<string, string>();
+    const { data: settings } = await admin.from('user_settings').select('user_id, display_name');
+    for (const s of settings || []) {
+      if (s.display_name) nameById.set(s.user_id, s.display_name);
+    }
+
+    const usersWithName = allUsers.map(u => ({
+      id: u.id,
+      email: u.email,
+      created_at: u.created_at,
+      name: nameById.get(u.id) || '',
+    }));
+
     return new Response(
-      JSON.stringify({ users: allUsers }),
+      JSON.stringify({ users: usersWithName }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (err) {

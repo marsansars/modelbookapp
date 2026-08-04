@@ -79,12 +79,12 @@ export default function Admin() {
     try {
       const { data, error } = await supabase.functions.invoke('admin-export-emails');
       if (error) throw error;
-      const list = (data as { users: { email?: string; created_at: string; id: string }[] }).users || [];
+      const list = (data as { users: { email?: string; created_at: string; id: string; name?: string }[] }).users || [];
       const rows = list
         .filter(u => u.email)
         .sort((a, b) => a.created_at.localeCompare(b.created_at));
-      const csv = ['email,status']
-        .concat(rows.map(u => `${u.email},waitlist`))
+      const csv = ['name,email,status']
+        .concat(rows.map(u => `${escapeCsvValue(u.name || '')},${u.email},waitlist`))
         .join('\n');
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
       const url = URL.createObjectURL(blob);
